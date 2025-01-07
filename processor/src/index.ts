@@ -12,9 +12,7 @@ async function main() {
   // connects to the kafka broker
   const producer = kafka.producer();
   await producer.connect();
-
-//   $ bin/kafka-console-consumer.sh --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
-
+  
   while (1) {
     // fetches the pending rows from the outbox table
     const pendingRows = await client.zapRunOutBox.findMany({
