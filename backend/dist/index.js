@@ -32,6 +32,7 @@ class Server {
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.prisma.$connect();
+            console.log("Database connected successfully");
             this.app.use(body_parser_1.default.json());
             this.app.use(body_parser_1.default.urlencoded({
                 extended: true,
