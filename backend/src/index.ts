@@ -24,6 +24,7 @@ class Server {
 
   public async start(): Promise<void> {
     await this.prisma.$connect();
+    console.log("Database connected successfully");
     this.app.use(bodyParser.json());
     this.app.use(
       bodyParser.urlencoded({
