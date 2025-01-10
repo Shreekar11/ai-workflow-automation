@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { GET, POST } from "../../decorators/router";
 import UserRepository from "../../repository/user.repo";
 
-export default class GetUserDataController {
+export default class UserController {
   @GET("/v1/user")
   public async getUserData(req: Request, res: Response): Promise<Response> {
     return res.status(200).json({ message: "User data" });

@@ -6,7 +6,6 @@ export default class Initializer {
   constructor() {}
 
   public initExpressRoute(controller: any, app: express.Application) {
-    console.log("route -> ", controller.__routes);
     if (controller.__routes) {
       for (const route of controller.__routes) {
         (app as any)[route.method](

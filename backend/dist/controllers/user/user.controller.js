@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const router_1 = require("../../decorators/router");
 const user_repo_1 = __importDefault(require("../../repository/user.repo"));
-class GetUserDataController {
+class UserController {
     getUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             return res.status(200).json({ message: "User data" });
@@ -47,16 +47,16 @@ class GetUserDataController {
         });
     }
 }
-exports.default = GetUserDataController;
+exports.default = UserController;
 __decorate([
     (0, router_1.GET)("/v1/user"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], GetUserDataController.prototype, "getUserData", null);
+], UserController.prototype, "getUserData", null);
 __decorate([
     (0, router_1.POST)("/v1/user"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], GetUserDataController.prototype, "createUserData", null);
+], UserController.prototype, "createUserData", null);
