@@ -8,6 +8,7 @@ const fs_1 = __importDefault(require("fs"));
 class Initializer {
     constructor() { }
     initExpressRoute(controller, app) {
+        console.log("route -> ", controller.__routes);
         if (controller.__routes) {
             for (const route of controller.__routes) {
                 app[route.method](route.path, (req, res, next) => {

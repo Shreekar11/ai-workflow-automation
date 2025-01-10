@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
-import express from "express";
-import dotenv from "dotenv";
-import bodyParser from "body-parser";
 import cors from "cors";
-import { Initializer } from "./util/initializer";
+import dotenv from "dotenv";
+import express from "express";
+import bodyParser from "body-parser";
+import  Initializer from "./initializer";
+import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
 

@@ -13,12 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const express_1 = __importDefault(require("express"));
-const dotenv_1 = __importDefault(require("dotenv"));
-const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
-const initializer_1 = require("./util/initializer");
+const dotenv_1 = __importDefault(require("dotenv"));
+const express_1 = __importDefault(require("express"));
+const body_parser_1 = __importDefault(require("body-parser"));
+const initializer_1 = __importDefault(require("./initializer"));
+const client_1 = require("@prisma/client");
 dotenv_1.default.config();
 class Server {
     constructor() {
@@ -38,7 +38,7 @@ class Server {
                 extended: true,
             }));
             this.app.use((0, cors_1.default)());
-            new initializer_1.Initializer().init(this.app);
+            new initializer_1.default().init(this.app);
             this.app.listen(this.port, () => {
                 console.log(`Server is running on port ${this.port}`);
             });
