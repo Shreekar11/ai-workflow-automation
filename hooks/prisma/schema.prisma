@@ -8,10 +8,13 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String
-  password String
+  id          Int      @id @default(autoincrement())
+  clerkUserId String
+  email       String
+  firstName   String
+  lastName    String
+  password    String
+  timestamp   DateTime @default(now())
 }
 
 model Zap {
@@ -20,6 +23,7 @@ model Zap {
   trigger   Trigger?
   actions   Action[]
   zapRun    ZapRun[]
+  timestamp DateTime @default(now())
 }
 
 model Trigger {
@@ -28,6 +32,7 @@ model Trigger {
   triggerid String
   type      AvailableTrigger @relation(fields: [triggerid], references: [id])
   zap       Zap              @relation(fields: [zapId], references: [id])
+  timestamp DateTime         @default(now())
 }
 
 model Action {
@@ -37,18 +42,21 @@ model Action {
   actionId     String
   type         AvailableAction @relation(fields: [actionId], references: [id])
   sortingOrder Int             @default(0)
+  timestamp    DateTime        @default(now())
 }
 
 model AvailableAction {
-  id      String   @id @default(uuid())
-  name    String
-  actions Action[]
+  id        String   @id @default(uuid())
+  name      String
+  actions   Action[]
+  timestamp DateTime @default(now())
 }
 
 model AvailableTrigger {
-  id       String    @id @default(uuid())
-  name     String
-  triggers Trigger[]
+  id        String    @id @default(uuid())
+  name      String
+  triggers  Trigger[]
+  timestamp DateTime  @default(now())
 }
 
 model ZapRun {
@@ -57,10 +65,12 @@ model ZapRun {
   metadata     Json
   zap          Zap           @relation(fields: [zapId], references: [id])
   zapRunOutBox ZapRunOutBox?
+  timestamp    DateTime      @default(now())
 }
 
 model ZapRunOutBox {
-  id       String @id @default(uuid())
-  zapRunId String @unique
-  zapRun   ZapRun @relation(fields: [zapRunId], references: [id])
+  id        String   @id @default(uuid())
+  zapRunId  String   @unique
+  zapRun    ZapRun   @relation(fields: [zapRunId], references: [id])
+  timestamp DateTime @default(now())
 }
