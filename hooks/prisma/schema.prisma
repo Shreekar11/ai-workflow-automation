@@ -8,28 +8,31 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   clerkUserId String
   email       String
   firstName   String
   lastName    String
-  timestamp   DateTime @default(now())
+  workflows   Workflow[]
+  timestamp   DateTime   @default(now())
 }
 
 model Workflow {
   id           String        @id @default(uuid())
   triggerId    String
+  userId       Int
   trigger      Trigger?
   actions      Action[]
   workflowRuns WorkflowRun[]
+  user         User          @relation(fields: [userId], references: [id])
   timestamp    DateTime      @default(now())
 }
 
 model Trigger {
   id         String           @id @default(uuid())
   workflowId String           @unique
-  triggerid  String
-  type       AvailableTrigger @relation(fields: [triggerid], references: [id])
+  triggerId  String
+  type       AvailableTrigger @relation(fields: [triggerId], references: [id])
   workflow   Workflow         @relation(fields: [workflowId], references: [id])
   timestamp  DateTime         @default(now())
 }

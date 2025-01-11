@@ -25,23 +25,12 @@ const types_1 = require("../../types");
 const router_1 = require("../../decorators/router");
 const user_repo_1 = __importDefault(require("../../repository/user.repo"));
 class UserController {
-    getUserData(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { clerkUserId } = req.params;
-            const userData = yield new user_repo_1.default().getUserByClerkUserId((clerkUserId === null || clerkUserId === void 0 ? void 0 : clerkUserId.toString()) || "");
-            return res.status(200).json({
-                status: true,
-                message: "User data retrieved successfully",
-                data: userData,
-            });
-        });
-    }
     createUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const body = req.body;
             const parsedData = types_1.CreateUserSchema.safeParse(body);
             if (!parsedData.success) {
-                return res.status(411).json({
+                return res.status(400).json({
                     status: false,
                     message: "Incorrect data",
                 });
@@ -66,17 +55,28 @@ class UserController {
             });
         });
     }
+    getUserData(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { clerkUserId } = req.params;
+            const userData = yield new user_repo_1.default().getUserByClerkUserId((clerkUserId === null || clerkUserId === void 0 ? void 0 : clerkUserId.toString()) || "");
+            return res.status(200).json({
+                status: true,
+                message: "User data retrieved successfully",
+                data: userData,
+            });
+        });
+    }
 }
 exports.default = UserController;
-__decorate([
-    (0, router_1.GET)("/api/v1/user/:clerkUserId"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "getUserData", null);
 __decorate([
     (0, router_1.POST)("/api/v1/user"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "createUserData", null);
+__decorate([
+    (0, router_1.GET)("/api/v1/user/:clerkUserId"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getUserData", null);

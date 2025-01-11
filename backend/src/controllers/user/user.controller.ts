@@ -4,26 +4,13 @@ import { GET, POST } from "../../decorators/router";
 import UserRepository from "../../repository/user.repo";
 
 export default class UserController {
-  @GET("/api/v1/user/:clerkUserId")
-  public async getUserData(req: Request, res: Response): Promise<Response> {
-    const { clerkUserId } = req.params;
-    const userData = await new UserRepository().getUserByClerkUserId(
-      clerkUserId?.toString() || ""
-    );
-    return res.status(200).json({
-      status: true,
-      message: "User data retrieved successfully",
-      data: userData,
-    });
-  }
-
   @POST("/api/v1/user")
   public async createUserData(req: Request, res: Response): Promise<Response> {
     const body = req.body;
 
     const parsedData = CreateUserSchema.safeParse(body);
     if (!parsedData.success) {
-      return res.status(411).json({
+      return res.status(400).json({
         status: false,
         message: "Incorrect data",
       });
@@ -51,6 +38,19 @@ export default class UserController {
       status: true,
       message: "User created successfully",
       data: createUserData,
+    });
+  }
+
+  @GET("/api/v1/user/:clerkUserId")
+  public async getUserData(req: Request, res: Response): Promise<Response> {
+    const { clerkUserId } = req.params;
+    const userData = await new UserRepository().getUserByClerkUserId(
+      clerkUserId?.toString() || ""
+    );
+    return res.status(200).json({
+      status: true,
+      message: "User data retrieved successfully",
+      data: userData,
     });
   }
 }
