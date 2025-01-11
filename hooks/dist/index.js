@@ -19,19 +19,19 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.params.userId;
-    const zapId = req.params.zapId;
+    const workflowId = req.params.zapId;
     const body = req.body;
     // store new trigger in db
     yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const run = yield client.zapRun.create({
+        const run = yield tx.workflowRun.create({
             data: {
-                zapId,
+                workflowId,
                 metadata: body,
             },
         });
-        yield client.zapRunOutBox.create({
+        yield tx.workflowRunOutbox.create({
             data: {
-                zapRunId: run.id,
+                workflowRunId: run.id,
             },
         });
     }));

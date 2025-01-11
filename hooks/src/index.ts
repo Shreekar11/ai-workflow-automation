@@ -9,21 +9,21 @@ app.use(express.json());
 
 app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
   const userId = req.params.userId;
-  const zapId = req.params.zapId;
+  const workflowId = req.params.zapId;
   const body = req.body;
 
   // store new trigger in db
   await client.$transaction(async (tx) => {
-    const run = await tx.zapRun.create({
+    const run = await tx.workflowRun.create({
       data: {
-        zapId,
+        workflowId,
         metadata: body,
       },
     });
 
-    await tx.zapRunOutBox.create({
+    await tx.workflowRunOutbox.create({
       data: {
-        zapRunId: run.id,
+        workflowRunId: run.id,
       },
     });
   });

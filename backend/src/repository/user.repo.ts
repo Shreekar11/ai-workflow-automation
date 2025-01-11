@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import Repository from "./base.repo";
 
-export default class UserRepository extends Repository {
+export default class UserRepository extends Repository<User> {
   constructor() {
     super("user");
   }

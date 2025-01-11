@@ -17,28 +17,28 @@ model User {
   timestamp   DateTime @default(now())
 }
 
-model Zap {
-  id        String   @id @default(uuid())
-  triggerId String
-  trigger   Trigger?
-  actions   Action[]
-  zapRun    ZapRun[]
-  timestamp DateTime @default(now())
+model Workflow {
+  id           String        @id @default(uuid())
+  triggerId    String
+  trigger      Trigger?
+  actions      Action[]
+  workflowRuns WorkflowRun[]
+  timestamp    DateTime      @default(now())
 }
 
 model Trigger {
-  id        String           @id @default(uuid())
-  zapId     String           @unique
-  triggerid String
-  type      AvailableTrigger @relation(fields: [triggerid], references: [id])
-  zap       Zap              @relation(fields: [zapId], references: [id])
-  timestamp DateTime         @default(now())
+  id         String           @id @default(uuid())
+  workflowId String           @unique
+  triggerid  String
+  type       AvailableTrigger @relation(fields: [triggerid], references: [id])
+  workflow   Workflow         @relation(fields: [workflowId], references: [id])
+  timestamp  DateTime         @default(now())
 }
 
 model Action {
   id           String          @id @default(uuid())
-  zapId        String
-  zap          Zap             @relation(fields: [zapId], references: [id])
+  workflowId   String
+  workflow     Workflow        @relation(fields: [workflowId], references: [id])
   actionId     String
   type         AvailableAction @relation(fields: [actionId], references: [id])
   sortingOrder Int             @default(0)
@@ -59,18 +59,18 @@ model AvailableTrigger {
   timestamp DateTime  @default(now())
 }
 
-model ZapRun {
-  id           String        @id @default(uuid())
-  zapId        String
-  metadata     Json
-  zap          Zap           @relation(fields: [zapId], references: [id])
-  zapRunOutBox ZapRunOutBox?
-  timestamp    DateTime      @default(now())
+model WorkflowRun {
+  id         String             @id @default(uuid())
+  workflowId String
+  metadata   Json
+  workflow   Workflow           @relation(fields: [workflowId], references: [id])
+  runOutbox  WorkflowRunOutbox?
+  timestamp  DateTime           @default(now())
 }
 
-model ZapRunOutBox {
-  id        String   @id @default(uuid())
-  zapRunId  String   @unique
-  zapRun    ZapRun   @relation(fields: [zapRunId], references: [id])
-  timestamp DateTime @default(now())
+model WorkflowRunOutbox {
+  id            String      @id @default(uuid())
+  workflowRunId String      @unique
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
+  timestamp     DateTime    @default(now())
 }
