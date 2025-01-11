@@ -17,11 +17,35 @@ class UserRepository extends base_repo_1.default {
     constructor() {
         super("user");
     }
+    getUserByClerkUserId(clerkUserId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userData = yield this.model.findFirst({
+                where: {
+                    clerkUserId,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    clerkUserId: true,
+                },
+            });
+            return userData;
+        });
+    }
     getUserByEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userData = yield this.model.findUnique({
+            const userData = yield this.model.findFirst({
                 where: {
                     email,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    clerkUserId: true,
                 },
             });
             return userData;
@@ -32,6 +56,13 @@ class UserRepository extends base_repo_1.default {
             const userData = yield this.model.findUnique({
                 where: {
                     id,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    clerkUserId: true,
                 },
             });
             return userData;

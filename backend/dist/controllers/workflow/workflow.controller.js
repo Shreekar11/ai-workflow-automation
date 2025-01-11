@@ -28,7 +28,7 @@ class WorkFlowController {
 }
 exports.default = WorkFlowController;
 __decorate([
-    (0, router_1.GET)("/v1/workflow"),
+    (0, router_1.GET)("/api/v1/workflow"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)

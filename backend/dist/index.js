@@ -17,12 +17,19 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const logger_1 = __importDefault(require("./modules/logger"));
 const initializer_1 = __importDefault(require("./initializer"));
 const client_1 = require("@prisma/client");
 dotenv_1.default.config();
 class Server {
     constructor() {
         this.port = Number(process.env.PORT) || 8080;
+        this.log = (req, res, next) => {
+            res.on("finish", () => {
+                logger_1.default.info(`${req.method} ${req.originalUrl} ${res.statusCode} ${res.statusMessage} ${res.get("Content-Length") || 0}`);
+            });
+            next();
+        };
         this.app = (0, express_1.default)();
         this.prisma = new client_1.PrismaClient();
     }
@@ -31,6 +38,7 @@ class Server {
     }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
+            // connect to the database
             yield this.prisma.$connect();
             console.log("Database connected successfully");
             this.app.use(body_parser_1.default.json());
@@ -38,6 +46,7 @@ class Server {
                 extended: true,
             }));
             this.app.use((0, cors_1.default)());
+            this.app.use(this.log);
             new initializer_1.default().init(this.app);
             this.app.listen(this.port, () => {
                 console.log(`Server is running on port ${this.port}`);

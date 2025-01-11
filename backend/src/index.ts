@@ -2,7 +2,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
-import  Initializer from "./initializer";
+import logger from "./modules/logger";
+import Initializer from "./initializer";
 import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
@@ -22,9 +23,28 @@ class Server {
     return this.instance;
   }
 
+  private log = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    res.on("finish", () => {
+      logger.info(
+        `${req.method} ${req.originalUrl} ${res.statusCode} ${
+          res.statusMessage
+        } ${res.get("Content-Length") || 0}`
+      );
+    });
+
+    next();
+  };
+
   public async start(): Promise<void> {
+
+    // connect to the database
     await this.prisma.$connect();
     console.log("Database connected successfully");
+
     this.app.use(bodyParser.json());
     this.app.use(
       bodyParser.urlencoded({
@@ -32,6 +52,7 @@ class Server {
       })
     );
     this.app.use(cors());
+    this.app.use(this.log);
     new Initializer().init(this.app);
     this.app.listen(this.port, () => {
       console.log(`Server is running on port ${this.port}`);

@@ -14,7 +14,7 @@ export default class Repository<T extends any> implements IRepository<T> {
     return (this.prisma as any)[this.modelName];
   }
 
-  public async get(id: string): Promise<T | null> {
+  public async get(id: string | number): Promise<T | null> {
     const getData = await this.model.findUnique({
       where: {
         id,

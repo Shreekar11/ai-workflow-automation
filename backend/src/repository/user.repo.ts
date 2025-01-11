@@ -6,20 +6,51 @@ export default class UserRepository extends Repository<User> {
     super("user");
   }
 
-  public async getUserByEmail(email: string): Promise<User | null> {
-    const userData = await this.model.findUnique({
+  public async getUserByClerkUserId(clerkUserId: string): Promise<User | null> {
+    const userData = await this.model.findFirst({
       where: {
-        email,
+        clerkUserId,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        clerkUserId: true,
       },
     });
 
     return userData;
   }
 
-  public async getUserById(id: string): Promise<User | null> {
+  public async getUserByEmail(email: string): Promise<User | null> {
+    const userData = await this.model.findFirst({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        clerkUserId: true,
+      },
+    });
+
+    return userData;
+  }
+
+  public async getUserById(id: number): Promise<User | null> {
     const userData = await this.model.findUnique({
       where: {
         id,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        clerkUserId: true,
       },
     });
 
