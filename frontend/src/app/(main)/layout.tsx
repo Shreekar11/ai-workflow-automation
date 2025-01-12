@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <body className={everett.className}>{children}</body>
+        <body className={`${everett.className} bg-[#FBF8F6]`}>{children}</body>
     </html>
   );
 }

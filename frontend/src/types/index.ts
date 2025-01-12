@@ -11,4 +11,22 @@ export interface UserDetailsType {
     data?: T;
     error?: string;
   }
+
+  export interface Workflow {
+    id: string;
+    triggerId: string;
+    userId: number;
+    timestamp: string;
+    actions: {
+      id: string;
+      type: {
+        name: string;
+      };
+    }[];
+    trigger: {
+      type: {
+        name: string;
+      };
+    };
+  }
   
