@@ -9,8 +9,9 @@ const everett = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Workflow Dashboard", 
-  description: "Workflow is a purpose-built tool for automating and streamlining your processes",
+  title: "Automate your Workflows",
+  description:
+    "Workflow is a purpose-built tool for automating and streamlining your processes",
 };
 
 export default function RootLayout({
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <body className={everett.className}>{children}</body>
+      <body className={everett.className}>{children}</body>
     </html>
   );
 }
