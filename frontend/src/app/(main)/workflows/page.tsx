@@ -8,6 +8,15 @@ import { WorkflowTable } from "@/components/custom/workflow-table";
 import { Button } from "@/components/ui/button";
 import { useWorkflows } from "@/lib/hook/useWorkflows";
 import { useRouter } from "next/navigation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import CreateWorkflowTable from "@/components/custom/create-workflow-table";
 
 const WorkflowPage = () => {
   const router = useRouter();
@@ -16,6 +25,10 @@ const WorkflowPage = () => {
 
   const handleViewWorkflow = (id: string) => {
     router.push(`/workflows/${id}`);
+  };
+
+  const handleCreateWorkflow = () => {
+    router.push("/workflows/create");
   };
 
   const filteredWorkflows = workflows.filter(
@@ -40,9 +53,14 @@ const WorkflowPage = () => {
               Manage and monitor your automated workflows
             </p>
           </div>
-          <Button className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90">
-            <Plus className="mr-2 h-4 w-4" /> New Workflow
-          </Button>
+          {workflows.length !== 0 && (
+            <Button
+              className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
+              onClick={handleCreateWorkflow}
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Workflow
+            </Button>
+          )}
         </div>
         <div className="mb-6 relative">
           <Input
@@ -58,11 +76,15 @@ const WorkflowPage = () => {
           />
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <WorkflowTable
-            workflows={filteredWorkflows}
-            onViewWorkflow={handleViewWorkflow}
-            loading={loading}
-          />
+          {workflows.length > 0 ? (
+            <WorkflowTable
+              workflows={filteredWorkflows}
+              onViewWorkflow={handleViewWorkflow}
+              loading={loading}
+            />
+          ) : (
+            <CreateWorkflowTable handleCreateWorkflow={handleCreateWorkflow} />
+          )}
         </div>
       </main>
     </div>
