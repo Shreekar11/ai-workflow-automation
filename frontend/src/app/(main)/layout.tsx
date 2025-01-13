@@ -1,3 +1,4 @@
+import { Navbar } from "@/components/layout/navbar";
 import "../globals.css";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -9,8 +10,9 @@ const everett = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Workflow Dashboard", 
-  description: "Workflow is a purpose-built tool for automating and streamlining your processes",
+  title: "Workflow Dashboard",
+  description:
+    "Workflow is a purpose-built tool for automating and streamlining your processes",
 };
 
 export default function RootLayout({
@@ -20,7 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <body className={`${everett.className} bg-[#FBF8F6]`}>{children}</body>
+      <body className={`${everett.className} bg-[#FBF8F6]`}>
+        <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
+          <Navbar />
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
