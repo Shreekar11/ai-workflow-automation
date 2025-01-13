@@ -6,9 +6,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export function Navbar() {
   const { isSignedIn } = useUser();
+  const pathName = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -41,9 +44,20 @@ export function Navbar() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="text-2xl font-bold text-[#FF7801]">
-                Workflow
-              </span>
+              {/* {pathName === "/" ? (
+                <span className="text-2xl font-bold text-[#FF7801]">
+                  Workflow
+                </span>
+              ) : ( */}
+                <Image
+                  src="/assets/logo.png"
+                  alt="logo"
+                  width={50}
+                  height={50}
+                  layout="fixed"
+                  quality={100}
+                />
+              {/* )} */}
             </motion.div>
           </Link>
 
