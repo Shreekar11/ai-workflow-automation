@@ -49,40 +49,42 @@ export function Navbar() {
                   Workflow
                 </span>
               ) : ( */}
-                <Image
-                  src="/assets/logo.png"
-                  alt="logo"
-                  width={50}
-                  height={50}
-                  layout="fixed"
-                  quality={100}
-                />
+              <Image
+                src="/assets/logo.png"
+                alt="logo"
+                width={50}
+                height={50}
+                layout="fixed"
+                quality={100}
+              />
               {/* )} */}
             </motion.div>
           </Link>
 
-          {isSignedIn ? (
-            <UserButton />
-          ) : (
-            <div className="hidden md:flex items-center space-x-6">
-              <Link href="/sign-in">
-                <Button
-                  variant="ghost"
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                >
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/sign-up">
-                <Button
-                  variant="default"
-                  className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90 transition-all duration-200 transform hover:scale-105"
-                >
-                  Sign up
-                </Button>
-              </Link>
-            </div>
-          )}
+          <div className="hidden md:flex">
+            {isSignedIn ? (
+              <UserButton />
+            ) : (
+              <div className="hidden md:flex items-center space-x-4">
+                <Link href="/sign-in">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  >
+                    Log in
+                  </Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button
+                    variant="default"
+                    className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90 transition-all duration-200 transform hover:scale-105"
+                  >
+                    Sign up
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
 
           <div className="md:hidden">
             {isSignedIn ? (
