@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
 import { WorkflowTable } from "@/components/custom/workflow-table";
 import { Button } from "@/components/ui/button";
-import { useWorkflows } from "@/lib/hook/useWorkFlows";
+import { useWorkflows } from "@/lib/hook/useWorkflows";
+import { useRouter } from "next/navigation";
 
 const WorkflowPage = () => {
+  const router = useRouter();
   const { loading, workflows } = useWorkflows();
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleViewWorkflow = (id: string) => {
-    console.log(`View workflow with id: ${id}`);
+    router.push(`/workflows/${id}`);
   };
 
   const filteredWorkflows = workflows.filter(

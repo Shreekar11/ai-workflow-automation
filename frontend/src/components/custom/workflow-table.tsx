@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { Workflow } from "@/types";
+import { Skeleton } from "../ui/skeleton";
 
 interface WorkflowTableProps {
   workflows: Workflow[];
@@ -33,6 +34,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -46,46 +48,67 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {workflows.map((workflow) => (
-            <TableRow key={workflow.id}>
-              <TableCell className="font-medium">
-                {workflow.id.slice(0, 8)}...
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant="outline"
-                  className="bg-blue-50 text-blue-700 hover:bg-blue-100"
-                >
-                  {workflow.trigger.type.name}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {workflow.actions.map((action, index) => (
+          {loading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Skeleton className="h-6 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="flex gap-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-28" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-16 ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))
+            : workflows.map((workflow) => (
+                <TableRow key={workflow.id}>
+                  <TableCell className="font-medium">
+                    {workflow.id.slice(0, 8)}...
+                  </TableCell>
+                  <TableCell>
                     <Badge
-                      key={index}
-                      variant="secondary"
-                      className="bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      variant="outline"
+                      className="bg-blue-50 text-blue-700 hover:bg-blue-100"
                     >
-                      {action.type.name}
+                      {workflow.trigger.type.name}
                     </Badge>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell>{formatDate(workflow.timestamp)}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onViewWorkflow(workflow.id)}
-                  className="hover:bg-blue-50"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {workflow.actions.map((action, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-gray-100 text-gray-800 hover:bg-gray-200"
+                        >
+                          {action.type.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDate(workflow.timestamp)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewWorkflow(workflow.id)}
+                      className="hover:bg-blue-50"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
         </TableBody>
       </Table>
     </div>
