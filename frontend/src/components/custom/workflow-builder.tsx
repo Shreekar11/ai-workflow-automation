@@ -1,5 +1,7 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 
 // react-flow components
@@ -17,10 +19,15 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 
 // custom react-flow components
-import TriggerNode from "./trigger-node";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import ActionNode from "./action-node";
-import AddActionButton from "./add-action-button";
+import TriggerNode from "./trigger-node";
 import SelectDialog from "./select-dialog";
+import AddActionButton from "./add-action-button";
+
+// action
+import { publishWorkflow } from "@/lib/actions/workflow.action";
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -52,12 +59,30 @@ const initialEdges: Edge[] = [
 ];
 
 export default function WorkflowBuilder() {
+  const router = useRouter();
+  const { user } = useUser();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [workflowName, setWorkflowName] = useState("Untitled Workflow");
+
+  const [selectTrigger, setSelectTrigger] = useState<{
+    id: string;
+    name: string;
+  }>({
+    id: "",
+    name: "",
+  });
+
+  const [selectActions, setSelectActions] = useState<
+    {
+      id: string;
+      name: string;
+    }[]
+  >([]);
 
   const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Edge | Connection) => setEdges((items) => addEdge(params, items)),
     [setEdges]
   );
 
@@ -75,9 +100,9 @@ export default function WorkflowBuilder() {
       data: { label: `Action ${nodes.length}` },
     };
 
-    setNodes((nds) => [...nds, newActionNode]);
-    setEdges((eds) => [
-      ...eds,
+    setNodes((items) => [...items, newActionNode]);
+    setEdges((items) => [
+      ...items,
       {
         id: `e-${lastActionNode.id}-${newActionId}`,
         source: lastActionNode.id,
@@ -96,36 +121,92 @@ export default function WorkflowBuilder() {
   }, []);
 
   const handleSelectOption = useCallback(
-    (option: string) => {
+    (option: { id: string; type: string; name: string }) => {
       if (selectedNode) {
-        setNodes((nds) =>
-          nds.map((node) =>
+        if (option.type === "action") {
+          setSelectActions((prevActions) => [
+            ...prevActions.filter((action) => action.id !== option.id),
+            { id: option.id, name: option.name },
+          ]);
+        } else {
+          setSelectTrigger({
+            id: option.id,
+            name: option.name,
+          });
+        }
+
+        setNodes((items) =>
+          items.map((node) =>
             node.id === selectedNode.id
-              ? { ...node, data: { ...node.data, selectedOption: option } }
+              ? { ...node, data: { ...node.data, selectedOption: option.name } }
               : node
           )
         );
       }
       handleCloseDialog();
     },
-    [selectedNode, setNodes]
+    [selectedNode, setNodes, handleCloseDialog]
   );
 
+  const handlePublishWorkflow = async () => {
+    try {
+      const response = await publishWorkflow(
+        selectActions,
+        selectTrigger,
+        workflowName,
+        user?.id || ""
+      );
+      if (!response.status) {
+        throw new Error("Error creating workflow");
+      }
+      router.push("/workflows");
+    } catch (err: any) {
+      console.error("Error: ", err);
+    }
+  };
+
   return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={handleNodeClick}
-        nodeTypes={nodeTypes}
-      >
-        <Controls />
-        <Background variant={"dots" as BackgroundVariant} gap={12} size={1} />
-        <AddActionButton onClick={handleAddAction} />
-      </ReactFlow>
+    <div className="flex flex-col w-full h-screen">
+      <div className="w-full py-2 px-6 bg-[#f2f2f2]">
+        <div
+          className="border rounded-xl p-2 bg-white/50 backdrop-blur-lg 
+        w-full max-w-screen-lg mx-auto flex items-center justify-between"
+        >
+          <Input
+            type="text"
+            value={workflowName}
+            onChange={(e) => setWorkflowName(e.target.value)}
+            className="text-lg w-[50%] bg-white"
+            placeholder="Workflow Name"
+          />
+          <div className="flex justify-center items-center gap-4">
+            <AddActionButton onClick={handleAddAction} />
+            <Button
+              variant="outline"
+              onClick={handlePublishWorkflow}
+              className="bg-[#FF7801] text-white hover:bg-[#FF7801]/80 hover:text-white"
+            >
+              Publish
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 w-full">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={handleNodeClick}
+          nodeTypes={nodeTypes}
+        >
+          <Controls />
+          <Background variant={"dots" as BackgroundVariant} gap={12} size={1} />
+        </ReactFlow>
+      </div>
+
       {selectedNode && (
         <SelectDialog
           isOpen={!!selectedNode}

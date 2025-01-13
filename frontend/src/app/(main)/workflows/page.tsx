@@ -1,34 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
-import { Navbar } from "@/components/layout/navbar";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { Plus, Search } from "lucide-react";
-import { WorkflowTable } from "@/components/custom/workflow-table";
-import { Button } from "@/components/ui/button";
-import { useWorkflows } from "@/lib/hook/useWorkflows";
 import { useRouter } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import CreateWorkflowTable from "@/components/custom/create-workflow-table";
+import { useWorkflows } from "@/lib/hook/useWorkflows";
+
+// components
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/layout/navbar";
+import { WorkflowTable } from "@/components/custom/workflow-table";
 
 const WorkflowPage = () => {
   const router = useRouter();
-  const { loading, workflows } = useWorkflows();
+  const { loading, workflows, setWorkflows } = useWorkflows();
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleViewWorkflow = (id: string) => {
     router.push(`/workflows/${id}`);
-  };
-
-  const handleCreateWorkflow = () => {
-    router.push("/workflows/create");
   };
 
   const filteredWorkflows = workflows.filter(
@@ -43,6 +32,8 @@ const WorkflowPage = () => {
   );
 
   return (
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
+      <Navbar />
       <main className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="mb-8 flex justify-between items-center">
           <div>
@@ -54,7 +45,7 @@ const WorkflowPage = () => {
           {workflows.length !== 0 && (
             <Button
               className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
-              onClick={handleCreateWorkflow}
+              onClick={() => router.push("/workflows/create")}
             >
               <Plus className="mr-2 h-4 w-4" /> New Workflow
             </Button>
@@ -74,17 +65,15 @@ const WorkflowPage = () => {
           />
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          {workflows.length > 0 ? (
-            <WorkflowTable
-              workflows={filteredWorkflows}
-              onViewWorkflow={handleViewWorkflow}
-              loading={loading}
-            />
-          ) : (
-            <CreateWorkflowTable handleCreateWorkflow={handleCreateWorkflow} />
-          )}
+          <WorkflowTable
+            workflows={filteredWorkflows}
+            setWorkflows={setWorkflows}
+            onViewWorkflow={handleViewWorkflow}
+            loading={loading}
+          />
         </div>
       </main>
+    </div>
   );
 };
 

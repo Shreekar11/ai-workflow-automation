@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/layout/navbar";
 import "../globals.css";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -22,12 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${everett.className} bg-[#FBF8F6]`}>
-        <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
-          <Navbar />
-          {children}
-        </div>
-      </body>
+      <body className={`${everett.className} bg-[#FBF8F6]`}>{children}</body>
     </html>
   );
 }

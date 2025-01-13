@@ -1,3 +1,9 @@
+import { ReactNode } from "react";
+
+// icons
+import { SiSolana } from "react-icons/si";
+import { Mail, Webhook } from "lucide-react";
+// components
 import {
   Dialog,
   DialogContent,
@@ -5,41 +11,66 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Mail, Webhook } from "lucide-react";
-import { SiSolana } from "react-icons/si";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const triggerOptions = [
-  {
+// actions
+import { useAvailableTriggersActions } from "@/lib/hook/useAvailableTriggersActions";
+
+type OptionType = {
+  id: string;
+  name: string;
+  image?: string;
+  icon?: ReactNode;
+  className?: string;
+};
+
+type SelectDialogProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (option: { id: string; type: string; name: string }) => void;
+  type: "trigger" | "action";
+};
+
+const optionStyles: Record<string, { icon: ReactNode; className: string }> = {
+  Webhook: {
     icon: <Webhook />,
-    name: "Webhook",
     className: "bg-[#FF7801]/70 text-white hover:bg-[#FF7801]",
   },
-];
-const actionOptions = [
-  {
+  Email: {
     icon: <Mail />,
-    name: "Send Email",
     className: "bg-[#FF5571]/80 text-white hover:bg-[#FF5571]",
   },
-  {
+  Solana: {
     icon: <SiSolana />,
-    name: "Send Solana",
     className: "bg-[#93BEFF]/80 text-white hover:bg-[#93BEFF]",
   },
-];
+};
 
 export default function SelectDialog({
   isOpen,
   onClose,
   onSelect,
   type,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (option: string) => void;
-  type: "trigger" | "action";
-}) {
-  const options = type === "trigger" ? triggerOptions : actionOptions;
+}: SelectDialogProps) {
+  const { loading, availableData: workflowAvailableData } =
+    useAvailableTriggersActions(type);
+
+  const mappedOptions: OptionType[] = workflowAvailableData.map((item) => {
+    const style = optionStyles[item.name] || optionStyles.Email;
+    return {
+      ...item,
+      icon: style.icon,
+      className: style.className,
+    };
+  });
+
+  const LoadingSkeleton = () => (
+    <div className="space-y-3">
+      <Skeleton className="h-10 w-full bg-gray-200" />
+      <Skeleton className="h-10 w-full bg-gray-200" />
+      <Skeleton className="h-10 w-full bg-gray-200" />
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -50,15 +81,22 @@ export default function SelectDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          {options.map((option, index) => (
-            <Button
-              key={index}
-              onClick={() => onSelect(option.name)}
-              className={option.className}
-            >
-              {option.icon} {option.name}
-            </Button>
-          ))}
+          {loading ? (
+            <LoadingSkeleton />
+          ) : (
+            mappedOptions.map((option, index) => (
+              <Button
+                key={option.id || index}
+                onClick={() => onSelect({ id: option.id, type: type, name: option.name })}
+                className={`flex items-center gap-2 py-6 ${option.className}`}
+              >
+                <span className="rounded-full bg-white/20 p-3">
+                  {option.icon}
+                </span>
+                <span>{option.name}</span>
+              </Button>
+            ))
+          )}
         </div>
       </DialogContent>
     </Dialog>

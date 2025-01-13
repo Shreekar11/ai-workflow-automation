@@ -1,126 +1,267 @@
 import { Request, Response } from "express";
 import { WorkFlowSchema } from "../../types";
-import { GET, POST } from "../../decorators/router";
+import { DELETE, GET, POST } from "../../decorators/router";
 import WorkFlowRepo from "../../repository/workflow.repo";
 import { PrismaClient } from "@prisma/client";
 import UserRepository from "../../repository/user.repo";
+import { HTTPStatus } from "../../constants";
+import { APIResponse } from "../../interface/api";
 
 export default class WorkFlowController {
   private prisma: PrismaClient = new PrismaClient();
 
   @POST("/api/v1/workflow")
-  public async create1WorkFlowData(
+  public async createWorkFlowData(
     req: Request,
-    res: Response
-  ): Promise<Response> {
-    const body = req.body;
-    const clerkUserId = req.headers["clerk-user-id"];
-    if (!clerkUserId) {
-      return res.status(401).json({
-        status: false,
-        message: "Unauthorized",
-      });
-    }
+    res: Response<APIResponse>
+  ): Promise<Response<APIResponse>> {
+    try {
+      const { body } = req;
+      const clerkUserId = req.headers["clerk-user-id"]?.toString();
 
-    const userData = await new UserRepository().getUserByClerkUserId(
-      clerkUserId?.toString() || ""
-    );
-    if (!userData) {
-      return res.status(404).json({
-        status: false,
-        message: "User not found",
-      });
-    }
+      if (!clerkUserId) {
+        return res.status(HTTPStatus.UNAUTHORIZED).json({
+          status: false,
+          message: "Unauthorized: Missing user ID",
+        });
+      }
 
-    const parsedData = WorkFlowSchema.safeParse(body);
-    if (!parsedData.success) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Incorrect Workflow data" });
-    }
+      const parsedData = WorkFlowSchema.safeParse(body);
+      if (!parsedData.success) {
+        return res.status(HTTPStatus.BAD_REQUEST).json({
+          status: false,
+          message: "Invalid workflow data",
+        });
+      }
 
-    const workflow = await this.prisma.$transaction(async (tx) => {
-      const workflow = await tx.workflow.create({
-        data: {
-          userId: userData.id,
-          triggerId: "",
-          actions: {
-            create: parsedData.data.actions.map((item, index) => ({
-              actionId: item.availableActionId,
-              sortingOrder: index,
-            })),
+      const userRepo = new UserRepository();
+      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
+      if (!userData) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+
+      const workflow = await this.prisma.$transaction(async (tx) => {
+        const newWorkflow = await tx.workflow.create({
+          data: {
+            userId: userData.id,
+            name: parsedData.data.name,
+            triggerId: "",
+            actions: {
+              create: parsedData.data.actions.map((item, index) => ({
+                actionId: item.availableActionId,
+                sortingOrder: index,
+              })),
+            },
           },
-        },
+          include: {
+            actions: true,
+          },
+        });
+
+        const trigger = await tx.trigger.create({
+          data: {
+            triggerId: parsedData.data.availableTriggerId,
+            workflowId: newWorkflow.id,
+          },
+        });
+
+        return await tx.workflow.update({
+          where: { id: newWorkflow.id },
+          data: { triggerId: trigger.id },
+          include: {
+            actions: true,
+            trigger: true,
+          },
+        });
       });
 
-      const trigger = await tx.trigger.create({
-        data: {
-          triggerId: parsedData.data.availableTriggetId,
-          workflowId: workflow.id,
-        },
+      return res.status(HTTPStatus.CREATED).json({
+        status: true,
+        message: "Workflow created successfully",
+        data: workflow,
       });
-
-      await tx.workflow.update({
-        where: {
-          id: workflow.id,
-        },
-        data: {
-          triggerId: trigger.id,
-        },
+    } catch (err: any) {
+      console.error("Error creating workflow:", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to create workflow",
       });
-
-      return workflow;
-    });
-
-    return res.status(201).json({
-      status: true,
-      message: "Workflow created successfully",
-      data: workflow,
-    });
+    }
   }
 
   @GET("/api/v1/workflow")
-  public async getWorkFlowData(req: Request, res: Response): Promise<Response> {
-    const clerkUserId = req.headers["clerk-user-id"];
-    if (!clerkUserId) {
-      return res.status(401).json({ status: false, message: "Unauthorized" });
+  public async getWorkFlowData(
+    req: Request,
+    res: Response<APIResponse>
+  ): Promise<Response<APIResponse>> {
+    try {
+      const clerkUserId = req.headers["clerk-user-id"]?.toString();
+
+      if (!clerkUserId) {
+        return res.status(HTTPStatus.UNAUTHORIZED).json({
+          status: false,
+          message: "Unauthorized: Missing user ID",
+        });
+      }
+
+      const userRepo = new UserRepository();
+      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
+
+      if (!userData) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+
+      const workflowRepo = new WorkFlowRepo();
+      const userWorkFlowData = await workflowRepo.getAllUsersWorkFlow(
+        userData.id
+      );
+
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Workflows retrieved successfully",
+        data: userWorkFlowData,
+      });
+    } catch (err: any) {
+      console.error("Error fetching workflows:", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to fetch workflows",
+      });
     }
-    const userData = await new UserRepository().getUserByClerkUserId(
-      clerkUserId?.toString() || ""
-    );
-    if (!userData) {
-      return res.status(404).json({ status: false, message: "User not found" });
-    }
-    const userId: number = userData.id;
-    const userWorkFlowData = await new WorkFlowRepo().getAllUsersWorkFlow(
-      userId
-    );
-    return res.status(200).json({
-      status: true,
-      message: "User WorkFlows retrieved",
-      data: userWorkFlowData,
-    });
   }
 
   @GET("/api/v1/workflow/:id")
   public async getWorkFlowDataById(
     req: Request,
-    res: Response
-  ): Promise<Response> {
-    const { id } = req.params;
-    const clerkUserId = req.headers["clerk-user-id"];
-    if (!clerkUserId) {
-      return res.status(401).json({ status: false, message: "Unauthorized" });
+    res: Response<APIResponse>
+  ): Promise<Response<APIResponse>> {
+    try {
+      const { id } = req.params;
+      const clerkUserId = req.headers["clerk-user-id"]?.toString();
+
+      if (!clerkUserId) {
+        return res.status(HTTPStatus.UNAUTHORIZED).json({
+          status: false,
+          message: "Unauthorized: Missing user ID",
+        });
+      }
+
+      if (!id) {
+        return res.status(HTTPStatus.BAD_REQUEST).json({
+          status: false,
+          message: "Workflow ID is required",
+        });
+      }
+
+      const userRepo = new UserRepository();
+      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
+
+      if (!userData) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "User not found",
+        });
+      }
+
+      const workflowRepo = new WorkFlowRepo();
+      const workFlowData = await workflowRepo.getWorkFlowById(id, userData.id);
+
+      if (!workFlowData) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "Workflow not found",
+        });
+      }
+
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Workflow retrieved successfully",
+        data: workFlowData,
+      });
+    } catch (err: any) {
+      console.error("Error fetching workflow:", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to fetch workflow",
+      });
     }
-    const userData = await new UserRepository().getUserByClerkUserId(
-      clerkUserId?.toString() || ""
-    );
-    const userId: number | undefined = userData?.id;
-    const workFlowData = await new WorkFlowRepo().getWorkFlowById(id, userId);
-    return res.status(200).json({
-      status: true,
-      message: "WorkFlow data retrieved successfully",
-      data: workFlowData,
-    });
+  }
+
+  @DELETE("/api/v1/workflow/:id")
+  public async deleteWorkflow(req: Request, res: Response<APIResponse>) {
+    try {
+      const { id } = req.params;
+      const clerkUserId = req.headers["clerk-user-id"];
+
+      if (!clerkUserId) {
+        return res.status(HTTPStatus.UNAUTHORIZED).json({
+          status: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const existingWorkflow = await this.prisma.workflow.findUnique({
+        where: { id },
+      });
+
+      if (!existingWorkflow) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "Workflow not found or already deleted",
+        });
+      }
+
+      const deleteWorkflow = await this.prisma.$transaction(async (tx) => {
+        const triggerCount = await tx.trigger.count({
+          where: { workflowId: id },
+        });
+
+        if (triggerCount > 0) {
+          await tx.trigger.delete({
+            where: { workflowId: id },
+          });
+        }
+
+        const actionCount = await tx.action.count({
+          where: { workflowId: id },
+        });
+
+        if (actionCount > 0) {
+          await tx.action.deleteMany({
+            where: { workflowId: id },
+          });
+        }
+
+        return await tx.workflow.delete({
+          where: { id },
+        });
+      });
+
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Workflow and associated data deleted successfully",
+        data: deleteWorkflow,
+      });
+    } catch (err: any) {
+      console.error("err deleting workflow:", err);
+
+      if (err.code === "P2025") {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "Workflow not found or already deleted",
+        });
+      }
+
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Error deleting workflow",
+      });
+    }
   }
 }

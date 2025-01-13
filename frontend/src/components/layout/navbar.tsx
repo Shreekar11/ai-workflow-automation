@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { UserButton, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
+
+import Link from "next/link";
 import Image from "next/image";
 
 export function Navbar() {

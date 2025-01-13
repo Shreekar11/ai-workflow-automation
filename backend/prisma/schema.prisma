@@ -21,6 +21,7 @@ model Workflow {
   id           String        @id @default(uuid())
   triggerId    String
   userId       Int
+  name         String        @default("Untitled")
   trigger      Trigger?
   actions      Action[]
   workflowRuns WorkflowRun[]
@@ -51,6 +52,7 @@ model AvailableAction {
   id        String   @id @default(uuid())
   name      String
   actions   Action[]
+  image     String
   timestamp DateTime @default(now())
 }
 
@@ -58,6 +60,7 @@ model AvailableTrigger {
   id        String    @id @default(uuid())
   name      String
   triggers  Trigger[]
+  image     String
   timestamp DateTime  @default(now())
 }
 

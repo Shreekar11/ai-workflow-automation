@@ -16,6 +16,7 @@ export interface UserDetailsType {
     id: string;
     triggerId: string;
     userId: number;
+    name: string;
     timestamp: string;
     actions: {
       id: string;

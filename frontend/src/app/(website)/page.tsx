@@ -2,11 +2,15 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+
+// icons
+import { ArrowRight, CheckCircle } from "lucide-react";
+
+// components
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/navbar";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
-import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle } from "lucide-react";
 
 export default function Page() {
   const router = useRouter();

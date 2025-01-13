@@ -21,53 +21,108 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserController = void 0;
 const types_1 = require("../../types");
 const router_1 = require("../../decorators/router");
 const user_repo_1 = __importDefault(require("../../repository/user.repo"));
+const constants_1 = require("../../constants");
 class UserController {
     createUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const body = req.body;
-            const parsedData = types_1.CreateUserSchema.safeParse(body);
-            if (!parsedData.success) {
-                return res.status(400).json({
-                    status: false,
-                    message: "Incorrect data",
+            try {
+                if (!req.body || Object.keys(req.body).length === 0) {
+                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                        status: false,
+                        message: "Request body is empty",
+                    });
+                }
+                const userRepo = new user_repo_1.default();
+                const parsedData = types_1.CreateUserSchema.safeParse(req.body);
+                if (!parsedData.success) {
+                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                        status: false,
+                        message: "Invalid input data",
+                        error: parsedData.error.errors.map((e) => ({
+                            field: e.path.join("."),
+                            message: e.message,
+                        })),
+                    });
+                }
+                try {
+                    const userExists = yield userRepo.getUserByEmail(parsedData.data.email);
+                    if (userExists) {
+                        return res.status(constants_1.HTTPStatus.CONFLICT).json({
+                            status: false,
+                            message: "User with this email already exists",
+                        });
+                    }
+                }
+                catch (error) {
+                    throw new Error("Error checking existing user");
+                }
+                const userData = {
+                    clerkUserId: parsedData.data.clerkUserId,
+                    firstName: parsedData.data.firstName,
+                    lastName: parsedData.data.lastName,
+                    email: parsedData.data.email.toLowerCase().trim(),
+                };
+                const createUserData = yield userRepo.create(userData);
+                return res.status(constants_1.HTTPStatus.CREATED).json({
+                    status: true,
+                    message: "User created successfully",
+                    data: createUserData,
                 });
             }
-            const userExists = yield new user_repo_1.default().getUserByEmail(parsedData.data.email);
-            if (userExists) {
-                return res.status(403).json({
+            catch (error) {
+                console.error("Error creating user:", error);
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
                     status: false,
-                    message: "User already exists",
+                    message: "Failed to create user",
                 });
             }
-            const createUserData = yield new user_repo_1.default().create({
-                clerkUserId: parsedData.data.clerkUserId,
-                firstName: parsedData.data.firstName,
-                lastName: parsedData.data.lastName,
-                email: parsedData.data.email,
-            });
-            return res.status(201).json({
-                status: true,
-                message: "User created successfully",
-                data: createUserData,
-            });
         });
     }
     getUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { clerkUserId } = req.params;
-            const userData = yield new user_repo_1.default().getUserByClerkUserId((clerkUserId === null || clerkUserId === void 0 ? void 0 : clerkUserId.toString()) || "");
-            return res.status(200).json({
-                status: true,
-                message: "User data retrieved successfully",
-                data: userData,
-            });
+            try {
+                const { clerkUserId } = req.params;
+                if (!clerkUserId) {
+                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                        status: false,
+                        message: "clerkUserId is required",
+                    });
+                }
+                if (typeof clerkUserId !== "string" || clerkUserId.trim().length === 0) {
+                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                        status: false,
+                        message: "Invalid clerkUserId format",
+                    });
+                }
+                const userRepo = new user_repo_1.default();
+                const userData = yield userRepo.getUserByClerkUserId(clerkUserId.trim());
+                if (!userData) {
+                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                        status: false,
+                        message: "User not found",
+                    });
+                }
+                return res.status(constants_1.HTTPStatus.OK).json({
+                    status: true,
+                    message: "User data retrieved successfully",
+                    data: userData,
+                });
+            }
+            catch (error) {
+                console.error("Error retrieving user:", error);
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
+                    status: false,
+                    message: "Failed to retrieve user data",
+                });
+            }
         });
     }
 }
-exports.default = UserController;
+exports.UserController = UserController;
 __decorate([
     (0, router_1.POST)("/api/v1/user"),
     __metadata("design:type", Function),
