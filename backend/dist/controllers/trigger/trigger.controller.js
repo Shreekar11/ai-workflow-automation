@@ -28,7 +28,8 @@ class TriggerController {
     getAllAvailableTriggers(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const triggerData = yield new trigger_repo_1.default().getAllAvailableTriggers();
+                const triggerRepo = new trigger_repo_1.default();
+                const triggerData = yield triggerRepo.getAllAvailableTriggers();
                 return res.status(200).json({
                     status: true,
                     message: "All available triggers retrieved",

@@ -1,7 +1,7 @@
-import { api } from "@/app/api/client";
 import { Workflow } from "@/types";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import { getAllUsersWorkFlow } from "../actions/workflow.action";
 
 export function useWorkflows() {
   const { user } = useUser();
@@ -11,19 +11,16 @@ export function useWorkflows() {
   const fetchWorkflows = async () => {
     try {
       if (!user?.id) {
-        return; 
+        return;
       }
-
-      const response = await api.get("/api/v1/workflow", {
-        headers: {
-          "clerk-user-id": user.id,
-        },
-      });
-
+      const response = await getAllUsersWorkFlow(user.id);
+      if (!response.status) {
+        throw new Error("Error fetching workflows");
+      }
       const data = response.data;
-      setWorkflows(data.data);
+      setWorkflows(data);
     } catch (err) {
-      console.error("Error fetching workflows:", err); 
+      console.error("Error fetching workflows:", err);
     } finally {
       setLoading(false);
     }

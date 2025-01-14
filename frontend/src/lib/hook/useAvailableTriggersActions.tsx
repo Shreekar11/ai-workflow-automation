@@ -1,31 +1,34 @@
-import { api } from "@/app/api/client";
-import { ReactNode, useEffect, useState } from "react"
+import { useEffect, useState } from "react";
+import { getAvailableTriggerActions } from "../actions/workflow.action";
 
 export const useAvailableTriggersActions = (type: string) => {
-    const [loading, setLoading] = useState(true);
-    const [availableData, setAvailableData] = useState<{
-        id: string;
-        name: string;
-        image: string;
-        icon?: ReactNode;
-        className?: string;
-    }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [availableTriggerActions, setAvailableTriggerActions] = useState<
+    {
+      id: string;
+      name: string;
+      image: string;
+    }[]
+  >([]);
 
-    const fetchAvailableData = async() => {
-        try {
-            const response = await api.get(`/api/v1/${type}/available`);
-            const data = response.data;
-            setAvailableData(data.data);
-        } catch (err: any) {
-            console.log("Errro: ", err);
-        } finally {
-            setLoading(false);
-        }
+  const fetchAvailableTriggerActions = async () => {
+    try {
+      const response = await getAvailableTriggerActions(type);
+      if (!response.status) {
+        throw new Error("Error fetching trigger and actions");
+      }
+      const data = response.data;
+      setAvailableTriggerActions(data);
+    } catch (err: any) {
+      console.log("Errro: ", err);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    useEffect(() => {
-        fetchAvailableData();
-    }, [type]);
+  useEffect(() => {
+    fetchAvailableTriggerActions();
+  }, [type]);
 
-    return {loading, availableData};
-}
+  return { loading, availableTriggerActions };
+};

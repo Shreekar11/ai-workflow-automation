@@ -21,7 +21,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserController = void 0;
 const types_1 = require("../../types");
 const router_1 = require("../../decorators/router");
 const user_repo_1 = __importDefault(require("../../repository/user.repo"));
@@ -122,7 +121,7 @@ class UserController {
         });
     }
 }
-exports.UserController = UserController;
+exports.default = UserController;
 __decorate([
     (0, router_1.POST)("/api/v1/user"),
     __metadata("design:type", Function),

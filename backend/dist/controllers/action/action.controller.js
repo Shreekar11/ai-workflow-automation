@@ -28,7 +28,8 @@ class ActionController {
     getAllAvailableActions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const actionData = yield new action_repo_1.default().getAllAvailableActions();
+                const actionRepo = new action_repo_1.default();
+                const actionData = yield actionRepo.getAllAvailableActions();
                 return res.status(200).json({
                     status: true,
                     message: "All available actions retrieved",

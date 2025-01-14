@@ -6,9 +6,12 @@ import { APIResponse } from "../../interface/api";
 
 export default class ActionController {
   @GET("/api/v1/action/available")
-  public async getAllAvailableActions(req: Request, res: Response<APIResponse>) {
+  public async getAllAvailableActions(
+    req: Request,
+    res: Response<APIResponse>
+  ) {
     try {
-        const actionRepo = new ActionRepository();
+      const actionRepo = new ActionRepository();
       const actionData = await actionRepo.getAllAvailableActions();
       return res.status(200).json({
         status: true,

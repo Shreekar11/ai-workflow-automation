@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 // icons
 import { SiSolana } from "react-icons/si";
 import { Mail, Webhook } from "lucide-react";
+
 // components
 import {
   Dialog,
@@ -24,7 +25,7 @@ type OptionType = {
   className?: string;
 };
 
-type SelectDialogProps = {
+interface SelectDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (option: { id: string; type: string; name: string }) => void;
@@ -52,10 +53,10 @@ export default function SelectDialog({
   onSelect,
   type,
 }: SelectDialogProps) {
-  const { loading, availableData: workflowAvailableData } =
+  const { loading, availableTriggerActions } =
     useAvailableTriggersActions(type);
 
-  const mappedOptions: OptionType[] = workflowAvailableData.map((item) => {
+  const mappedOptions: OptionType[] = availableTriggerActions.map((item) => {
     const style = optionStyles[item.name] || optionStyles.Email;
     return {
       ...item,

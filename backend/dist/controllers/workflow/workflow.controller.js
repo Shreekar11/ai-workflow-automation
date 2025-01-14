@@ -31,7 +31,7 @@ class WorkFlowController {
     constructor() {
         this.prisma = new client_1.PrismaClient();
     }
-    create1WorkFlowData(req, res) {
+    createWorkFlowData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
@@ -259,7 +259,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "create1WorkFlowData", null);
+], WorkFlowController.prototype, "createWorkFlowData", null);
 __decorate([
     (0, router_1.GET)("/api/v1/workflow"),
     __metadata("design:type", Function),
