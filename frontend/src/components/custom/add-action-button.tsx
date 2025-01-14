@@ -7,9 +7,9 @@ export default function AddActionButton({ onClick }: { onClick: () => void }) {
     <div className="">
       <Button
         onClick={onClick}
-        className="bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded"
+        className="text-black bg-white border font-bold py-2 px-4 rounded-lg shadow-md hover:bg-white/40"
       >
-        <PlusCircle className="mr-2 h-4 w-4" /> Add Action
+        <PlusCircle className="text-black mr-2 h-4 w-4" /> Add Action
       </Button>
     </div>
   );

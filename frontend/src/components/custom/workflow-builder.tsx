@@ -63,6 +63,7 @@ export default function WorkflowBuilder() {
   const router = useRouter();
   const { user } = useUser();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -170,6 +171,7 @@ export default function WorkflowBuilder() {
 
       return;
     }
+    setLoading(true);
     try {
       const response = await publishWorkflow(
         selectActions,
@@ -194,6 +196,8 @@ export default function WorkflowBuilder() {
         title: "Uh oh! Something went wrong.",
         description: err.message || "Error creating a workflow",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -211,13 +215,17 @@ export default function WorkflowBuilder() {
             className="text-lg w-[50%] bg-white"
             placeholder="Workflow Name"
           />
-          <div className="flex justify-center items-center gap-4">
+          <div className="flex justify-center items-center gap-3">
             <AddActionButton onClick={handleAddAction} />
             <Button
               variant="outline"
+              disabled={loading}
               onClick={handlePublishWorkflow}
-              className="bg-[#FF7801] text-white hover:bg-[#FF7801]/80 hover:text-white"
+              className="bg-[#FF7801] text-white rounded-lg hover:bg-[#FF7801]/80 hover:text-white"
             >
+              {loading && (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              )}
               Publish
             </Button>
           </div>

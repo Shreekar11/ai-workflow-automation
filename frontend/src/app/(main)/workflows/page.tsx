@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/navbar";
 import { WorkflowTable } from "@/components/custom/workflow-table";
+import { useUser } from "@clerk/nextjs";
 
 const WorkflowPage = () => {
   const router = useRouter();
+  const { user } = useUser();
   const { loading, workflows, setWorkflows } = useWorkflows();
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -37,7 +39,9 @@ const WorkflowPage = () => {
       <main className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Workflows</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back! {user?.firstName && user.firstName}
+            </h1>
             <p className="text-gray-600">
               Manage and monitor your automated workflows
             </p>
