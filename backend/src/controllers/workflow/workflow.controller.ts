@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { WorkFlowSchema } from "../../types";
-import { DELETE, GET, POST } from "../../decorators/router";
+import { DELETE, GET, POST, PUT } from "../../decorators/router";
 import WorkFlowRepo from "../../repository/workflow.repo";
 import { PrismaClient } from "@prisma/client";
 import UserRepository from "../../repository/user.repo";
@@ -193,6 +193,109 @@ export default class WorkFlowController {
     }
   }
 
+  @PUT("/api/v1/workflow")
+  public async updateWorkflow(req: Request, res: Response<APIResponse>) {
+    try {
+      const body = req.body;
+      const clerkUserId = req.headers["clerk-user-id"];
+
+      if (!clerkUserId) {
+        return res.status(HTTPStatus.UNAUTHORIZED).json({
+          status: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const parsedData = WorkFlowSchema.safeParse(body);
+      if (!parsedData.success) {
+        return res.status(HTTPStatus.BAD_REQUEST).json({
+          status: false,
+          message: "Invalid workflow data",
+        });
+      }
+
+      const updatedWorkflowData = await this.prisma.$transaction(async (tx) => {
+        await tx.workflow.update({
+          where: {
+            id: parsedData.data.id,
+          },
+          data: {
+            name: parsedData.data.name,
+          },
+        });
+
+        // delete earlier actions and create new to update them
+        await tx.action.deleteMany({
+          where: {
+            workflowId: parsedData.data.id,
+          },
+        });
+
+        // new actions created
+        if (parsedData.data.actions.length > 0) {
+          await tx.action.createMany({
+            data: parsedData.data.actions.map((item, index) => ({
+              workflowId: parsedData.data.id || "",
+              actionId: item.availableActionId,
+              metadata: item.actionMetadata || {},
+              sortingOrder: index,
+            })),
+          });
+        }
+
+        const updatedData = await tx.workflow.findUnique({
+          where: {
+            id: parsedData.data.id,
+          },
+          include: {
+            actions: {
+              include: {
+                type: true,
+              },
+              orderBy: {
+                sortingOrder: "asc",
+              },
+            },
+            trigger: {
+              include: {
+                type: true,
+              },
+            },
+          },
+        });
+
+        return updatedData;
+      });
+
+      if (!updatedWorkflowData) {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "Workflow not found",
+        });
+      }
+
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Workflow updated successfully",
+        data: updatedWorkflowData,
+      });
+    } catch (err: any) {
+      console.error("Error updating workflow:", err);
+
+      if (err.code === "P2025") {
+        return res.status(HTTPStatus.NOT_FOUND).json({
+          status: false,
+          message: "Workflow not found",
+        });
+      }
+
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Error updating workflow",
+      });
+    }
+  }
+
   @DELETE("/api/v1/workflow/:id")
   public async deleteWorkflow(req: Request, res: Response<APIResponse>) {
     try {
@@ -249,7 +352,7 @@ export default class WorkFlowController {
         data: deleteWorkflow,
       });
     } catch (err: any) {
-      console.error("err deleting workflow:", err);
+      console.error("Error deleting workflow:", err);
 
       if (err.code === "P2025") {
         return res.status(HTTPStatus.NOT_FOUND).json({

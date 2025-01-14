@@ -1,6 +1,16 @@
 import { Workflow } from "@prisma/client";
 import Repository from "./base.repo";
 
+interface WorkflowInterface {
+  id?: string | undefined;
+  name: string;
+  availableTriggerId: string;
+  actions: {
+    availableActionId: string;
+    actionMetadata?: any;
+  }[];
+  triggerMetadata?: any;
+}
 export default class WorkFlowRepo extends Repository<Workflow> {
   constructor() {
     super("workflow");

@@ -49,7 +49,6 @@ class Repository {
     }
     delete(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("model :- ", this.model);
             const deleteData = yield this.model.delete({
                 where: {
                     id,

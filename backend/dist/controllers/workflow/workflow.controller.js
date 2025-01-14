@@ -190,6 +190,99 @@ class WorkFlowController {
             }
         });
     }
+    updateWorkflow(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const body = req.body;
+                const clerkUserId = req.headers["clerk-user-id"];
+                if (!clerkUserId) {
+                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
+                        status: false,
+                        message: "Unauthorized",
+                    });
+                }
+                const parsedData = types_1.WorkFlowSchema.safeParse(body);
+                if (!parsedData.success) {
+                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                        status: false,
+                        message: "Invalid workflow data",
+                    });
+                }
+                const updatedWorkflowData = yield this.prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                    yield tx.workflow.update({
+                        where: {
+                            id: parsedData.data.id,
+                        },
+                        data: {
+                            name: parsedData.data.name,
+                        },
+                    });
+                    // delete earlier actions and create new to update them
+                    yield tx.action.deleteMany({
+                        where: {
+                            workflowId: parsedData.data.id,
+                        },
+                    });
+                    // new actions created
+                    if (parsedData.data.actions.length > 0) {
+                        yield tx.action.createMany({
+                            data: parsedData.data.actions.map((item, index) => ({
+                                workflowId: parsedData.data.id || "",
+                                actionId: item.availableActionId,
+                                metadata: item.actionMetadata || {},
+                                sortingOrder: index,
+                            })),
+                        });
+                    }
+                    const updatedData = yield tx.workflow.findUnique({
+                        where: {
+                            id: parsedData.data.id,
+                        },
+                        include: {
+                            actions: {
+                                include: {
+                                    type: true,
+                                },
+                                orderBy: {
+                                    sortingOrder: "asc",
+                                },
+                            },
+                            trigger: {
+                                include: {
+                                    type: true,
+                                },
+                            },
+                        },
+                    });
+                    return updatedData;
+                }));
+                if (!updatedWorkflowData) {
+                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                        status: false,
+                        message: "Workflow not found",
+                    });
+                }
+                return res.status(constants_1.HTTPStatus.OK).json({
+                    status: true,
+                    message: "Workflow updated successfully",
+                    data: updatedWorkflowData,
+                });
+            }
+            catch (err) {
+                console.error("Error updating workflow:", err);
+                if (err.code === "P2025") {
+                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                        status: false,
+                        message: "Workflow not found",
+                    });
+                }
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
+                    status: false,
+                    message: "Error updating workflow",
+                });
+            }
+        });
+    }
     deleteWorkflow(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -238,7 +331,7 @@ class WorkFlowController {
                 });
             }
             catch (err) {
-                console.error("err deleting workflow:", err);
+                console.error("Error deleting workflow:", err);
                 if (err.code === "P2025") {
                     return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
                         status: false,
@@ -272,6 +365,12 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], WorkFlowController.prototype, "getWorkFlowDataById", null);
+__decorate([
+    (0, router_1.PUT)("/api/v1/workflow"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], WorkFlowController.prototype, "updateWorkflow", null);
 __decorate([
     (0, router_1.DELETE)("/api/v1/workflow/:id"),
     __metadata("design:type", Function),

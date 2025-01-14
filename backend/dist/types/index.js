@@ -9,6 +9,7 @@ exports.CreateUserSchema = zod_1.z.object({
     lastName: zod_1.z.string().default(""),
 });
 exports.WorkFlowSchema = zod_1.z.object({
+    id: zod_1.z.string().optional(),
     name: zod_1.z.string(),
     availableTriggerId: zod_1.z.string(),
     triggerMetadata: zod_1.z.any().optional(),

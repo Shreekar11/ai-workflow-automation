@@ -47,7 +47,6 @@ export default class Repository<T extends any> implements IRepository<T> {
   }
 
   public async delete(id: string): Promise<T | null> {
-    console.log("model :- ", this.model);
     const deleteData = await this.model.delete({
       where: {
         id,

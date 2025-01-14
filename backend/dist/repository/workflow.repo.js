@@ -62,5 +62,38 @@ class WorkFlowRepo extends base_repo_1.default {
             return workFlowData;
         });
     }
+    updateWorkflowData(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updateWorkflow = yield this.model.update({
+                where: {
+                    id: data.data.id || "",
+                },
+                data: {
+                    name: data.data.name,
+                    actions: {
+                        deleteMany: {}, // deleting existing actions then adding/creating new actions
+                        create: data.data.actions.map((action) => ({
+                            availableActionId: action.availableActionId,
+                            metadata: action.actionMetadata,
+                            type: {
+                                connect: {
+                                    id: action.availableActionId,
+                                },
+                            },
+                        })),
+                    },
+                },
+                include: {
+                    actions: true,
+                    trigger: {
+                        include: {
+                            type: true,
+                        },
+                    },
+                },
+            });
+            return updateWorkflow;
+        });
+    }
 }
 exports.default = WorkFlowRepo;

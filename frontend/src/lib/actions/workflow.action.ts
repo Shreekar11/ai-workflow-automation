@@ -89,6 +89,96 @@ export const getAllUsersWorkFlow = async (userId: string) => {
   }
 };
 
+export const getWorkFlow = async (id: string | string[], userId: string) => {
+  try {
+    const response = await api.get(`/api/v1/workflow/${id}`, {
+      headers: {
+        "clerk-user-id": userId,
+      },
+    });
+    const data = response.data;
+    if (!data.status) {
+      throw new Error("Error fetching workflow");
+    }
+    return data;
+  } catch (error: any) {
+    if (error instanceof Error) {
+      console.error("Error fetching workflow: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+};
+
+export const updateWorkflow = async (
+  workflowId: string,
+  selectActions: { id: string; name: string }[],
+  selectTrigger: { id: string; name: string },
+  workflowName: string,
+  userId: string
+) => {
+  try {
+    const response = await api.put(
+      "/api/v1/workflow",
+      {
+        id: workflowId,
+        name: workflowName,
+        availableTriggerId: selectTrigger.id,
+        triggerMetadata: {},
+        actions: selectActions.map((action) => ({
+          availableActionId: action.id,
+          actionMetadata: {},
+        })),
+      },
+      {
+        headers: {
+          "clerk-user-id": userId,
+        },
+      }
+    );
+
+    const data = response.data;
+    if (!data.status) {
+      throw new Error("Error updating workflow");
+    }
+    return data;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error updating workflow: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+};
+
 export const deleteWorkflow = async (id: string, userId: string) => {
   try {
     const response = await api.delete(`/api/v1/workflow/${id}`, {

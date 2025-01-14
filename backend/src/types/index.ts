@@ -8,6 +8,7 @@ export const CreateUserSchema = z.object({
 });
 
 export const WorkFlowSchema = z.object({
+  id: z.string().optional(),
   name: z.string(),
   availableTriggerId: z.string(),
   triggerMetadata: z.any().optional(),
