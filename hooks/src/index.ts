@@ -7,9 +7,8 @@ const app = express();
 
 app.use(express.json());
 
-app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
-  const userId = req.params.userId;
-  const workflowId = req.params.zapId;
+app.post("/hooks/:workflowId", async (req, res) => {
+  const workflowId = req.params.workflowId;
   const body = req.body;
 
   // store new trigger in db
@@ -28,7 +27,7 @@ app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
     });
   });
 
-  res.json({ message: "Webhook Trigger received" });
+  res.status(200).json({ status: true, message: "Webhook Trigger received" });
 });
 
 app.listen(5000, () => {

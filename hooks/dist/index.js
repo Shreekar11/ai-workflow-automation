@@ -17,9 +17,8 @@ const client_1 = require("@prisma/client");
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.params.userId;
-    const workflowId = req.params.zapId;
+app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const workflowId = req.params.workflowId;
     const body = req.body;
     // store new trigger in db
     yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
