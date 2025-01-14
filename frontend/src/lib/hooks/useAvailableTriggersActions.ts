@@ -15,12 +15,12 @@ export const useAvailableTriggersActions = (type: string) => {
     try {
       const response = await getAvailableTriggerActions(type);
       if (!response.status) {
-        throw new Error("Error fetching trigger and actions");
+        throw new Error(response.message || "Error fetching trigger and actions");
       }
       const data = response.data;
       setAvailableTriggerActions(data);
     } catch (err: any) {
-      console.log("Errro: ", err);
+      console.error("Error: ", err);
     } finally {
       setLoading(false);
     }

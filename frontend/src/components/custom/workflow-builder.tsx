@@ -28,6 +28,7 @@ import AddActionButton from "./add-action-button";
 
 // action
 import { publishWorkflow } from "@/lib/actions/workflow.action";
+import { useToast } from "@/lib/hooks/useToast";
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -61,6 +62,7 @@ const initialEdges: Edge[] = [
 export default function WorkflowBuilder() {
   const router = useRouter();
   const { user } = useUser();
+  const { toast } = useToast();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -149,6 +151,25 @@ export default function WorkflowBuilder() {
   );
 
   const handlePublishWorkflow = async () => {
+    const { id, name } = selectTrigger;
+    if (!id || !name) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Trigger not selected. Please select a trigger!",
+      });
+
+      return;
+    }
+    if (!(selectActions.length > 0)) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Actions not selected. Please select an action!",
+      });
+
+      return;
+    }
     try {
       const response = await publishWorkflow(
         selectActions,
@@ -157,11 +178,22 @@ export default function WorkflowBuilder() {
         user?.id || ""
       );
       if (!response.status) {
-        throw new Error("Error creating workflow");
+        throw new Error(response.message || "Error creating workflow");
       }
-      router.push("/workflows");
+      toast({
+        variant: "success",
+        title: "Success!",
+        description: "Workflow published successfully!",
+      });
+      setTimeout(() => {
+        router.push("/workflows");
+      }, 1000);
     } catch (err: any) {
-      console.error("Error: ", err);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: err.message || "Error creating a workflow",
+      });
     }
   };
 

@@ -1,4 +1,5 @@
 import { api } from "@/app/api/client";
+import { isAxiosError } from "axios";
 
 export const publishWorkflow = async (
   selectActions: { id: string; name: string }[],
@@ -30,9 +31,26 @@ export const publishWorkflow = async (
       throw new Error("Error creating workflow");
     }
     return data;
-  } catch (err: any) {
-    console.error("Error: ", err);
-    throw err;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error creating workflow: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
 };
 
@@ -48,9 +66,26 @@ export const getAllUsersWorkFlow = async (userId: string) => {
       throw new Error("Error fetching workflow");
     }
     return data;
-  } catch (err: any) {
-    console.error("Error: ", err);
-    throw err;
+  } catch (error: any) {
+    if (error instanceof Error) {
+      console.error("Error fetching workflow: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
 };
 
@@ -67,13 +102,30 @@ export const deleteWorkflow = async (id: string, userId: string) => {
       throw new Error("Error deleting workflow");
     }
     return data;
-  } catch (err: any) {
-    console.error("Error: ", err);
-    throw err;
+  } catch (error: any) {
+    if (error instanceof Error) {
+      console.error("Error deleting workflow: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
 };
 
-export const getAvailableTriggerActions = async(type: string) => {
+export const getAvailableTriggerActions = async (type: string) => {
   try {
     const response = await api.get(`/api/v1/${type}/available`);
     const data = response.data;
@@ -81,7 +133,25 @@ export const getAvailableTriggerActions = async(type: string) => {
       throw new Error("Error fetching trigger and actions");
     }
     return data;
-  } catch (err: any) {
-    console.log("Error: ", err);
+  } catch (error: any) {
+    if (error instanceof Error) {
+      console.error("Error fetching trigger and actions: ", error);
+    } else {
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
+    }
+
+    return {
+      status: false,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
-}
+};

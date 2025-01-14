@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // actions
-import { useAvailableTriggersActions } from "@/lib/hook/useAvailableTriggersActions";
+import { useAvailableTriggersActions } from "@/lib/hooks/useAvailableTriggersActions";
 
 type OptionType = {
   id: string;

@@ -1,35 +1,35 @@
 import { api } from "@/app/api/client";
 import { ApiResponse, UserDetailsType } from "@/types";
+import { isAxiosError } from "axios";
 
 export const createUserAction = async (userData: UserDetailsType) => {
   try {
-    const response = await api.post<ApiResponse<UserDetailsType>>(
-      "/api/v1/user",
-      userData
-    );
+    const response = await api.post("/api/v1/user", userData);
 
     const data = response.data;
     if (!data.status) {
-      throw new Error(JSON.stringify(data));
+      throw new Error("Error saving user");
     }
     return data;
-  } catch (error: unknown) {
-    let errorMessage: string;
-
+  } catch (error: any) {
     if (error instanceof Error) {
-      try {
-        const parsedError = JSON.parse(error.message);
-        errorMessage = parsedError.error || "An unknown error occurred.";
-      } catch {
-        errorMessage = error.message;
-      }
+      console.error("Error saving user: ", error);
     } else {
-      errorMessage = "An unexpected error occurred.";
+      console.error("An unexpected error occurred: ", error);
+    }
+
+    if (isAxiosError(error)) {
+      const errorResponse = error.response?.data;
+      return {
+        status: false,
+        message: errorResponse?.message || "Server communication error",
+      };
     }
 
     return {
       status: false,
-      message: errorMessage,
+      message:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 };

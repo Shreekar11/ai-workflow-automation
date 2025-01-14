@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/toaster";
 import "../globals.css";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -21,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${everett.className} bg-[#FBF8F6]`}>{children}</body>
+      <body className={`${everett.className} bg-[#FBF8F6]`}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

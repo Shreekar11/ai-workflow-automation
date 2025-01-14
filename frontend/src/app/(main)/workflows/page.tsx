@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useWorkflows } from "@/lib/hook/useWorkflows";
+import { useWorkflows } from "@/lib/hooks/useWorkflows";
 
 // components
 import { Input } from "@/components/ui/input";

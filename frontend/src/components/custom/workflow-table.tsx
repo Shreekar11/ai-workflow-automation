@@ -22,6 +22,7 @@ import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DeleteDialog } from "./delete-dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/hooks/useToast";
 
 interface WorkflowTableProps {
   workflows: Workflow[];
@@ -61,13 +62,23 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
     try {
       const response = await deleteWorkflow(id, user?.id || "");
       if (!response.status) {
-        throw new Error("Error creating workflow");
+        throw new Error(response.message || "Error deleting workflow");
       }
       const currentWorkflows = workflows.filter((item) => item.id !== id);
       setWorkflows(currentWorkflows);
       setOpenDialog(false);
+      toast({
+        variant: "success",
+        title: "Success!",
+        description: "Workflow deleted successfully",
+      });
     } catch (err: any) {
-      console.log("Error: ", err);
+      console.error("Error deleting workflow: ", err.message);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: err.message || "Error deleting workflow",
+      });
     } finally {
       setIsDeleting(false);
     }
