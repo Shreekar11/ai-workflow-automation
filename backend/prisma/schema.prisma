@@ -33,6 +33,7 @@ model Trigger {
   id         String           @id @default(uuid())
   workflowId String           @unique
   triggerId  String
+  metadata   Json             @default("{}")
   type       AvailableTrigger @relation(fields: [triggerId], references: [id])
   workflow   Workflow         @relation(fields: [workflowId], references: [id])
   timestamp  DateTime         @default(now())
@@ -43,6 +44,7 @@ model Action {
   workflowId   String
   workflow     Workflow        @relation(fields: [workflowId], references: [id])
   actionId     String
+  metadata     Json            @default("{}")
   type         AvailableAction @relation(fields: [actionId], references: [id])
   sortingOrder Int             @default(0)
   timestamp    DateTime        @default(now())
