@@ -245,10 +245,7 @@ export default function WorkflowBuilder({
             );
           }
         } else {
-          setSelectActions((prevActions) => [
-            ...prevActions.filter((action) => action.id !== option.id),
-            newAction,
-          ]);
+          setSelectActions((prevActions) => [...prevActions, newAction]);
         }
       } else {
         setSelectTrigger({
