@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useState, useCallback, SetStateAction, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import ReactFlow, {
   Node,
@@ -21,7 +21,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
-import SelectDialog from "./select-dialog";
+// import SelectDialog from "./select-dialog";
 import AddActionButton from "./add-action-button";
 
 import { useToast } from "@/lib/hooks/useToast";
@@ -29,14 +29,11 @@ import { Workflow } from "@/types";
 import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
 import { PulsatingButton } from "../ui/pulsating-button";
 import NodeCard from "./node-card";
-import { metadata } from "@/app/layout";
+import { Mail, Webhook } from "lucide-react";
+import { SiSolana } from "react-icons/si";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
-}
-interface Metadata {
-  key: string;
-  value: string;
 }
 
 const nodeTypes = {
@@ -69,7 +66,11 @@ const createInitialNodes = (workflow?: Workflow | null): Node[] => {
       position: { x: 600, y: 100 },
       data: {
         label: "Trigger",
-        selectedOption: workflow.trigger.type.name,
+        selectedOption: {
+          icon: <Webhook />,
+          metadata: workflow.trigger.metadata,
+          name: workflow.trigger.type.name,
+        },
       },
     },
   ];
@@ -81,7 +82,11 @@ const createInitialNodes = (workflow?: Workflow | null): Node[] => {
       position: { x: 600, y: 350 + index * 150 },
       data: {
         label: `Action ${index + 1}`,
-        selectedOption: action.type.name,
+        selectedOption: {
+          icon: action.type.name === "Email" ? <Mail /> : <SiSolana />,
+          metadata: action.metadata || {},
+          name: action.type.name || "",
+        },
       },
     });
   });
@@ -226,12 +231,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   }, []);
 
   const handleSelectOption = useCallback(
-    (option: {
-      id: string;
-      type: string;
-      name: string;
-      metadata: Metadata[];
-    }) => {
+    (option: { id: string; type: string; name: string; metadata: any }) => {
+      console.log(option);
       if (!selectedNode) {
         // handleCloseDialog();
         handleCloseSheet();
@@ -279,10 +280,32 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       setNodes((items) =>
         items.map((node) =>
           node.id === selectedNode.id
-            ? { ...node, data: { ...node.data, selectedOption: option.name } }
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  selectedOption: {
+                    icon:
+                      option.name === "Webhook" ? (
+                        <Webhook />
+                      ) : option.name === "Email" ? (
+                        <Mail />
+                      ) : (
+                        <SiSolana />
+                      ),
+                    name: option.name,
+                    metadata: option.metadata,
+                  },
+                },
+              }
             : node
         )
       );
+
+      // This is body for mail
+      // example@gmail.com
+
+      console.log(nodes);
 
       // handleCloseDialog();
       handleCloseSheet();

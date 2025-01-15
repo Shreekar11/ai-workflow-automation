@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { getWorkFlow } from "../actions/workflow.action";
 
 export function useWorkflow(id: string | string[]) {
+  if (id) {
+    return { loading: false, workflow: null };
+  }
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [workflow, setWorkflow] = useState<Workflow | null>(null);

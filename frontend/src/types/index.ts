@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface UserDetailsType {
   clerkUserId: string;
   email: string;
@@ -33,4 +35,13 @@ export interface Workflow {
       name: string;
     };
   };
+}
+
+export interface OptionType {
+  id: string;
+  name: string;
+  image?: string;
+  type?: string;
+  icon?: ReactNode;
+  metadata?: Record<string, string>;
 }

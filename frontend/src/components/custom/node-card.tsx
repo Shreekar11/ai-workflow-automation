@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,31 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Plus, ChevronRight, Webhook, Mail, Clock } from "lucide-react";
+import { X, Plus, ChevronRight } from "lucide-react";
 import { useAvailableTriggersActions } from "@/lib/hooks/useAvailableTriggersActions";
-import { SiSolana } from "react-icons/si";
-import { Workflow } from "@/types";
+import { OptionType, Workflow } from "@/types";
 import { Skeleton } from "../ui/skeleton";
-
-interface OptionType {
-  id: string;
-  name: string;
-  image?: string;
-  icon?: ReactNode;
-  metadata?: { key: string; value: string }[];
-}
-
-interface Metadata {
-  key: string;
-  value: string;
-}
+import { optionStyles } from "@/constant";
 
 interface NodeCardProps {
   workflow: Workflow | null;
   selectTrigger: {
     id: string;
     name: string;
-    metadata: Metadata[];
+    metadata: Record<string, string>;
   };
   isOpen: boolean;
   onClose: () => void;
@@ -47,25 +34,10 @@ interface NodeCardProps {
     id: string;
     type: string;
     name: string;
-    metadata: Metadata[];
+    metadata: Record<string, string>;
   }) => void;
   type: "trigger" | "action";
 }
-
-const optionStyles: Record<string, { icon: ReactNode }> = {
-  Webhook: {
-    icon: <Webhook />,
-  },
-  Email: {
-    icon: <Mail />,
-  },
-  Solana: {
-    icon: <SiSolana />,
-  },
-  Schedule: {
-    icon: <Clock />,
-  },
-};
 
 export default function NodeCard({
   workflow,
@@ -80,7 +52,7 @@ export default function NodeCard({
 
   const [stage, setStage] = useState<"select" | "configure">("select");
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
-  const [metadata, setMetadata] = useState<Metadata[]>([]);
+  const [metadata, setMetadata] = useState<Record<string, string>>({});
 
   const mappedOptions: OptionType[] = availableTriggerActions.map((item) => ({
     ...item,
@@ -91,32 +63,23 @@ export default function NodeCard({
     if (!isOpen) {
       setStage("select");
       setSelectedOption(null);
-      setMetadata([]);
+      setMetadata({});
     }
   }, [isOpen, type]);
 
   useEffect(() => {
     if (selectedOption && workflow) {
       if (type === "trigger") {
-        const triggerMetadata = workflow.trigger?.metadata || [];
-        setMetadata(
-          triggerMetadata.map((m: any) => ({
-            key: m.key,
-            value: "",
-          }))
-        );
+        setMetadata(workflow.trigger?.metadata || {});
       } else {
         const matchingAction = workflow.actions?.find(
           (action) => action.type.name === selectedOption.name
         );
 
         if (matchingAction) {
-          setMetadata(matchingAction.metadata || []);
+          setMetadata(matchingAction.metadata || {});
         } else {
-          setMetadata(
-            selectedOption.metadata?.map((m) => ({ key: m.key, value: "" })) ||
-              []
-          );
+          setMetadata(selectedOption.metadata || {});
         }
       }
     }
@@ -125,33 +88,22 @@ export default function NodeCard({
   const handleOptionSelect = (option: OptionType) => {
     setSelectedOption(option);
     setStage("configure");
-    if (option.metadata) {
-      setMetadata(option.metadata.map((m) => ({ key: m.key, value: "" })));
-    }
+    setMetadata(option.metadata || {});
   };
 
-  const handleMetadataChange = (
-    index: number,
-    field: "key" | "value",
-    value: string
-  ) => {
-    setMetadata((prev) => {
-      const updated = [...prev];
-      if (!updated[index]) {
-        updated[index] = { key: "", value: "" };
-      }
-      updated[index][field] = value;
-      return updated;
-    });
+  const handleMetadataChange = (key: string, value: string) => {
+    setMetadata((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleAddMetadata = () => {
-    setMetadata((prev) => [...prev, { key: "", value: "" }]);
+    setMetadata((prev) => ({ ...prev, "": "" }));
   };
 
   const handleSubmit = () => {
     if (selectedOption) {
-      const validMetadata = metadata.filter((m) => m.key && m.value);
+      const validMetadata = Object.fromEntries(
+        Object.entries(metadata).filter(([key, value]) => key && value)
+      );
       onSelect({
         id: selectedOption.id,
         type: type,
@@ -160,7 +112,7 @@ export default function NodeCard({
       });
       setStage("select");
       setSelectedOption(null);
-      setMetadata([]);
+      setMetadata({});
       onClose();
     }
   };
@@ -168,48 +120,46 @@ export default function NodeCard({
   const handleBack = () => {
     setStage("select");
     setSelectedOption(null);
-    setMetadata([]);
+    setMetadata({});
   };
 
   const handleClose = () => {
     setStage("select");
     setSelectedOption(null);
-    setMetadata([]);
+    setMetadata({});
     onClose();
   };
 
-  const renderMetadataValue = (item: Metadata, index: number) => {
-    if (type === "action" && selectTrigger?.metadata?.length > 0) {
+  const renderMetadataValue = (key: string, value: string) => {
+    if (
+      type === "action" &&
+      Object.keys(selectTrigger?.metadata || {}).length > 0
+    ) {
       return (
         <div className="space-y-2">
           <Select
-            value={item.value || undefined}
-            onValueChange={(value) =>
-              handleMetadataChange(index, "value", value)
-            }
+            value={value || undefined}
+            onValueChange={(newValue) => handleMetadataChange(key, newValue)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a value" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="custom">Custom Value</SelectItem>
-              {selectTrigger.metadata.map((triggerMeta) => (
-                <SelectItem
-                  key={triggerMeta.key}
-                  value={`{{trigger.${triggerMeta.key}}}`}
-                >
-                  Trigger: {triggerMeta.key}
-                </SelectItem>
-              ))}
+              {Object.entries(selectTrigger.metadata).map(
+                ([triggerKey, triggerValue]) => (
+                  <SelectItem key={triggerKey} value={triggerValue}>
+                    {triggerKey}: {triggerValue}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
-          {(!item.value || item.value === "custom") && (
+          {(!value || value === "custom") && (
             <Input
               placeholder="Custom value"
-              value={item.value === "custom" ? "" : item.value}
-              onChange={(e) =>
-                handleMetadataChange(index, "value", e.target.value)
-              }
+              value={value === "custom" ? "" : value}
+              onChange={(e) => handleMetadataChange(key, e.target.value)}
             />
           )}
         </div>
@@ -219,10 +169,30 @@ export default function NodeCard({
     return (
       <Input
         placeholder="Value"
-        value={item.value}
-        onChange={(e) => handleMetadataChange(index, "value", e.target.value)}
+        value={value}
+        onChange={(e) => handleMetadataChange(key, e.target.value)}
       />
     );
+  };
+
+  const renderMetadataExample = () => {
+    if (type === "trigger" && Object.keys(metadata).length > 0) {
+      const metadataObject = Object.fromEntries(
+        Object.entries(metadata).filter(([key, value]) => key && value)
+      );
+
+      return (
+        <div className="mt-4 space-y-2 pb-4">
+          <h4 className="font-medium">Metadata Object Example:</h4>
+          <div className="bg-gray-100 p-2 rounded max-h-40 overflow-auto">
+            <pre className="text-sm whitespace-pre-wrap break-all">
+              {JSON.stringify(metadataObject, null, 2)}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   if (!isOpen) return null;
@@ -240,7 +210,7 @@ export default function NodeCard({
   };
 
   return (
-    <Card className="bg-white w-[30rem] shadow-lg z-50 overflow-auto">
+    <Card className="bg-white w-[30rem] shadow-lg z-50 max-h-[90vh] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
           {stage === "select"
@@ -251,9 +221,9 @@ export default function NodeCard({
           <X className="h-4 w-4" />
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow overflow-y-auto p-4">
         {stage === "select" && (
-          <div className="space-y-2">
+          <div className="space-y-2 pr-2">
             {loading ? (
               <LoadingSkeleton />
             ) : (
@@ -278,19 +248,22 @@ export default function NodeCard({
         )}
 
         {stage === "configure" && selectedOption && (
-          <div className="space-y-4 overflow-y-auto">
+          <div className="space-y-4 pr-2">
             <h3 className="font-medium">Metadata</h3>
             <div className="space-y-4">
-              {metadata.map((item, index) => (
+              {Object.entries(metadata).map(([key, value], index) => (
                 <div key={index} className="space-y-2">
                   <Input
                     placeholder="Key"
-                    value={item.key}
-                    onChange={(e) =>
-                      handleMetadataChange(index, "key", e.target.value)
-                    }
+                    value={key}
+                    onChange={(e) => {
+                      const newMetadata = { ...metadata };
+                      delete newMetadata[key];
+                      newMetadata[e.target.value] = value;
+                      setMetadata(newMetadata);
+                    }}
                   />
-                  {renderMetadataValue(item, index)}
+                  {renderMetadataValue(key, value)}
                 </div>
               ))}
               <Button
@@ -302,6 +275,7 @@ export default function NodeCard({
                 <Plus className="h-4 w-4 mr-2" /> Add Metadata
               </Button>
             </div>
+            {renderMetadataExample()}
           </div>
         )}
       </CardContent>
