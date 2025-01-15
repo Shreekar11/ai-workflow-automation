@@ -30,5 +30,5 @@ export function useWorkflow(id: string | string[]) {
     fetchWorkflow();
   }, [user?.id]);
 
-  return { loading, workflow, setWorkflow };
+  return { loading, workflow };
 }

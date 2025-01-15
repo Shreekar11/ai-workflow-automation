@@ -8,15 +8,13 @@ const WorkflowPlayPage = () => {
   const params = useParams();
   const id = params.id;
 
-  const { loading, workflow, setWorkflow } = useWorkflow(id);
+  const { loading, workflow } = useWorkflow(id);
 
   return (
     <main className="w-full h-screen flex flex-col">
       <div className="flex-grow">
         <WorkflowBuilder
-          loading={loading}
           workflow={workflow}
-          setWorkflow={setWorkflow}
         />
       </div>
     </main>

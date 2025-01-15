@@ -24,14 +24,19 @@ import TriggerNode from "./trigger-node";
 import SelectDialog from "./select-dialog";
 import AddActionButton from "./add-action-button";
 
-import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
 import { useToast } from "@/lib/hooks/useToast";
 import { Workflow } from "@/types";
+import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
+import { PulsatingButton } from "../ui/pulsating-button";
+import NodeCard from "./node-card";
+import { metadata } from "@/app/layout";
 
 interface WorkflowBuilderProps {
-  loading?: boolean;
   workflow?: Workflow | null;
-  setWorkflow?: React.Dispatch<SetStateAction<Workflow | null>>;
+}
+interface Metadata {
+  key: string;
+  value: string;
 }
 
 const nodeTypes = {
@@ -113,11 +118,7 @@ const createInitialEdges = (workflow?: Workflow | null): Edge[] => {
   return edges;
 };
 
-export default function WorkflowBuilder({
-  loading,
-  workflow,
-  setWorkflow,
-}: WorkflowBuilderProps) {
+export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const router = useRouter();
   const { user } = useUser();
   const { toast } = useToast();
@@ -136,21 +137,25 @@ export default function WorkflowBuilder({
   const [selectTrigger, setSelectTrigger] = useState<{
     id: string;
     name: string;
+    metadata: any;
   }>({
     id: workflow?.triggerId || "",
     name: workflow?.trigger?.type?.name || "",
+    metadata: {},
   });
 
   const [actionData, setActionData] = useState<
     {
       id: string;
       name: string;
+      metadata: any;
     }[]
   >([]);
   const [selectActions, setSelectActions] = useState<
     {
       id: string;
       name: string;
+      metadata: {};
     }[]
   >(actionData || []);
 
@@ -162,12 +167,14 @@ export default function WorkflowBuilder({
       const trigger_data = {
         id: workflow.trigger.type.id,
         name: workflow.trigger.type.name,
+        metadata: workflow.trigger.metadata,
       };
       setSelectTrigger(trigger_data);
       const action_data = workflow.actions.map((ax) => {
         return {
           id: ax.type.id,
           name: ax.type.name,
+          metadata: ax.metadata,
         };
       });
       setActionData(action_data);
@@ -214,10 +221,20 @@ export default function WorkflowBuilder({
     setSelectedNode(null);
   }, []);
 
+  const handleCloseSheet = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
   const handleSelectOption = useCallback(
-    (option: { id: string; type: string; name: string }) => {
+    (option: {
+      id: string;
+      type: string;
+      name: string;
+      metadata: Metadata[];
+    }) => {
       if (!selectedNode) {
-        handleCloseDialog();
+        // handleCloseDialog();
+        handleCloseSheet();
         return;
       }
 
@@ -226,7 +243,11 @@ export default function WorkflowBuilder({
         : 0;
 
       if (option.type === "action") {
-        const newAction = { id: option.id, name: option.name };
+        const newAction = {
+          id: option.id,
+          name: option.name,
+          metadata: option.metadata,
+        };
 
         if (workflow && selectActions.length >= nodeNumber) {
           const isExistingAction =
@@ -251,6 +272,7 @@ export default function WorkflowBuilder({
         setSelectTrigger({
           id: option.id,
           name: option.name,
+          metadata: option.metadata,
         });
       }
 
@@ -262,7 +284,8 @@ export default function WorkflowBuilder({
         )
       );
 
-      handleCloseDialog();
+      // handleCloseDialog();
+      handleCloseSheet();
     },
     [selectedNode, setNodes, handleCloseDialog, workflow, selectActions]
   );
@@ -322,7 +345,7 @@ export default function WorkflowBuilder({
       });
 
       setTimeout(() => {
-        router.push("/workflows");
+        router.push(`/workflows/${response.data?.id}`);
       }, 1000);
     } catch (err: any) {
       toast({
@@ -338,10 +361,15 @@ export default function WorkflowBuilder({
     }
   };
 
+  const handleRunWorkflow = async () => {};
+
   return (
-    <div className="flex flex-col w-full h-screen">
+    <div className="flex flex-col w-full h-screen relative">
       <div className="w-full py-2 px-6 bg-[#f2f2f2]">
-        <div className="border rounded-xl p-2 bg-white/50 backdrop-blur-lg w-full max-w-screen-lg mx-auto flex items-center justify-between">
+        <div
+          className="border rounded-xl p-2 bg-white/50 backdrop-blur-lg 
+        w-full max-w-screen-lg mx-auto flex items-center justify-between"
+        >
           <Input
             type="text"
             value={workflowName}
@@ -355,18 +383,28 @@ export default function WorkflowBuilder({
               variant="outline"
               disabled={isLoading}
               onClick={handlePublishWorkflow}
-              className="bg-[#FF7801] text-white rounded-lg hover:bg-[#FF7801]/80 hover:text-white"
+              className="bg-[#FF7801] text-white rounded-lg 
+              hover:bg-[#FF7801]/80 hover:text-white"
             >
               {isLoading && (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <div
+                  className="h-4 w-4 animate-spin rounded-full 
+                border-2 border-current border-t-transparent"
+                />
               )}
               {workflow ? "Update" : "Publish"}
             </Button>
+
+            {workflow && (
+              <PulsatingButton onClick={handleRunWorkflow}>
+                Run flow
+              </PulsatingButton>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -378,17 +416,27 @@ export default function WorkflowBuilder({
         >
           <Controls />
           <Background variant={"dots" as BackgroundVariant} gap={12} size={1} />
-        </ReactFlow>
-      </div>
 
-      {selectedNode && (
+          {/* {selectedNode && (
         <SelectDialog
           isOpen={!!selectedNode}
           onClose={handleCloseDialog}
           onSelect={handleSelectOption}
           type={selectedNode.type as "trigger" | "action"}
         />
-      )}
+      )} */}
+          <div className="absolute top-10 right-32 h-full w-96 z-10">
+            <NodeCard
+              workflow={workflow || null}
+              selectTrigger={selectTrigger}
+              isOpen={!!selectedNode}
+              onClose={handleCloseSheet}
+              onSelect={handleSelectOption}
+              type={selectedNode?.type as "trigger" | "action"}
+            />
+          </div>
+        </ReactFlow>
+      </div>
     </div>
   );
 }

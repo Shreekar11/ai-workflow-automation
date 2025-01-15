@@ -20,12 +20,14 @@ export interface Workflow {
   timestamp: string;
   actions: {
     id: string;
+    metadata: any;
     type: {
       id: string;
       name: string;
     };
   }[];
   trigger: {
+    metadata: any;
     type: {
       id: string;
       name: string;
