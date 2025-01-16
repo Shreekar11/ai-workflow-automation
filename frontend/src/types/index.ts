@@ -45,3 +45,46 @@ export interface OptionType {
   icon?: ReactNode;
   metadata?: Record<string, string>;
 }
+
+export interface NodeCardProps {
+  workflow: Workflow | null;
+  selectTrigger: {
+    id: string;
+    name: string;
+    metadata: Record<string, string>;
+  };
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (option: {
+    id: string;
+    type: string;
+    name: string;
+    metadata: Record<string, string>;
+  }) => void;
+  type: "trigger" | "action";
+}
+
+export interface MetadataDisplayProps {
+  type: string;
+  metadata: Record<string, string>;
+}
+
+export interface TriggerMetadataFieldsProps {
+  metadata: Record<string, string>;
+  errors: Record<string, boolean>;
+  setMetadata: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  handleMetadataChange: (key: string, value: string) => void;
+}
+
+export interface ActionMetadataFieldsProps {
+  selectedOption: OptionType;
+  metadata: Record<string, string>;
+  customValues: Record<string, string>;
+  errors: Record<string, boolean>;
+  selectTrigger: {
+    metadata: Record<string, string>;
+  };
+  handleMetadataChange: (key: string, value: string) => void;
+  handleCustomValueChange: (key: string, value: string) => void;
+}
