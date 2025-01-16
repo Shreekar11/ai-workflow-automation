@@ -21,7 +21,7 @@ export function PulsatingButton({
   return (
     <Button
       className={cn(
-        `relative flex cursor-pointer items-center justify-center rounded-lg bg-[#DB2777] 
+        `relative flex cursor-pointer items-center justify-center bg-[#DB2777] 
         hover:bg-[#DB2777]/60 text-center text-white dark:bg-[#DB2777] dark:text-black`,
         className
       )}
@@ -35,7 +35,7 @@ export function PulsatingButton({
     >
       <div className="relative z-10">{children}</div>
       <div className="absolute left-1/2 top-1/2 size-full -translate-x-1/2 
-      -translate-y-1/2 animate-pulse rounded-lg bg-inherit" />
+      -translate-y-1/2 animate-pulse rounded bg-inherit" />
     </Button>
   );
 }

@@ -68,6 +68,7 @@ class WorkFlowController {
                                 create: parsedData.data.actions.map((item, index) => ({
                                     actionId: item.availableActionId,
                                     sortingOrder: index,
+                                    metadata: item.actionMetadata,
                                 })),
                             },
                         },
@@ -79,6 +80,7 @@ class WorkFlowController {
                         data: {
                             triggerId: parsedData.data.availableTriggerId,
                             workflowId: newWorkflow.id,
+                            metadata: parsedData.data.triggerMetadata,
                         },
                     });
                     return yield tx.workflow.update({

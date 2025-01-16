@@ -53,6 +53,7 @@ export default class WorkFlowController {
               create: parsedData.data.actions.map((item, index) => ({
                 actionId: item.availableActionId,
                 sortingOrder: index,
+                metadata: item.actionMetadata,
               })),
             },
           },
@@ -65,6 +66,7 @@ export default class WorkFlowController {
           data: {
             triggerId: parsedData.data.availableTriggerId,
             workflowId: newWorkflow.id,
+            metadata: parsedData.data.triggerMetadata,
           },
         });
 

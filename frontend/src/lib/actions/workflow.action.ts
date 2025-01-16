@@ -2,8 +2,8 @@ import { api } from "@/app/api/client";
 import { isAxiosError } from "axios";
 
 export const publishWorkflow = async (
-  selectActions: { id: string; name: string }[],
-  selectTrigger: { id: string; name: string },
+  selectActions: { id: string; name: string; metadata: any }[],
+  selectTrigger: { id: string; name: string; metadata: any },
   workflowName: string,
   userId: string
 ) => {
@@ -13,10 +13,10 @@ export const publishWorkflow = async (
       {
         name: workflowName,
         availableTriggerId: selectTrigger.id,
-        triggerMetadata: {},
+        triggerMetadata: selectTrigger.metadata,
         actions: selectActions.map((action) => ({
           availableActionId: action.id,
-          actionMetadata: {},
+          actionMetadata: action.metadata,
         })),
       },
       {
@@ -126,8 +126,8 @@ export const getWorkFlow = async (id: string | string[], userId: string) => {
 
 export const updateWorkflow = async (
   workflowId: string,
-  selectActions: { id: string; name: string }[],
-  selectTrigger: { id: string; name: string },
+  selectActions: { id: string; name: string, metadata: any }[],
+  selectTrigger: { id: string; name: string, metadata: any },
   workflowName: string,
   userId: string
 ) => {
@@ -138,10 +138,10 @@ export const updateWorkflow = async (
         id: workflowId,
         name: workflowName,
         availableTriggerId: selectTrigger.id,
-        triggerMetadata: {},
+        triggerMetadata: selectTrigger.metadata,
         actions: selectActions.map((action) => ({
           availableActionId: action.id,
-          actionMetadata: {},
+          actionMetadata: action.metadata,
         })),
       },
       {

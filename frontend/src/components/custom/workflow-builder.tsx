@@ -29,7 +29,7 @@ import { Workflow } from "@/types";
 import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
 import { PulsatingButton } from "../ui/pulsating-button";
 import NodeCard from "./node-card";
-import { Mail, Webhook } from "lucide-react";
+import { ArrowLeft, Mail, Webhook } from "lucide-react";
 import { SiSolana } from "react-icons/si";
 
 interface WorkflowBuilderProps {
@@ -201,7 +201,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       type: "action",
       position: {
         x: lastActionNode.position.x,
-        y: lastActionNode.position.y + 150,
+        y: lastActionNode.position.y + 250,
       },
       data: { label: `Action ${nodes.length}` },
     };
@@ -232,7 +232,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
   const handleSelectOption = useCallback(
     (option: { id: string; type: string; name: string; metadata: any }) => {
-      console.log(option);
       if (!selectedNode) {
         // handleCloseDialog();
         handleCloseSheet();
@@ -302,11 +301,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         )
       );
 
-      // This is body for mail
-      // example@gmail.com
-
-      console.log(nodes);
-
       // handleCloseDialog();
       handleCloseSheet();
     },
@@ -314,8 +308,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   );
 
   const handlePublishWorkflow = async () => {
-    const { id, name } = selectTrigger;
-    if (!id || !name) {
+    const { id, name, metadata } = selectTrigger;
+    if (!id || !name || !metadata) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
@@ -393,20 +387,29 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           className="border rounded-xl p-2 bg-white/50 backdrop-blur-lg 
         w-full max-w-screen-lg mx-auto flex items-center justify-between"
         >
-          <Input
-            type="text"
-            value={workflowName}
-            onChange={(e) => setWorkflowName(e.target.value)}
-            className="text-lg w-[50%] bg-white"
-            placeholder="Workflow Name"
-          />
+          <div className="flex items-center gap-4 w-[50%]">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/workflows")}
+              className="p-2 hover:bg-gray-100 "
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Input
+              type="text"
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="text-lg bg-white"
+              placeholder="Workflow Name"
+            />
+          </div>
           <div className="flex justify-center items-center gap-3">
             <AddActionButton onClick={handleAddAction} />
             <Button
               variant="outline"
               disabled={isLoading}
               onClick={handlePublishWorkflow}
-              className="bg-[#FF7801] text-white rounded-lg 
+              className="bg-[#FF7801] text-white  
               hover:bg-[#FF7801]/80 hover:text-white"
             >
               {isLoading && (
@@ -448,16 +451,18 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           type={selectedNode.type as "trigger" | "action"}
         />
       )} */}
-          <div className="absolute top-10 right-32 h-full w-96 z-10">
-            <NodeCard
-              workflow={workflow || null}
-              selectTrigger={selectTrigger}
-              isOpen={!!selectedNode}
-              onClose={handleCloseSheet}
-              onSelect={handleSelectOption}
-              type={selectedNode?.type as "trigger" | "action"}
-            />
-          </div>
+          {!!selectedNode && (
+            <div className="absolute top-10 right-32 h-full w-96 z-10">
+              <NodeCard
+                workflow={workflow || null}
+                selectTrigger={selectTrigger}
+                isOpen={!!selectedNode}
+                onClose={handleCloseSheet}
+                onSelect={handleSelectOption}
+                type={selectedNode?.type as "trigger" | "action"}
+              />
+            </div>
+          )}
         </ReactFlow>
       </div>
     </div>

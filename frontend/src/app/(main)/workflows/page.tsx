@@ -36,7 +36,7 @@ const WorkflowPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
       <Navbar />
-      <main className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">

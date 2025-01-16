@@ -29,7 +29,7 @@ export default function TriggerNode({
   }, [data.selectedOption]);
 
   return (
-    <div className="p-2 shadow-md rounded-md border-2 bg-white border-violet-400 min-w-[18rem] max-w-md">
+    <div className="p-2 shadow-md rounded-md border-2 bg-white border-violet-400 w-96">
       <div className="rounded-md px-6 py-4 bg-violet-100">
         <div className="font-bold text-lg mb-2 break-words">{data.label}</div>
         {data.selectedOption && (
@@ -43,12 +43,10 @@ export default function TriggerNode({
                 {Object.entries(metadata).map(([key, value]) => (
                   <div
                     key={key}
-                    className="grid grid-cols-[auto,1fr] gap-2 items-start"
+                    className="grid grid-cols-[1fr,2fr] gap-4 items-start"
                   >
-                    <span className="text-gray-600 font-medium whitespace-nowrap">
-                      {key}:
-                    </span>
-                    <span className="text-gray-800 break-words text-right">
+                    <span className="text-gray-600 font-medium">{key}:</span>
+                    <span className="text-gray-800 break-words">
                       {String(value)}
                     </span>
                   </div>

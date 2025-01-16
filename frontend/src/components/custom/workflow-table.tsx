@@ -92,9 +92,10 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             <TableHead>Name</TableHead>
             <TableHead>Trigger</TableHead>
             <TableHead>Actions</TableHead>
+            <TableHead>Webhook</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead className="text-right">View</TableHead>
-            <TableHead></TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -102,17 +103,16 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-[200px]" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-6 w-20" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-32" />
                 </TableCell>
-                <TableCell className="flex gap-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-16" />
+                <TableCell>
+                  <Skeleton className="h-6 w-36" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-6 w-28" />
@@ -120,12 +120,15 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                 <TableCell className="text-right">
                   <Skeleton className="h-8 w-16 ml-auto" />
                 </TableCell>
+                <TableCell>
+                  <Skeleton className="h-8 w-8" />
+                </TableCell>
               </TableRow>
             ))
           ) : workflows.length > 0 ? (
             workflows.map((workflow) => (
               <TableRow key={workflow.id}>
-                <TableCell className="w-[200px]">{workflow.name}</TableCell>
+                <TableCell className="font-medium">{workflow.name}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
@@ -147,6 +150,9 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                     ))}
                   </div>
                 </TableCell>
+                <TableCell className="font-mono text-sm">
+                  {`${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow.id}`}
+                </TableCell>
                 <TableCell>{formatDate(workflow.timestamp)}</TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -159,33 +165,32 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                     View
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setOpenDialog(true);
-                      setWorkflowId(workflow.id);
-                    }}
+                    onClick={() => handleDelete(workflow.id)}
                     className="hover:bg-red-100"
                   >
-                    <Trash className="text-red-500" />
+                    <Trash className="h-4 w-4 text-red-500" />
                   </Button>
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center space-y-4 py-10">
-                <div className="text-gray-500">
-                  No workflows yet. Create your first workflow to get started!
+              <TableCell colSpan={7} className="h-24 text-center">
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  <div className="text-gray-500">
+                    No workflows yet. Create your first workflow to get started!
+                  </div>
+                  <Button
+                    className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
+                    onClick={handleCreateWorkflow}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Create Your First Workflow
+                  </Button>
                 </div>
-                <Button
-                  className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
-                  onClick={handleCreateWorkflow}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Create Your First Workflow
-                </Button>
               </TableCell>
             </TableRow>
           )}

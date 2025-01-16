@@ -11,11 +11,19 @@ export const useAvailableTriggersActions = (type: string) => {
     }[]
   >([]);
 
+  useEffect(() => {
+    if (type) {
+      fetchAvailableTriggerActions();
+    }
+  }, [type]);
+
   const fetchAvailableTriggerActions = async () => {
     try {
       const response = await getAvailableTriggerActions(type);
       if (!response.status) {
-        throw new Error(response.message || "Error fetching trigger and actions");
+        throw new Error(
+          response.message || "Error fetching trigger and actions"
+        );
       }
       const data = response.data;
       setAvailableTriggerActions(data);
@@ -25,10 +33,6 @@ export const useAvailableTriggersActions = (type: string) => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchAvailableTriggerActions();
-  }, [type]);
 
   return { loading, availableTriggerActions };
 };
