@@ -41,7 +41,6 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
   const { user } = useUser();
   const [workflowId, setWorkflowId] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const handleCreateWorkflow = () => {
     router.push("/workflows/create");
   };
@@ -51,37 +50,8 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const handleDelete = async (id: string) => {
-    setIsDeleting(true);
-    try {
-      const response = await deleteWorkflow(id, user?.id || "");
-      if (!response.status) {
-        throw new Error(response.message || "Error deleting workflow");
-      }
-      const currentWorkflows = workflows.filter((item) => item.id !== id);
-      setWorkflows(currentWorkflows);
-      setOpenDialog(false);
-      toast({
-        variant: "success",
-        title: "Success!",
-        description: "Workflow deleted successfully",
-      });
-    } catch (err: any) {
-      console.error("Error deleting workflow: ", err.message);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: err.message || "Error deleting workflow",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   return (
@@ -169,7 +139,10 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(workflow.id)}
+                    onClick={() => {
+                      setWorkflowId(workflow.id);
+                      setOpenDialog(true);
+                    }}
                     className="hover:bg-red-100"
                   >
                     <Trash className="h-4 w-4 text-red-500" />
@@ -198,10 +171,12 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
       </Table>
 
       <DeleteDialog
+        user={user}
+        workflows={workflows}
+        workflowId={workflowId}
         openDialog={openDialog}
         setOpenDialog={setOpenDialog}
-        onDelete={() => handleDelete(workflowId)}
-        isLoading={isDeleting}
+        setWorkflows={setWorkflows}
         title="Delete Workflow"
         description="Are you sure you want to delete this workflow? All associated data will be permanently removed."
       />
