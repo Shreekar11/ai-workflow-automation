@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { WorkFlowSchema } from "../types";
 import { DELETE, GET, POST, PUT } from "../decorators/router";
-import WorkFlowRepo from "../repository/workflow.repo";
 import { PrismaClient } from "@prisma/client";
-import UserRepository from "../repository/user.repo";
 import { HTTPStatus } from "../constants";
 import { APIResponse } from "../interface/api";
 import { WorkflowService } from "../services/workflow.service";

@@ -6,9 +6,6 @@ import { useRouter } from "next/navigation";
 // icons
 import { Eye, Plus, Trash } from "lucide-react";
 
-// actions
-import { deleteWorkflow } from "@/lib/actions/workflow.action";
-
 // components
 import {
   Table,
@@ -22,7 +19,6 @@ import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DeleteDialog } from "./delete-dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/lib/hooks/useToast";
 
 interface WorkflowTableProps {
   workflows: Workflow[];
