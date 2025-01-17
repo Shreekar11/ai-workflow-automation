@@ -13,11 +13,11 @@ import { EMAIL_FIELDS, SOLANA_FIELDS } from "@/constant";
 
 // ui components
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -105,13 +105,20 @@ export const ActionMetadataFields = ({
   handleCustomValueChange,
 }: ActionMetadataFieldsProps) => {
   const { user } = useUser();
-
   const defaultEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+
+  const getDisplayValue = (field: string, value: string) => {
+    if (!value || !value.startsWith("{data.")) return value;
+
+    const triggerKey = value.replace("{data.", "").replace("}", "");
+    return selectTrigger?.metadata[triggerKey] || value;
+  };
 
   const renderField = (field: string) => {
     const hasError = errors[field];
     const value = metadata[field];
     const customValue = customValues[field];
+    const displayValue = getDisplayValue(field, value);
 
     if (field === "from") {
       return (
@@ -165,15 +172,28 @@ export const ActionMetadataFields = ({
         {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
           <div className="space-y-2">
             <Select
-              value={value || undefined}
-              onValueChange={(newValue) =>
-                handleMetadataChange(field, newValue)
-              }
+              value={value || ""}
+              onValueChange={(newValue) => {
+                if (newValue === "custom") {
+                  handleMetadataChange(field, "");
+                } else {
+                  const triggerKey = Object.entries(
+                    selectTrigger.metadata
+                  ).find(([_, val]) => val === newValue)?.[0];
+                  if (triggerKey) {
+                    handleMetadataChange(field, `{data.${triggerKey}}`);
+                  } else {
+                    handleMetadataChange(field, newValue);
+                  }
+                }
+              }}
             >
               <SelectTrigger
                 className={`w-full ${hasError ? "border-red-500" : ""}`}
               >
-                <SelectValue placeholder={`Select ${field}`} />
+                <SelectValue placeholder={`Select ${field}`}>
+                  {displayValue}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom Value</SelectItem>
@@ -190,7 +210,10 @@ export const ActionMetadataFields = ({
               <Input
                 placeholder={`Enter custom ${field}`}
                 value={customValue || ""}
-                onChange={(e) => handleCustomValueChange(field, e.target.value)}
+                onChange={(e) => {
+                  handleCustomValueChange(field, e.target.value);
+                  handleMetadataChange(field, e.target.value);
+                }}
                 className={hasError ? "border-red-500" : ""}
               />
             )}
@@ -198,7 +221,7 @@ export const ActionMetadataFields = ({
         ) : (
           <Input
             placeholder={`Enter ${field}`}
-            value={value || ""}
+            value={displayValue}
             onChange={(e) => handleMetadataChange(field, e.target.value)}
             className={hasError ? "border-red-500" : ""}
           />

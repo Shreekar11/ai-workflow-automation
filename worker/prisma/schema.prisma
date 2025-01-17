@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  clerkUserId String
+  email       String
+  firstName   String
+  lastName    String
+  workflows   Workflow[]
+  timestamp   DateTime   @default(now())
+}
+
+model Workflow {
+  id           String        @id @default(uuid())
+  triggerId    String
+  userId       Int
+  name         String        @default("Untitled")
+  trigger      Trigger?
+  actions      Action[]
+  workflowRuns WorkflowRun[]
+  user         User          @relation(fields: [userId], references: [id])
+  timestamp    DateTime      @default(now())
+}
+
+model Trigger {
+  id         String           @id @default(uuid())
+  workflowId String           @unique
+  triggerId  String
+  metadata   Json             @default("{}")
+  type       AvailableTrigger @relation(fields: [triggerId], references: [id])
+  workflow   Workflow         @relation(fields: [workflowId], references: [id])
+  timestamp  DateTime         @default(now())
+}
+
+model Action {
+  id           String          @id @default(uuid())
+  workflowId   String
+  workflow     Workflow        @relation(fields: [workflowId], references: [id])
+  actionId     String
+  metadata     Json            @default("{}")
+  type         AvailableAction @relation(fields: [actionId], references: [id])
+  sortingOrder Int             @default(0)
+  timestamp    DateTime        @default(now())
+}
+
+model AvailableAction {
+  id        String   @id @default(uuid())
+  name      String
+  actions   Action[]
+  image     String
+  timestamp DateTime @default(now())
+}
+
+model AvailableTrigger {
+  id        String    @id @default(uuid())
+  name      String
+  triggers  Trigger[]
+  image     String
+  timestamp DateTime  @default(now())
+}
+
+model WorkflowRun {
+  id         String             @id @default(uuid())
+  workflowId String
+  metadata   Json
+  workflow   Workflow           @relation(fields: [workflowId], references: [id])
+  runOutbox  WorkflowRunOutbox?
+  timestamp  DateTime           @default(now())
+}
+
+model WorkflowRunOutbox {
+  id            String      @id @default(uuid())
+  workflowRunId String      @unique
+  workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
+  timestamp     DateTime    @default(now())
+}

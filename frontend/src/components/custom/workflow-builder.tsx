@@ -21,7 +21,6 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
-// import SelectDialog from "./select-dialog";
 import AddActionButton from "./add-action-button";
 
 import { useToast } from "@/lib/hooks/useToast";
@@ -79,7 +78,7 @@ const createInitialNodes = (workflow?: Workflow | null): Node[] => {
     nodes.push({
       id: `action${index + 1}`,
       type: "action",
-      position: { x: 600, y: 350 + index * 150 },
+      position: { x: 600, y: 350 + index * 250 },
       data: {
         label: `Action ${index + 1}`,
         selectedOption: {
@@ -222,10 +221,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     setSelectedNode(node);
   }, []);
 
-  const handleCloseDialog = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
   const handleCloseSheet = useCallback(() => {
     setSelectedNode(null);
   }, []);
@@ -233,7 +228,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const handleSelectOption = useCallback(
     (option: { id: string; type: string; name: string; metadata: any }) => {
       if (!selectedNode) {
-        // handleCloseDialog();
         handleCloseSheet();
         return;
       }
@@ -294,6 +288,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                       ),
                     name: option.name,
                     metadata: option.metadata,
+                    triggerMetadata: selectTrigger.metadata,
                   },
                 },
               }
@@ -301,10 +296,9 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         )
       );
 
-      // handleCloseDialog();
       handleCloseSheet();
     },
-    [selectedNode, setNodes, handleCloseDialog, workflow, selectActions]
+    [selectedNode, setNodes, workflow, selectActions]
   );
 
   const handlePublishWorkflow = async () => {
@@ -442,15 +436,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         >
           <Controls />
           <Background variant={"dots" as BackgroundVariant} gap={12} size={1} />
-
-          {/* {selectedNode && (
-        <SelectDialog
-          isOpen={!!selectedNode}
-          onClose={handleCloseDialog}
-          onSelect={handleSelectOption}
-          type={selectedNode.type as "trigger" | "action"}
-        />
-      )} */}
           {!!selectedNode && (
             <div className="absolute top-10 right-32 h-full w-96 z-10">
               <NodeCard

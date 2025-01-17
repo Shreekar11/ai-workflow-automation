@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.2.0",
     "kafkajs": "^2.2.4",
     "prisma": "^6.2.0"
   }

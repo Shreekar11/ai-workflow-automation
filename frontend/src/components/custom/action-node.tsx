@@ -1,6 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
 
+const resolveValue = (value: any, triggerMetadata: Record<string, any>) => {
+  if (typeof value === "string" && value.startsWith("{data.")) {
+    const fieldKey = value.replace("{data.", "").replace("}", "");
+    return triggerMetadata[fieldKey] || value;
+  }
+  return value;
+};
+
 export default function ActionNode({
   data,
 }: {
@@ -10,21 +18,27 @@ export default function ActionNode({
       icon: ReactNode;
       metadata: any;
       name: string;
+      triggerMetadata?: Record<string, any>;
     };
   };
 }) {
-  const [metadata, setMetadata] = useState<Record<string, any>>({});
+  const [displayMetadata, setDisplayMetadata] = useState<Record<string, any>>(
+    {}
+  );
 
   useEffect(() => {
-    if (data.selectedOption && data.selectedOption.metadata) {
-      const metadataObject = Object.fromEntries(
-        Object.entries(data.selectedOption.metadata).filter(
-          ([key, value]) => key && value
-        )
+    if (data.selectedOption?.metadata) {
+      const resolvedMetadata = Object.fromEntries(
+        Object.entries(data.selectedOption.metadata)
+          .filter(([key, value]) => key && value)
+          .map(([key, value]) => [
+            key,
+            resolveValue(value, data.selectedOption?.triggerMetadata || {}),
+          ])
       );
-      setMetadata(metadataObject);
+      setDisplayMetadata(resolvedMetadata);
     } else {
-      setMetadata({});
+      setDisplayMetadata({});
     }
   }, [data.selectedOption]);
 
@@ -43,9 +57,9 @@ export default function ActionNode({
               {data.selectedOption.icon}
               <span className="break-words">{data.selectedOption.name}</span>
             </div>
-            {Object.keys(metadata).length > 0 && (
+            {Object.keys(displayMetadata).length > 0 && (
               <div className="bg-white rounded-md p-2 text-sm space-y-1 max-h-[200px] overflow-y-auto">
-                {Object.entries(metadata).map(([key, value]) => (
+                {Object.entries(displayMetadata).map(([key, value]) => (
                   <div
                     key={key}
                     className="grid grid-cols-[1fr,2fr] gap-4 items-start"
