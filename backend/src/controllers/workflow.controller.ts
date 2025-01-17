@@ -1,14 +1,21 @@
 import { Request, Response } from "express";
-import { WorkFlowSchema } from "../../types";
-import { DELETE, GET, POST, PUT } from "../../decorators/router";
-import WorkFlowRepo from "../../repository/workflow.repo";
+import { WorkFlowSchema } from "../types";
+import { DELETE, GET, POST, PUT } from "../decorators/router";
+import WorkFlowRepo from "../repository/workflow.repo";
 import { PrismaClient } from "@prisma/client";
-import UserRepository from "../../repository/user.repo";
-import { HTTPStatus } from "../../constants";
-import { APIResponse } from "../../interface/api";
+import UserRepository from "../repository/user.repo";
+import { HTTPStatus } from "../constants";
+import { APIResponse } from "../interface/api";
+import { WorkflowService } from "../services/workflow.service";
 
 export default class WorkFlowController {
-  private prisma: PrismaClient = new PrismaClient();
+  private prisma: PrismaClient;
+  private workflowService: WorkflowService;
+
+  constructor() {
+    this.prisma = new PrismaClient();
+    this.workflowService = new WorkflowService();
+  }
 
   @POST("/api/v1/workflow")
   public async createWorkFlowData(
@@ -43,42 +50,10 @@ export default class WorkFlowController {
         });
       }
 
-      const workflow = await this.prisma.$transaction(async (tx) => {
-        const newWorkflow = await tx.workflow.create({
-          data: {
-            userId: userData.id,
-            name: parsedData.data.name,
-            triggerId: "",
-            actions: {
-              create: parsedData.data.actions.map((item, index) => ({
-                actionId: item.availableActionId,
-                sortingOrder: index,
-                metadata: item.actionMetadata,
-              })),
-            },
-          },
-          include: {
-            actions: true,
-          },
-        });
-
-        const trigger = await tx.trigger.create({
-          data: {
-            triggerId: parsedData.data.availableTriggerId,
-            workflowId: newWorkflow.id,
-            metadata: parsedData.data.triggerMetadata,
-          },
-        });
-
-        return await tx.workflow.update({
-          where: { id: newWorkflow.id },
-          data: { triggerId: trigger.id },
-          include: {
-            actions: true,
-            trigger: true,
-          },
-        });
-      });
+      const workflow = await this.workflowService.createWorkflow(
+        userData,
+        parsedData
+      );
 
       return res.status(HTTPStatus.CREATED).json({
         status: true,
@@ -119,9 +94,8 @@ export default class WorkFlowController {
         });
       }
 
-      const workflowRepo = new WorkFlowRepo();
-      const userWorkFlowData = await workflowRepo.getAllUsersWorkFlow(
-        userData.id
+      const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
+        userData
       );
 
       return res.status(HTTPStatus.OK).json({

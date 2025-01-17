@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { CreateUserSchema } from "../../types";
-import { GET, POST } from "../../decorators/router";
-import UserRepository from "../../repository/user.repo";
-import { APIResponse } from "../../interface/api";
-import { HTTPStatus } from "../../constants";
+import { CreateUserSchema } from "../types";
+import { GET, POST } from "../decorators/router";
+import UserRepository from "../repository/user.repo";
+import { APIResponse } from "../interface/api";
+import { HTTPStatus } from "../constants";
 
 export default class UserController {
   @POST("/api/v1/user")

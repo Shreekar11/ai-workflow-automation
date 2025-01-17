@@ -21,13 +21,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const types_1 = require("../../types");
-const router_1 = require("../../decorators/router");
-const workflow_repo_1 = __importDefault(require("../../repository/workflow.repo"));
+const types_1 = require("../types");
+const router_1 = require("../decorators/router");
+const workflow_repo_1 = __importDefault(require("../repository/workflow.repo"));
 const client_1 = require("@prisma/client");
-const user_repo_1 = __importDefault(require("../../repository/user.repo"));
-const constants_1 = require("../../constants");
-const workflow_service_1 = require("../../services/workflow.service");
+const user_repo_1 = __importDefault(require("../repository/user.repo"));
+const constants_1 = require("../constants");
+const workflow_service_1 = require("../services/workflow.service");
 class WorkFlowController {
     constructor() {
         this.prisma = new client_1.PrismaClient();

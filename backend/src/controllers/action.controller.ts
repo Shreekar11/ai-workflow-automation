@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { GET } from "../../decorators/router";
-import ActionRepository from "../../repository/action.repo";
-import { HTTPStatus } from "../../constants";
-import { APIResponse } from "../../interface/api";
+import { GET } from "../decorators/router";
+import ActionRepository from "../repository/action.repo";
+import { HTTPStatus } from "../constants";
+import { APIResponse } from "../interface/api";
 
 export default class ActionController {
   @GET("/api/v1/action/available")

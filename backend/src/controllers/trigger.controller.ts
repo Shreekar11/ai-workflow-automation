@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { GET } from "../../decorators/router";
-import TriggerRepository from "../../repository/trigger.repo";
-import { HTTPStatus } from "../../constants";
-import { APIResponse } from "../../interface/api";
+import { GET } from "../decorators/router";
+import TriggerRepository from "../repository/trigger.repo";
+import { HTTPStatus } from "../constants";
+import { APIResponse } from "../interface/api";
 
 export default class TriggerController {
   @GET("/api/v1/trigger/available")
