@@ -7,14 +7,18 @@ import UserRepository from "../repository/user.repo";
 import { HTTPStatus } from "../constants";
 import { APIResponse } from "../interface/api";
 import { WorkflowService } from "../services/workflow.service";
+import { UserService } from "../services/user.service";
+import { UserNotFoundError } from "../modules/error";
 
 export default class WorkFlowController {
   private prisma: PrismaClient;
   private workflowService: WorkflowService;
+  private userService: UserService;
 
   constructor() {
     this.prisma = new PrismaClient();
     this.workflowService = new WorkflowService();
+    this.userService = new UserService();
   }
 
   @POST("/api/v1/workflow")
@@ -41,13 +45,17 @@ export default class WorkFlowController {
         });
       }
 
-      const userRepo = new UserRepository();
-      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
-      if (!userData) {
-        return res.status(HTTPStatus.NOT_FOUND).json({
-          status: false,
-          message: "User not found",
-        });
+      let userData;
+      try {
+        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+      } catch (error) {
+        if (error instanceof UserNotFoundError) {
+          return res.status(HTTPStatus.NOT_FOUND).json({
+            status: false,
+            message: error.message,
+          });
+        }
+        throw error;
       }
 
       const workflow = await this.workflowService.createWorkflow(
@@ -84,14 +92,17 @@ export default class WorkFlowController {
         });
       }
 
-      const userRepo = new UserRepository();
-      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
-
-      if (!userData) {
-        return res.status(HTTPStatus.NOT_FOUND).json({
-          status: false,
-          message: "User not found",
-        });
+      let userData;
+      try {
+        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+      } catch (error) {
+        if (error instanceof UserNotFoundError) {
+          return res.status(HTTPStatus.NOT_FOUND).json({
+            status: false,
+            message: error.message,
+          });
+        }
+        throw error;
       }
 
       const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
@@ -135,18 +146,23 @@ export default class WorkFlowController {
         });
       }
 
-      const userRepo = new UserRepository();
-      const userData = await userRepo.getUserByClerkUserId(clerkUserId);
-
-      if (!userData) {
-        return res.status(HTTPStatus.NOT_FOUND).json({
-          status: false,
-          message: "User not found",
-        });
+      let userData;
+      try {
+        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+      } catch (error) {
+        if (error instanceof UserNotFoundError) {
+          return res.status(HTTPStatus.NOT_FOUND).json({
+            status: false,
+            message: error.message,
+          });
+        }
+        throw error;
       }
 
-      const workflowRepo = new WorkFlowRepo();
-      const workFlowData = await workflowRepo.getWorkFlowById(id, userData.id);
+      const workFlowData = await this.workflowService.fetchWorkFlowById(
+        id,
+        userData.id
+      );
 
       if (!workFlowData) {
         return res.status(HTTPStatus.NOT_FOUND).json({
@@ -190,58 +206,9 @@ export default class WorkFlowController {
         });
       }
 
-      const updatedWorkflowData = await this.prisma.$transaction(async (tx) => {
-        await tx.workflow.update({
-          where: {
-            id: parsedData.data.id,
-          },
-          data: {
-            name: parsedData.data.name,
-          },
-        });
-
-        // delete earlier actions and create new to update them
-        await tx.action.deleteMany({
-          where: {
-            workflowId: parsedData.data.id,
-          },
-        });
-
-        // new actions created
-        if (parsedData.data.actions.length > 0) {
-          await tx.action.createMany({
-            data: parsedData.data.actions.map((item, index) => ({
-              workflowId: parsedData.data.id || "",
-              actionId: item.availableActionId,
-              metadata: item.actionMetadata || {},
-              sortingOrder: index,
-            })),
-          });
-        }
-
-        const updatedData = await tx.workflow.findUnique({
-          where: {
-            id: parsedData.data.id,
-          },
-          include: {
-            actions: {
-              include: {
-                type: true,
-              },
-              orderBy: {
-                sortingOrder: "asc",
-              },
-            },
-            trigger: {
-              include: {
-                type: true,
-              },
-            },
-          },
-        });
-
-        return updatedData;
-      });
+      const updatedWorkflowData = await this.workflowService.updateWorkflow(
+        parsedData
+      );
 
       if (!updatedWorkflowData) {
         return res.status(HTTPStatus.NOT_FOUND).json({
@@ -296,31 +263,7 @@ export default class WorkFlowController {
         });
       }
 
-      const deleteWorkflow = await this.prisma.$transaction(async (tx) => {
-        const triggerCount = await tx.trigger.count({
-          where: { workflowId: id },
-        });
-
-        if (triggerCount > 0) {
-          await tx.trigger.delete({
-            where: { workflowId: id },
-          });
-        }
-
-        const actionCount = await tx.action.count({
-          where: { workflowId: id },
-        });
-
-        if (actionCount > 0) {
-          await tx.action.deleteMany({
-            where: { workflowId: id },
-          });
-        }
-
-        return await tx.workflow.delete({
-          where: { id },
-        });
-      });
+      const deleteWorkflow = await this.workflowService.deleteWorkflow(id);
 
       return res.status(HTTPStatus.OK).json({
         status: true,

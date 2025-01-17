@@ -6,6 +6,12 @@ import { APIResponse } from "../interface/api";
 import { HTTPStatus } from "../constants";
 
 export default class UserController {
+
+  private userRepo: UserRepository;
+  constructor() {
+    this.userRepo = new UserRepository();
+  }
+
   @POST("/api/v1/user")
   public async createUserData(
     req: Request,
@@ -18,8 +24,6 @@ export default class UserController {
           message: "Request body is empty",
         });
       }
-
-      const userRepo = new UserRepository();
 
       const parsedData = CreateUserSchema.safeParse(req.body);
       if (!parsedData.success) {
@@ -34,7 +38,7 @@ export default class UserController {
       }
 
       try {
-        const userExists = await userRepo.getUserByEmail(parsedData.data.email);
+        const userExists = await this.userRepo.getUserByEmail(parsedData.data.email);
 
         if (userExists) {
           return res.status(HTTPStatus.CONFLICT).json({
@@ -53,7 +57,7 @@ export default class UserController {
         email: parsedData.data.email.toLowerCase().trim(),
       };
 
-      const createUserData = await userRepo.create(userData);
+      const createUserData = await this.userRepo.create(userData);
 
       return res.status(HTTPStatus.CREATED).json({
         status: true,

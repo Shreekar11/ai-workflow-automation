@@ -26,6 +26,9 @@ const router_1 = require("../decorators/router");
 const user_repo_1 = __importDefault(require("../repository/user.repo"));
 const constants_1 = require("../constants");
 class UserController {
+    constructor() {
+        this.userRepo = new user_repo_1.default();
+    }
     createUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -35,7 +38,6 @@ class UserController {
                         message: "Request body is empty",
                     });
                 }
-                const userRepo = new user_repo_1.default();
                 const parsedData = types_1.CreateUserSchema.safeParse(req.body);
                 if (!parsedData.success) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
@@ -48,7 +50,7 @@ class UserController {
                     });
                 }
                 try {
-                    const userExists = yield userRepo.getUserByEmail(parsedData.data.email);
+                    const userExists = yield this.userRepo.getUserByEmail(parsedData.data.email);
                     if (userExists) {
                         return res.status(constants_1.HTTPStatus.CONFLICT).json({
                             status: false,
@@ -65,7 +67,7 @@ class UserController {
                     lastName: parsedData.data.lastName,
                     email: parsedData.data.email.toLowerCase().trim(),
                 };
-                const createUserData = yield userRepo.create(userData);
+                const createUserData = yield this.userRepo.create(userData);
                 return res.status(constants_1.HTTPStatus.CREATED).json({
                     status: true,
                     message: "User created successfully",

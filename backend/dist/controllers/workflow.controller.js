@@ -17,21 +17,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const types_1 = require("../types");
 const router_1 = require("../decorators/router");
-const workflow_repo_1 = __importDefault(require("../repository/workflow.repo"));
 const client_1 = require("@prisma/client");
-const user_repo_1 = __importDefault(require("../repository/user.repo"));
 const constants_1 = require("../constants");
 const workflow_service_1 = require("../services/workflow.service");
+const user_service_1 = require("../services/user.service");
+const error_1 = require("../modules/error");
 class WorkFlowController {
     constructor() {
         this.prisma = new client_1.PrismaClient();
         this.workflowService = new workflow_service_1.WorkflowService();
+        this.userService = new user_service_1.UserService();
     }
     createWorkFlowData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -52,13 +50,18 @@ class WorkFlowController {
                         message: "Invalid workflow data",
                     });
                 }
-                const userRepo = new user_repo_1.default();
-                const userData = yield userRepo.getUserByClerkUserId(clerkUserId);
-                if (!userData) {
-                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
-                        status: false,
-                        message: "User not found",
-                    });
+                let userData;
+                try {
+                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
+                }
+                catch (error) {
+                    if (error instanceof error_1.UserNotFoundError) {
+                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                            status: false,
+                            message: error.message,
+                        });
+                    }
+                    throw error;
                 }
                 const workflow = yield this.workflowService.createWorkflow(userData, parsedData);
                 return res.status(constants_1.HTTPStatus.CREATED).json({
@@ -87,13 +90,18 @@ class WorkFlowController {
                         message: "Unauthorized: Missing user ID",
                     });
                 }
-                const userRepo = new user_repo_1.default();
-                const userData = yield userRepo.getUserByClerkUserId(clerkUserId);
-                if (!userData) {
-                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
-                        status: false,
-                        message: "User not found",
-                    });
+                let userData;
+                try {
+                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
+                }
+                catch (error) {
+                    if (error instanceof error_1.UserNotFoundError) {
+                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                            status: false,
+                            message: error.message,
+                        });
+                    }
+                    throw error;
                 }
                 const userWorkFlowData = yield this.workflowService.fetchAllWorkflows(userData);
                 return res.status(constants_1.HTTPStatus.OK).json({
@@ -129,16 +137,20 @@ class WorkFlowController {
                         message: "Workflow ID is required",
                     });
                 }
-                const userRepo = new user_repo_1.default();
-                const userData = yield userRepo.getUserByClerkUserId(clerkUserId);
-                if (!userData) {
-                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
-                        status: false,
-                        message: "User not found",
-                    });
+                let userData;
+                try {
+                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
                 }
-                const workflowRepo = new workflow_repo_1.default();
-                const workFlowData = yield workflowRepo.getWorkFlowById(id, userData.id);
+                catch (error) {
+                    if (error instanceof error_1.UserNotFoundError) {
+                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                            status: false,
+                            message: error.message,
+                        });
+                    }
+                    throw error;
+                }
+                const workFlowData = yield this.workflowService.fetchWorkFlowById(id, userData.id);
                 if (!workFlowData) {
                     return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
                         status: false,
@@ -178,54 +190,7 @@ class WorkFlowController {
                         message: "Invalid workflow data",
                     });
                 }
-                const updatedWorkflowData = yield this.prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                    yield tx.workflow.update({
-                        where: {
-                            id: parsedData.data.id,
-                        },
-                        data: {
-                            name: parsedData.data.name,
-                        },
-                    });
-                    // delete earlier actions and create new to update them
-                    yield tx.action.deleteMany({
-                        where: {
-                            workflowId: parsedData.data.id,
-                        },
-                    });
-                    // new actions created
-                    if (parsedData.data.actions.length > 0) {
-                        yield tx.action.createMany({
-                            data: parsedData.data.actions.map((item, index) => ({
-                                workflowId: parsedData.data.id || "",
-                                actionId: item.availableActionId,
-                                metadata: item.actionMetadata || {},
-                                sortingOrder: index,
-                            })),
-                        });
-                    }
-                    const updatedData = yield tx.workflow.findUnique({
-                        where: {
-                            id: parsedData.data.id,
-                        },
-                        include: {
-                            actions: {
-                                include: {
-                                    type: true,
-                                },
-                                orderBy: {
-                                    sortingOrder: "asc",
-                                },
-                            },
-                            trigger: {
-                                include: {
-                                    type: true,
-                                },
-                            },
-                        },
-                    });
-                    return updatedData;
-                }));
+                const updatedWorkflowData = yield this.workflowService.updateWorkflow(parsedData);
                 if (!updatedWorkflowData) {
                     return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
                         status: false,
@@ -273,27 +238,7 @@ class WorkFlowController {
                         message: "Workflow not found or already deleted",
                     });
                 }
-                const deleteWorkflow = yield this.prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                    const triggerCount = yield tx.trigger.count({
-                        where: { workflowId: id },
-                    });
-                    if (triggerCount > 0) {
-                        yield tx.trigger.delete({
-                            where: { workflowId: id },
-                        });
-                    }
-                    const actionCount = yield tx.action.count({
-                        where: { workflowId: id },
-                    });
-                    if (actionCount > 0) {
-                        yield tx.action.deleteMany({
-                            where: { workflowId: id },
-                        });
-                    }
-                    return yield tx.workflow.delete({
-                        where: { id },
-                    });
-                }));
+                const deleteWorkflow = yield this.workflowService.deleteWorkflow(id);
                 return res.status(constants_1.HTTPStatus.OK).json({
                     status: true,
                     message: "Workflow and associated data deleted successfully",
