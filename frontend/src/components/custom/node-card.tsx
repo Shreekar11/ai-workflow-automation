@@ -14,7 +14,11 @@ import { Button } from "@/components/ui/button";
 import { optionStyles } from "@/constant";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNodeCardState } from "@/lib/hooks/useNode";
-import { ActionMetadataFields, TriggerMetadataFields } from "./metadata-fields";
+import {
+  ActionMetadataFields,
+  TriggerMetadataFields,
+  MetadataDisplay,
+} from "./metadata-fields";
 
 export default function NodeCard({
   workflow,
@@ -111,13 +115,16 @@ export default function NodeCard({
           selectedOption && (
             <div className="space-y-6 pr-2 max-h-[60vh] flex-grow p-2 overflow-y-auto">
               {type === "trigger" ? (
-                <TriggerMetadataFields
-                  metadata={metadata}
-                  errors={errors}
-                  setMetadata={setMetadata}
-                  setErrors={setErrors}
-                  handleMetadataChange={handleMetadataChange}
-                />
+                <>
+                  <TriggerMetadataFields
+                    metadata={metadata}
+                    errors={errors}
+                    setMetadata={setMetadata}
+                    setErrors={setErrors}
+                    handleMetadataChange={handleMetadataChange}
+                  />
+                  <MetadataDisplay type="trigger" metadata={metadata} />
+                </>
               ) : (
                 <ActionMetadataFields
                   selectedOption={selectedOption}

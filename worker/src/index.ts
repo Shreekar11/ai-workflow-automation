@@ -1,6 +1,12 @@
 import { Kafka } from "kafkajs";
 import { availableEmailId, availableSolanaId, TOPIC_NAME } from "./config";
 import { PrismaClient } from "@prisma/client";
+import { JsonObject } from "@prisma/client/runtime/library";
+import { parser } from "./utils/parser";
+import dotenv from "dotenv";
+import { EmailService } from "./services/mail.service";
+
+dotenv.config();
 
 const client = new PrismaClient();
 
@@ -38,7 +44,7 @@ async function main() {
       const workflowRunId = parsedValue.workflowRunId;
       const stage = parsedValue.stage;
 
-      const workflowDetails = await client.workflowRun.findFirst({
+      const workflowRunDetails = await client.workflowRun.findFirst({
         where: {
           id: workflowRunId,
         },
@@ -55,7 +61,7 @@ async function main() {
         },
       });
 
-      const currentAction = workflowDetails?.workflow.actions.find(
+      const currentAction = workflowRunDetails?.workflow.actions.find(
         (action) => action.sortingOrder === stage
       );
 
@@ -63,18 +69,49 @@ async function main() {
         console.log("Current action not found");
         return;
       }
-      
+
       // email action
       if (currentAction.type.id === availableEmailId) {
-        console.log("Sending out Email");
+        const workflowRunMetadata = workflowRunDetails?.metadata;
+        const to = parser(
+          (currentAction.metadata as JsonObject)?.to as string,
+          workflowRunMetadata
+        );
+        const from = parser(
+          (currentAction.metadata as JsonObject)?.from as string,
+          workflowRunMetadata
+        );
+        const subject = parser(
+          (currentAction.metadata as JsonObject)?.subject as string,
+          workflowRunMetadata
+        );
+        const body = parser(
+          (currentAction.metadata as JsonObject)?.body as string,
+          workflowRunMetadata
+        );
+
+        const emailService = new EmailService(to, from, subject, body);
+
+        await emailService.sendEmailFunction();
+
+        console.log(`Sending out Email to ${to}, body is ${body}`);
       }
 
       // solana action
       if (currentAction.type.id === availableSolanaId) {
-        console.log("Sending out Solana");
+        const workflowRunMetadata = workflowRunDetails?.metadata;
+        const to = parser(
+          (currentAction.metadata as JsonObject)?.to as string,
+          workflowRunMetadata
+        );
+        const amount = parser(
+          (currentAction.metadata as JsonObject)?.amount as string,
+          workflowRunMetadata
+        );
+        console.log(`Sending out Solana to ${to}, amount is ${amount}`);
       }
 
-      const lastStage = (workflowDetails?.workflow.actions.length || 1) - 1;
+      const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
       if (lastStage !== stage) {
         await producer.send({
           topic: TOPIC_NAME,

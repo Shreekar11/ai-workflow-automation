@@ -8,10 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const kafkajs_1 = require("kafkajs");
 const config_1 = require("./config");
 const client_1 = require("@prisma/client");
+const parser_1 = require("./utils/parser");
+const dotenv_1 = __importDefault(require("dotenv"));
+const mail_service_1 = require("./services/mail.service");
+dotenv_1.default.config();
 const client = new client_1.PrismaClient();
 const kafka = new kafkajs_1.Kafka({
     clientId: "outbox-worker",
@@ -30,7 +37,7 @@ function main() {
         yield consumer.run({
             autoCommit: false,
             eachMessage: (_a) => __awaiter(this, [_a], void 0, function* ({ topic, partition, message }) {
-                var _b, _c, _d;
+                var _b, _c, _d, _e, _f, _g, _h, _j, _k;
                 console.log({
                     partition,
                     offset: message.offset,
@@ -42,7 +49,7 @@ function main() {
                 const parsedValue = JSON.parse((_d = message.value) === null || _d === void 0 ? void 0 : _d.toString());
                 const workflowRunId = parsedValue.workflowRunId;
                 const stage = parsedValue.stage;
-                const workflowDetails = yield client.workflowRun.findFirst({
+                const workflowRunDetails = yield client.workflowRun.findFirst({
                     where: {
                         id: workflowRunId,
                     },
@@ -58,20 +65,30 @@ function main() {
                         },
                     },
                 });
-                const currentAction = workflowDetails === null || workflowDetails === void 0 ? void 0 : workflowDetails.workflow.actions.find((action) => action.sortingOrder === stage);
+                const currentAction = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.find((action) => action.sortingOrder === stage);
                 if (!currentAction) {
                     console.log("Current action not found");
                     return;
                 }
                 // email action
                 if (currentAction.type.id === config_1.availableEmailId) {
-                    console.log("Sending out Email");
+                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
+                    const to = (0, parser_1.parser)((_e = currentAction.metadata) === null || _e === void 0 ? void 0 : _e.to, workflowRunMetadata);
+                    const from = (0, parser_1.parser)((_f = currentAction.metadata) === null || _f === void 0 ? void 0 : _f.from, workflowRunMetadata);
+                    const subject = (0, parser_1.parser)((_g = currentAction.metadata) === null || _g === void 0 ? void 0 : _g.subject, workflowRunMetadata);
+                    const body = (0, parser_1.parser)((_h = currentAction.metadata) === null || _h === void 0 ? void 0 : _h.body, workflowRunMetadata);
+                    const emailService = new mail_service_1.EmailService(to, from, subject, body);
+                    yield emailService.sendEmailFunction();
+                    console.log(`Sending out Email to ${to}, body is ${body}`);
                 }
                 // solana action
                 if (currentAction.type.id === config_1.availableSolanaId) {
-                    console.log("Sending out Solana");
+                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
+                    const to = (0, parser_1.parser)((_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.to, workflowRunMetadata);
+                    const amount = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.amount, workflowRunMetadata);
+                    console.log(`Sending out Solana to ${to}, amount is ${amount}`);
                 }
-                const lastStage = ((workflowDetails === null || workflowDetails === void 0 ? void 0 : workflowDetails.workflow.actions.length) || 1) - 1;
+                const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
                 if (lastStage !== stage) {
                     yield producer.send({
                         topic: config_1.TOPIC_NAME,
