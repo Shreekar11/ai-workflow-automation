@@ -1,5 +1,4 @@
-import { useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { NodeCardProps, OptionType } from "@/types";
 import { useAvailableTriggersActions } from "@/lib/hooks/useAvailableTriggersActions";
 import {

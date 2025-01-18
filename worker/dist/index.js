@@ -18,6 +18,7 @@ const client_1 = require("@prisma/client");
 const parser_1 = require("./utils/parser");
 const dotenv_1 = __importDefault(require("dotenv"));
 const mail_service_1 = require("./services/mail.service");
+const sheets_service_1 = require("./services/sheets.service");
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
 const kafka = new kafkajs_1.Kafka({
@@ -37,7 +38,7 @@ function main() {
         yield consumer.run({
             autoCommit: false,
             eachMessage: (_a) => __awaiter(this, [_a], void 0, function* ({ topic, partition, message }) {
-                var _b, _c, _d, _e, _f, _g, _h;
+                var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
                 console.log({
                     partition,
                     offset: message.offset,
@@ -80,6 +81,16 @@ function main() {
                     const emailService = new mail_service_1.EmailService(to, from, subject, body);
                     yield emailService.sendEmailFunction();
                     console.log(`Sending out Email to ${to}, body is ${body}`);
+                }
+                // google sheets action
+                if (currentAction.type.id === config_1.availableGoogleSheetsId) {
+                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
+                    const sheetId = (0, parser_1.parser)((_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.sheetId, workflowRunMetadata);
+                    const range = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.range, workflowRunMetadata);
+                    const values = (0, parser_1.parser)((_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.values, workflowRunMetadata);
+                    const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, JSON.parse(values));
+                    yield sheetsService.appendToSheet();
+                    console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
                 }
                 const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
                 if (lastStage !== stage) {

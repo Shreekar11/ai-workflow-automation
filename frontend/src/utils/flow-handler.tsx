@@ -1,5 +1,5 @@
 import { Workflow } from "@/types";
-import { Mail, Webhook } from "lucide-react";
+import { FileSpreadsheet, Mail, Webhook } from "lucide-react";
 import { Edge, Node } from "reactflow";
 
 export const createInitialNodes = (workflow?: Workflow | null): Node[] => {
@@ -44,7 +44,7 @@ export const createInitialNodes = (workflow?: Workflow | null): Node[] => {
       data: {
         label: `Action ${index + 1}`,
         selectedOption: {
-          icon: <Mail />,
+          icon: action.type.name === "Email" ? <Mail /> : <FileSpreadsheet />,
           metadata: action.metadata || {},
           name: action.type.name || "",
         },

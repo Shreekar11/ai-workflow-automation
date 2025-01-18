@@ -1,10 +1,15 @@
 import { Kafka } from "kafkajs";
-import { availableEmailId, TOPIC_NAME } from "./config";
+import {
+  availableEmailId,
+  availableGoogleSheetsId,
+  TOPIC_NAME,
+} from "./config";
 import { PrismaClient } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 import { parser } from "./utils/parser";
 import dotenv from "dotenv";
 import { EmailService } from "./services/mail.service";
+import { GoogleSheetsService } from "./services/sheets.service";
 
 dotenv.config();
 
@@ -91,10 +96,33 @@ async function main() {
         );
 
         const emailService = new EmailService(to, from, subject, body);
-
         await emailService.sendEmailFunction();
-
         console.log(`Sending out Email to ${to}, body is ${body}`);
+      }
+
+      // google sheets action
+      if (currentAction.type.id === availableGoogleSheetsId) {
+        const workflowRunMetadata = workflowRunDetails?.metadata;
+        const sheetId = parser(
+          (currentAction.metadata as JsonObject)?.sheetId as string,
+          workflowRunMetadata
+        );
+        const range = parser(
+          (currentAction.metadata as JsonObject)?.range as string,
+          workflowRunMetadata
+        );
+        const values = parser(
+          (currentAction.metadata as JsonObject)?.values as string,
+          workflowRunMetadata
+        );
+
+        const sheetsService = new GoogleSheetsService(
+          sheetId,
+          range,
+          JSON.parse(values)
+        );
+        await sheetsService.appendToSheet();
+        console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
       }
 
       const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;

@@ -20,6 +20,15 @@ async function main() {
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0XvFduY7sDBknSh_lJd80OzsdZ_LaHL2w-g&s",
     },
   });
+
+  await prisma.availableAction.create({
+    data: {
+      id: "2656ecd9-a9b1-45ef-9886-9a22a0ae292c",
+      name: "Google Sheets",
+      image:
+        "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera-course-photos.s3.amazonaws.com/a8/b4bac6e9614670b5a201b62293c489/logo_sheets_2020q4_color_1x_web_512dp.png",
+    },
+  });
 }
 
 main();

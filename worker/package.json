@@ -14,6 +14,7 @@
     "@prisma/client": "^6.2.0",
     "@types/dotenv": "^8.2.3",
     "dotenv": "^16.4.7",
+    "googleapis": "^144.0.0",
     "kafkajs": "^2.2.4",
     "prisma": "^6.2.0"
   },

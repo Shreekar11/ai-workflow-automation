@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
-import { Clock, Mail, Webhook } from "lucide-react";
+import { Clock, Mail, Webhook, FileSpreadsheet } from "lucide-react";
 
 export const EMAIL_FIELDS = ["to", "from", "subject", "body"];
+export const SHEETS_FIELDS = ["sheetId", "range", "values"];
 
 export const optionStyles: Record<string, { icon: ReactNode }> = {
   Webhook: {
@@ -12,5 +13,8 @@ export const optionStyles: Record<string, { icon: ReactNode }> = {
   },
   Schedule: {
     icon: <Clock />,
+  },
+  "Google Sheets": {
+    icon: <FileSpreadsheet />,
   },
 };
