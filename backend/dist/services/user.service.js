@@ -21,6 +21,30 @@ class UserService {
         this.prisma = new client_1.PrismaClient();
         this.userRepo = new user_repo_1.default();
     }
+    createUser(parsedData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userExists = yield this.userRepo.getUserByEmail(parsedData.data.email);
+                if (userExists) {
+                    throw new error_1.UserAlreadyExistsError(parsedData.data.clerkUserId);
+                }
+                const userData = {
+                    clerkUserId: parsedData.data.clerkUserId,
+                    firstName: parsedData.data.firstName,
+                    lastName: parsedData.data.lastName,
+                    email: parsedData.data.email.toLowerCase().trim(),
+                };
+                const createUserData = yield this.userRepo.create(userData);
+                return createUserData;
+            }
+            catch (error) {
+                if (error instanceof error_1.UserAlreadyExistsError) {
+                    throw error;
+                }
+                throw new error_1.AppError("Failed to fetch user data", 500, "USER_FETCH_ERROR");
+            }
+        });
+    }
     fetchUserByClerkId(clerkUserId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

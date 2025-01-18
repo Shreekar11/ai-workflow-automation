@@ -25,9 +25,11 @@ const types_1 = require("../types");
 const router_1 = require("../decorators/router");
 const user_repo_1 = __importDefault(require("../repository/user.repo"));
 const constants_1 = require("../constants");
+const user_service_1 = require("../services/user.service");
 class UserController {
     constructor() {
         this.userRepo = new user_repo_1.default();
+        this.userService = new user_service_1.UserService();
     }
     createUserData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -49,25 +51,7 @@ class UserController {
                         })),
                     });
                 }
-                try {
-                    const userExists = yield this.userRepo.getUserByEmail(parsedData.data.email);
-                    if (userExists) {
-                        return res.status(constants_1.HTTPStatus.CONFLICT).json({
-                            status: false,
-                            message: "User with this email already exists",
-                        });
-                    }
-                }
-                catch (error) {
-                    throw new Error("Error checking existing user");
-                }
-                const userData = {
-                    clerkUserId: parsedData.data.clerkUserId,
-                    firstName: parsedData.data.firstName,
-                    lastName: parsedData.data.lastName,
-                    email: parsedData.data.email.toLowerCase().trim(),
-                };
-                const createUserData = yield this.userRepo.create(userData);
+                const createUserData = yield this.userService.createUser(parsedData);
                 return res.status(constants_1.HTTPStatus.CREATED).json({
                     status: true,
                     message: "User created successfully",
@@ -99,8 +83,7 @@ class UserController {
                         message: "Invalid clerkUserId format",
                     });
                 }
-                const userRepo = new user_repo_1.default();
-                const userData = yield userRepo.getUserByClerkUserId(clerkUserId.trim());
+                const userData = yield this.userService.fetchUserByClerkId(clerkUserId.trim());
                 if (!userData) {
                     return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
                         status: false,

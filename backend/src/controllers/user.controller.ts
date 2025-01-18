@@ -4,12 +4,12 @@ import { GET, POST } from "../decorators/router";
 import UserRepository from "../repository/user.repo";
 import { APIResponse } from "../interface/api";
 import { HTTPStatus } from "../constants";
+import { UserService } from "../services/user.service";
 
 export default class UserController {
-
-  private userRepo: UserRepository;
+  private userService: UserService;
   constructor() {
-    this.userRepo = new UserRepository();
+    this.userService = new UserService();
   }
 
   @POST("/api/v1/user")
@@ -37,27 +37,7 @@ export default class UserController {
         });
       }
 
-      try {
-        const userExists = await this.userRepo.getUserByEmail(parsedData.data.email);
-
-        if (userExists) {
-          return res.status(HTTPStatus.CONFLICT).json({
-            status: false,
-            message: "User with this email already exists",
-          });
-        }
-      } catch (error) {
-        throw new Error("Error checking existing user");
-      }
-
-      const userData = {
-        clerkUserId: parsedData.data.clerkUserId,
-        firstName: parsedData.data.firstName,
-        lastName: parsedData.data.lastName,
-        email: parsedData.data.email.toLowerCase().trim(),
-      };
-
-      const createUserData = await this.userRepo.create(userData);
+      const createUserData = await this.userService.createUser(parsedData);
 
       return res.status(HTTPStatus.CREATED).json({
         status: true,
@@ -94,8 +74,10 @@ export default class UserController {
           message: "Invalid clerkUserId format",
         });
       }
-      const userRepo = new UserRepository();
-      const userData = await userRepo.getUserByClerkUserId(clerkUserId.trim());
+
+      const userData = await this.userService.fetchUserByClerkId(
+        clerkUserId.trim()
+      );
 
       if (!userData) {
         return res.status(HTTPStatus.NOT_FOUND).json({

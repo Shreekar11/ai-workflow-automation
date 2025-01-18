@@ -10,6 +10,12 @@ export class AppError extends Error {
   }
 }
 
+export class UserAlreadyExistsError extends AppError {
+  constructor(identifier: string) {
+    super(`User already exists: ${identifier}`, 400, "USER_ALREADY_EXISTS");
+  }
+}
+
 export class UserNotFoundError extends AppError {
   constructor(identifier: string) {
     super(
