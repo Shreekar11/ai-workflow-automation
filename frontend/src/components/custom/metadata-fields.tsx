@@ -9,7 +9,7 @@ import {
 import { useUser } from "@clerk/nextjs";
 
 // constants
-import { EMAIL_FIELDS, SOLANA_FIELDS } from "@/constant";
+import { EMAIL_FIELDS } from "@/constant";
 
 // ui components
 import {
@@ -236,7 +236,6 @@ export const ActionMetadataFields = ({
   return (
     <div className="space-y-6">
       {selectedOption.name === "Email" && EMAIL_FIELDS.map(renderField)}
-      {selectedOption.name === "Solana" && SOLANA_FIELDS.map(renderField)}
     </div>
   );
 };

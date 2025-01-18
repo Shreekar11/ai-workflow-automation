@@ -37,7 +37,7 @@ function main() {
         yield consumer.run({
             autoCommit: false,
             eachMessage: (_a) => __awaiter(this, [_a], void 0, function* ({ topic, partition, message }) {
-                var _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                var _b, _c, _d, _e, _f, _g, _h;
                 console.log({
                     partition,
                     offset: message.offset,
@@ -80,13 +80,6 @@ function main() {
                     const emailService = new mail_service_1.EmailService(to, from, subject, body);
                     yield emailService.sendEmailFunction();
                     console.log(`Sending out Email to ${to}, body is ${body}`);
-                }
-                // solana action
-                if (currentAction.type.id === config_1.availableSolanaId) {
-                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
-                    const to = (0, parser_1.parser)((_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.to, workflowRunMetadata);
-                    const amount = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.amount, workflowRunMetadata);
-                    console.log(`Sending out Solana to ${to}, amount is ${amount}`);
                 }
                 const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
                 if (lastStage !== stage) {

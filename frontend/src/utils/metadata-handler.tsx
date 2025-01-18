@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { OptionType } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EMAIL_FIELDS, SOLANA_FIELDS } from "@/constant";
+import { EMAIL_FIELDS } from "@/constant";
 
 export const initializeMetadata = (
   type: string,
@@ -14,7 +14,7 @@ export const initializeMetadata = (
   if (type === "trigger") {
     setMetadata({});
   } else {
-    const fields = actionType === "Email" ? EMAIL_FIELDS : SOLANA_FIELDS;
+    const fields = EMAIL_FIELDS;
     const initialMetadata = fields.reduce(
       (acc, field) => ({
         ...acc,
@@ -49,8 +49,7 @@ export const validateForm = (
     setErrors(newErrors);
     return isValid;
   } else {
-    const fields =
-      selectedOption?.name === "Email" ? EMAIL_FIELDS : SOLANA_FIELDS;
+    const fields = EMAIL_FIELDS;
     const newErrors: Record<string, boolean> = {};
     let isValid = true;
 

@@ -23,7 +23,6 @@ import "reactflow/dist/style.css";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { SiSolana } from "react-icons/si";
 import { ArrowLeft, Mail, Webhook } from "lucide-react";
 import { PulsatingButton } from "../ui/pulsating-button";
 
@@ -197,14 +196,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                 data: {
                   ...node.data,
                   selectedOption: {
-                    icon:
-                      option.name === "Webhook" ? (
-                        <Webhook />
-                      ) : option.name === "Email" ? (
-                        <Mail />
-                      ) : (
-                        <SiSolana />
-                      ),
+                    icon: option.name === "Webhook" ? <Webhook /> : <Mail />,
                     name: option.name,
                     metadata: option.metadata,
                     triggerMetadata: selectTrigger.metadata,

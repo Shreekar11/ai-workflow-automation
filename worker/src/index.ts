@@ -1,5 +1,5 @@
 import { Kafka } from "kafkajs";
-import { availableEmailId, availableSolanaId, TOPIC_NAME } from "./config";
+import { availableEmailId, TOPIC_NAME } from "./config";
 import { PrismaClient } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 import { parser } from "./utils/parser";
@@ -95,20 +95,6 @@ async function main() {
         await emailService.sendEmailFunction();
 
         console.log(`Sending out Email to ${to}, body is ${body}`);
-      }
-
-      // solana action
-      if (currentAction.type.id === availableSolanaId) {
-        const workflowRunMetadata = workflowRunDetails?.metadata;
-        const to = parser(
-          (currentAction.metadata as JsonObject)?.to as string,
-          workflowRunMetadata
-        );
-        const amount = parser(
-          (currentAction.metadata as JsonObject)?.amount as string,
-          workflowRunMetadata
-        );
-        console.log(`Sending out Solana to ${to}, amount is ${amount}`);
       }
 
       const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
