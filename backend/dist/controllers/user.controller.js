@@ -17,18 +17,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const types_1 = require("../types");
 const router_1 = require("../decorators/router");
-const user_repo_1 = __importDefault(require("../repository/user.repo"));
 const constants_1 = require("../constants");
 const user_service_1 = require("../services/user.service");
 class UserController {
     constructor() {
-        this.userRepo = new user_repo_1.default();
         this.userService = new user_service_1.UserService();
     }
     createUserData(req, res) {
