@@ -47,6 +47,7 @@ export const createInitialNodes = (workflow?: Workflow | null): Node[] => {
           icon: action.type.name === "Email" ? <Mail /> : <FileSpreadsheet />,
           metadata: action.metadata || {},
           name: action.type.name || "",
+          triggerMetadata: workflow.trigger.metadata,
         },
       },
     });

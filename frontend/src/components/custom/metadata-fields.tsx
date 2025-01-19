@@ -98,27 +98,36 @@ export const TriggerMetadataFields = ({
 export const ActionMetadataFields = ({
   selectedOption,
   metadata,
-  customValues,
   errors,
   selectTrigger,
   handleMetadataChange,
-  handleCustomValueChange,
 }: ActionMetadataFieldsProps) => {
   const { user } = useUser();
   const defaultEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-
+  
   const getDisplayValue = (field: string, value: string) => {
     if (!value || !value.startsWith("{data.")) return value;
-
     const triggerKey = value.replace("{data.", "").replace("}", "");
     return selectTrigger?.metadata[triggerKey] || value;
+  };
+
+  const getFieldDescription = (field: string) => {
+    const descriptions: any = {
+      sheetId:
+        "The unique identifier for your Google Sheet. Find this in the URL between /d/ and /edit",
+      range:
+        "The cell range to update (e.g., 'Sheet1!A1:B2' or 'A1:B2' for the first sheet)",
+      values:
+        "The data to write to the sheet. For multiple cells, use comma-separated values",
+    };
+    return descriptions[field] || "";
   };
 
   const renderField = (field: string) => {
     const hasError = errors[field];
     const value = metadata[field];
-    const customValue = customValues[field];
     const displayValue = getDisplayValue(field, value);
+    const description = getFieldDescription(field);
 
     if (field === "from") {
       return (
@@ -169,22 +178,19 @@ export const ActionMetadataFields = ({
           {field.charAt(0).toUpperCase() + field.slice(1)}
           <span className="text-destructive">*</span>
         </label>
+        <p className="text-sm text-gray-500">{description}</p>
         {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
           <div className="space-y-2">
             <Select
               value={value || ""}
               onValueChange={(newValue) => {
-                if (newValue === "custom") {
-                  handleMetadataChange(field, "");
+                const triggerKey = Object.entries(selectTrigger.metadata).find(
+                  ([_, val]) => val === newValue
+                )?.[0];
+                if (triggerKey) {
+                  handleMetadataChange(field, `{data.${triggerKey}}`);
                 } else {
-                  const triggerKey = Object.entries(
-                    selectTrigger.metadata
-                  ).find(([_, val]) => val === newValue)?.[0];
-                  if (triggerKey) {
-                    handleMetadataChange(field, `{data.${triggerKey}}`);
-                  } else {
-                    handleMetadataChange(field, newValue);
-                  }
+                  handleMetadataChange(field, newValue);
                 }
               }}
             >
@@ -196,7 +202,6 @@ export const ActionMetadataFields = ({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="custom">Custom Value</SelectItem>
                 {Object.entries(selectTrigger.metadata).map(
                   ([triggerKey, triggerValue]) => (
                     <SelectItem key={triggerKey} value={triggerValue}>
@@ -206,17 +211,6 @@ export const ActionMetadataFields = ({
                 )}
               </SelectContent>
             </Select>
-            {value === "custom" && (
-              <Input
-                placeholder={`Enter custom ${field}`}
-                value={customValue || ""}
-                onChange={(e) => {
-                  handleCustomValueChange(field, e.target.value);
-                  handleMetadataChange(field, e.target.value);
-                }}
-                className={hasError ? "border-red-500" : ""}
-              />
-            )}
           </div>
         ) : (
           <Input
@@ -236,7 +230,8 @@ export const ActionMetadataFields = ({
   return (
     <div className="space-y-6">
       {selectedOption.name === "Email" && EMAIL_FIELDS.map(renderField)}
-      {selectedOption.name === "Google Sheets" && SHEETS_FIELDS.map(renderField)}
+      {selectedOption.name === "Google Sheets" &&
+        SHEETS_FIELDS.map(renderField)}
     </div>
   );
 };

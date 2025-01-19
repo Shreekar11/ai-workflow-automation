@@ -3,13 +3,12 @@ import { Plus } from "lucide-react";
 import { OptionType } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EMAIL_FIELDS } from "@/constant";
+import { EMAIL_FIELDS, SHEETS_FIELDS } from "@/constant";
 
 export const initializeMetadata = (
   type: string,
   actionType: string,
-  setMetadata: React.Dispatch<React.SetStateAction<Record<string, string>>>,
-  setCustomValues: React.Dispatch<React.SetStateAction<Record<string, any>>>
+  setMetadata: React.Dispatch<React.SetStateAction<Record<string, string>>>
 ) => {
   if (type === "trigger") {
     setMetadata({});
@@ -23,7 +22,6 @@ export const initializeMetadata = (
       {}
     );
     setMetadata(initialMetadata);
-    setCustomValues({});
   }
 };
 
@@ -32,7 +30,6 @@ export const validateForm = (
   type: string,
   metadata: Record<string, string>,
   selectedOption: OptionType,
-  customValues: Record<string, any>,
   setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
 ) => {
   if (type === "trigger") {
@@ -49,7 +46,8 @@ export const validateForm = (
     setErrors(newErrors);
     return isValid;
   } else {
-    const fields = EMAIL_FIELDS;
+    const fields =
+      selectedOption?.name === "Email" ? EMAIL_FIELDS : SHEETS_FIELDS;
     const newErrors: Record<string, boolean> = {};
     let isValid = true;
 
@@ -63,7 +61,7 @@ export const validateForm = (
     fields.forEach((field) => {
       const value = metadata[field];
 
-      if (!value || (value === "custom" && !customValues[field])) {
+      if (!value) {
         newErrors[field] = true;
         isValid = false;
       }

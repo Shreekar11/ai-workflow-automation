@@ -23,7 +23,7 @@ export default function ActionNode({
   };
 }) {
   const [displayMetadata, setDisplayMetadata] = useState<Record<string, any>>(
-    {}
+    data.selectedOption?.triggerMetadata || {}
   );
 
   useEffect(() => {

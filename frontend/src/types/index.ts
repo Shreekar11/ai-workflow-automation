@@ -80,11 +80,9 @@ export interface TriggerMetadataFieldsProps {
 export interface ActionMetadataFieldsProps {
   selectedOption: OptionType;
   metadata: Record<string, string>;
-  customValues: Record<string, string>;
   errors: Record<string, boolean>;
   selectTrigger: {
     metadata: Record<string, string>;
   };
   handleMetadataChange: (key: string, value: string) => void;
-  handleCustomValueChange: (key: string, value: string) => void;
 }

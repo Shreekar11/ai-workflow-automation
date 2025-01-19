@@ -30,6 +30,7 @@ import NodeCard from "./node-card";
 import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
 import AddActionButton from "./add-action-button";
+import { api } from "@/app/api/client";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
@@ -70,7 +71,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     {
       id: string;
       name: string;
-      metadata: any;
+      metadata: {};
+      triggerMetadata: {},
     }[]
   >([]);
   const [selectActions, setSelectActions] = useState<
@@ -78,6 +80,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       id: string;
       name: string;
       metadata: {};
+      triggerMetadata?: {};
     }[]
   >(actionData || []);
 
@@ -97,6 +100,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           id: ax.type.id,
           name: ax.type.name,
           metadata: ax.metadata,
+          triggerMetadata: workflow.trigger.metadata,
         };
       });
       setActionData(action_data);
@@ -206,7 +210,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                       ),
                     name: option.name,
                     metadata: option.metadata,
-                    triggerMetadata: selectTrigger.metadata,
+                    triggerMetadata:
+                      selectTrigger.metadata || workflow?.trigger.metadata,
                   },
                 },
               }
@@ -221,6 +226,15 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
   const handlePublishWorkflow = async () => {
     const { id, name, metadata } = selectTrigger;
+
+    // filtering out empty metadata values
+    const filteredActions = selectActions.map((action) => ({
+      ...action,
+      metadata: Object.fromEntries(
+        Object.entries(action.metadata).filter(([_, value]) => value !== "")
+      ),
+    }));
+
     if (!id || !name || !metadata) {
       toast({
         variant: "destructive",
@@ -245,13 +259,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       response = workflow
         ? await updateWorkflow(
             workflow.id,
-            selectActions,
+            filteredActions,
             selectTrigger,
             workflowName,
             user?.id || ""
           )
         : await publishWorkflow(
-            selectActions,
+            filteredActions,
             selectTrigger,
             workflowName,
             user?.id || ""
@@ -290,8 +304,47 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     }
   };
 
-  const handleRunWorkflow = async () => {};
+  const handleRunWorkflow = async () => {
+    const actionMetadata = selectActions.reduce((acc, action) => {
+      return {
+        ...acc,
+        ...(action.metadata || {}),
+      };
+    }, {});
 
+    try {
+      const response = await api.post(
+        `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
+        {
+          actionMetadata,
+        },
+        {
+          headers: {
+            "clerk-user-id": user?.id,
+          },
+        }
+      );
+
+      const data = response.data;
+      if (!data.status) {
+        throw new Error("Error running the workflow");
+      }
+
+      toast({
+        variant: "success",
+        title: "Success!",
+        description: "Workflow run successful",
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+
+      toast({
+        variant: "destructive",
+        title: "Uh! Something went wrong",
+        description: "Error running the workflow",
+      });
+    }
+  };
   return (
     <div className="flex flex-col w-full h-screen relative">
       <div className="w-full py-2 px-6 bg-[#f2f2f2]">

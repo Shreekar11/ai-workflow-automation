@@ -34,12 +34,10 @@ export default function NodeCard({
     selectedOption,
     metadata,
     setMetadata,
-    customValues,
     errors,
     setErrors,
     handleOptionSelect,
     handleMetadataChange,
-    handleCustomValueChange,
     handleSubmit,
     resetForm,
     setStage,
@@ -128,11 +126,9 @@ export default function NodeCard({
                 <ActionMetadataFields
                   selectedOption={selectedOption}
                   metadata={metadata}
-                  customValues={customValues}
                   errors={errors}
                   selectTrigger={selectTrigger}
                   handleMetadataChange={handleMetadataChange}
-                  handleCustomValueChange={handleCustomValueChange}
                 />
               )}
             </div>
