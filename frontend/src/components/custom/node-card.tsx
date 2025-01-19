@@ -22,6 +22,9 @@ import {
 export default function NodeCard({
   workflow,
   selectTrigger,
+  setSelectTrigger,
+  finalTrigger,
+  setFinalTrigger,
   isOpen,
   onClose,
   onSelect,
@@ -47,6 +50,9 @@ export default function NodeCard({
     onSelect,
     onClose,
     selectTrigger,
+    setSelectTrigger,
+    finalTrigger,
+    setFinalTrigger,
     isOpen,
   });
 
@@ -128,6 +134,9 @@ export default function NodeCard({
                   metadata={metadata}
                   errors={errors}
                   selectTrigger={selectTrigger}
+                  setSelectTrigger={setSelectTrigger}
+                  finalTrigger={finalTrigger}
+                  setFinalTrigger={setFinalTrigger}
                   handleMetadataChange={handleMetadataChange}
                 />
               )}

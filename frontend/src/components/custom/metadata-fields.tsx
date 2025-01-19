@@ -100,34 +100,44 @@ export const ActionMetadataFields = ({
   metadata,
   errors,
   selectTrigger,
+  setSelectTrigger,
+  finalTrigger,
+  setFinalTrigger,
   handleMetadataChange,
 }: ActionMetadataFieldsProps) => {
   const { user } = useUser();
   const defaultEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-  
+
   const getDisplayValue = (field: string, value: string) => {
     if (!value || !value.startsWith("{data.")) return value;
-    const triggerKey = value.replace("{data.", "").replace("}", "");
-    return selectTrigger?.metadata[triggerKey] || value;
+    const dataField = value.replace("{data.", "").replace("}", "");
+    return selectTrigger?.metadata[dataField] || value;
   };
 
-  const getFieldDescription = (field: string) => {
-    const descriptions: any = {
-      sheetId:
-        "The unique identifier for your Google Sheet. Find this in the URL between /d/ and /edit",
-      range:
-        "The cell range to update (e.g., 'Sheet1!A1:B2' or 'A1:B2' for the first sheet)",
-      values:
-        "The data to write to the sheet. For multiple cells, use comma-separated values",
-    };
-    return descriptions[field] || "";
+  const updateTriggerMetadata = (field: string, selectedTriggerKey: string) => {
+    if (!selectTrigger?.metadata || !setSelectTrigger || !setFinalTrigger)
+      return;
+
+    // Keep original metadata in selectTrigger
+    const selectedValue = selectTrigger.metadata[selectedTriggerKey];
+
+    // Update finalTrigger with field-based keys
+    setFinalTrigger((prev) => {
+      const newMetadata = { ...prev.metadata };
+      delete newMetadata[selectedTriggerKey];
+      newMetadata[field] = selectedValue;
+
+      return {
+        ...prev,
+        metadata: newMetadata,
+      };
+    });
   };
 
   const renderField = (field: string) => {
     const hasError = errors[field];
     const value = metadata[field];
     const displayValue = getDisplayValue(field, value);
-    const description = getFieldDescription(field);
 
     if (field === "from") {
       return (
@@ -178,19 +188,18 @@ export const ActionMetadataFields = ({
           {field.charAt(0).toUpperCase() + field.slice(1)}
           <span className="text-destructive">*</span>
         </label>
-        <p className="text-sm text-gray-500">{description}</p>
         {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
           <div className="space-y-2">
             <Select
               value={value || ""}
               onValueChange={(newValue) => {
-                const triggerKey = Object.entries(selectTrigger.metadata).find(
-                  ([_, val]) => val === newValue
-                )?.[0];
-                if (triggerKey) {
-                  handleMetadataChange(field, `{data.${triggerKey}}`);
-                } else {
-                  handleMetadataChange(field, newValue);
+                const selectedTriggerKey = Object.entries(
+                  selectTrigger.metadata
+                ).find(([_, val]) => val === newValue)?.[0];
+
+                if (selectedTriggerKey) {
+                  handleMetadataChange(field, `{data.${field}}`);
+                  updateTriggerMetadata(field, selectedTriggerKey);
                 }
               }}
             >
@@ -202,13 +211,11 @@ export const ActionMetadataFields = ({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(selectTrigger.metadata).map(
-                  ([triggerKey, triggerValue]) => (
-                    <SelectItem key={triggerKey} value={triggerValue}>
-                      {triggerKey}: {triggerValue}
-                    </SelectItem>
-                  )
-                )}
+                {Object.entries(selectTrigger.metadata).map(([key, val]) => (
+                  <SelectItem key={key} value={val}>
+                    {key}: {val}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

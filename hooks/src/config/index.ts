@@ -1,1 +1,1 @@
-export const TOPIC_NAME="zap-events";
+export const TOPIC_NAME="workflow-events";

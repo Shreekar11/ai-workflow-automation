@@ -32,7 +32,9 @@ app.options("*", cors(corsOptions));
 
 app.post("/hooks/:workflowId", async (req, res) => {
   const workflowId = req.params.workflowId;
-  const body = req.body;
+  const body = req.body.data;
+
+  console.log(body);
 
   try {
     // store new trigger in db

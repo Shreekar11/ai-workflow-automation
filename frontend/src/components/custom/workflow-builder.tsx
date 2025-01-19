@@ -84,6 +84,16 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     }[]
   >(actionData || []);
 
+  const [finalTrigger, setFinalTrigger] = useState<{
+    id: string;
+    name: string;
+    metadata: any;
+  }>({
+    id: workflow?.triggerId || "",
+    name: workflow?.trigger?.type?.name || "",
+    metadata: {},
+  });
+
   useEffect(() => {
     if (workflow) {
       setNodes(createInitialNodes(workflow));
@@ -95,6 +105,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         metadata: workflow.trigger.metadata,
       };
       setSelectTrigger(trigger_data);
+      setFinalTrigger(trigger_data); // Initialize final trigger
       const action_data = workflow.actions.map((ax) => {
         return {
           id: ax.type.id,
@@ -190,6 +201,11 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           name: option.name,
           metadata: option.metadata,
         });
+        setFinalTrigger({
+          id: option.id,
+          name: option.name,
+          metadata: option.metadata,
+        });
       }
 
       setNodes((items) =>
@@ -211,7 +227,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                     name: option.name,
                     metadata: option.metadata,
                     triggerMetadata:
-                      selectTrigger.metadata || workflow?.trigger.metadata,
+                      finalTrigger.metadata || workflow?.trigger.metadata,
                   },
                 },
               }
@@ -225,7 +241,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   );
 
   const handlePublishWorkflow = async () => {
-    const { id, name, metadata } = selectTrigger;
+    const { id, name, metadata } = finalTrigger;
 
     // filtering out empty metadata values
     const filteredActions = selectActions.map((action) => ({
@@ -260,13 +276,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         ? await updateWorkflow(
             workflow.id,
             filteredActions,
-            selectTrigger,
+            finalTrigger,
             workflowName,
             user?.id || ""
           )
         : await publishWorkflow(
             filteredActions,
-            selectTrigger,
+            finalTrigger,
             workflowName,
             user?.id || ""
           );
@@ -319,7 +335,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           ) {
             // extract the key from the e.g:- {data.email} -> email
             const triggerKey = value.slice(6, -1);
-            const actualValue = selectTrigger?.metadata?.[triggerKey];
+            const actualValue = finalTrigger?.metadata?.[triggerKey];
             return {
               ...metaAcc,
               [key]: actualValue || value,
@@ -339,11 +355,14 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       };
     }, {});
 
+    //kafka-topics.sh --create --topic workflow-events --bootstrap-server localhost:9092
+    // kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic workflow-events
+
     try {
       const response = await api.post(
         `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
         {
-          actionMetadata,
+          data: actionMetadata,
         },
         {
           headers: {
@@ -440,6 +459,9 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
               <NodeCard
                 workflow={workflow || null}
                 selectTrigger={selectTrigger}
+                setSelectTrigger={setSelectTrigger}
+                finalTrigger={finalTrigger}
+                setFinalTrigger={setFinalTrigger}
                 isOpen={!!selectedNode}
                 onClose={handleCloseSheet}
                 onSelect={handleSelectOption}

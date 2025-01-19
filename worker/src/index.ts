@@ -75,6 +75,8 @@ async function main() {
         return;
       }
 
+      console.log(currentAction);
+
       // email action
       if (currentAction.type.id === availableEmailId) {
         const workflowRunMetadata = workflowRunDetails?.metadata;

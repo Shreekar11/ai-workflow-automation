@@ -53,6 +53,25 @@ export interface NodeCardProps {
     name: string;
     metadata: Record<string, string>;
   };
+  setSelectTrigger: React.Dispatch<
+    React.SetStateAction<{
+      id: string;
+      name: string;
+      metadata: Record<string, string>;
+    }>
+  >;
+  finalTrigger: {
+    id: string;
+    name: string;
+    metadata: Record<string, string>;
+  };
+  setFinalTrigger: React.Dispatch<
+    React.SetStateAction<{
+      id: string;
+      name: string;
+      metadata: Record<string, string>;
+    }>
+  >;
   isOpen: boolean;
   onClose: () => void;
   onSelect: (option: {
@@ -84,5 +103,24 @@ export interface ActionMetadataFieldsProps {
   selectTrigger: {
     metadata: Record<string, string>;
   };
+  setSelectTrigger: React.Dispatch<
+    React.SetStateAction<{
+      id: string;
+      name: string;
+      metadata: Record<string, string>;
+    }>
+  >;
+  finalTrigger: {
+    id: string;
+    name: string;
+    metadata: Record<string, string>;
+  };
+  setFinalTrigger: React.Dispatch<
+    React.SetStateAction<{
+      id: string;
+      name: string;
+      metadata: Record<string, string>;
+    }>
+  >;
   handleMetadataChange: (key: string, value: string) => void;
 }

@@ -71,6 +71,7 @@ function main() {
                     console.log("Current action not found");
                     return;
                 }
+                console.log(currentAction);
                 // email action
                 if (currentAction.type.id === config_1.availableEmailId) {
                     const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;

@@ -38,7 +38,8 @@ const PROCESSING_INTERVAL = 5000;
 app.options("*", (0, cors_1.default)(corsOptions));
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
-    const body = req.body;
+    const body = req.body.data;
+    console.log(body);
     try {
         // store new trigger in db
         yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
