@@ -13,11 +13,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
 const client_1 = require("@prisma/client");
 const kafkajs_1 = require("kafkajs");
 const config_1 = require("./config");
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
+// CORS configuration
+const corsOptions = {
+    origin: ["*", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "clerk-user-id", "Authorization"],
+    credentials: true,
+};
+app.use((0, cors_1.default)(corsOptions));
+app.use(express_1.default.json());
 const kafka = new kafkajs_1.Kafka({
     clientId: "outbox-processor",
     brokers: ["localhost:9092"],
@@ -25,7 +35,7 @@ const kafka = new kafkajs_1.Kafka({
 const producer = kafka.producer();
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
-app.use(express_1.default.json());
+app.options("*", (0, cors_1.default)(corsOptions));
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
     const body = req.body;

@@ -1,10 +1,22 @@
 import express from "express";
+import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { Kafka } from "kafkajs";
 import { TOPIC_NAME } from "./config";
 
 const client = new PrismaClient();
 const app = express();
+
+// CORS configuration
+const corsOptions = {
+  origin: ["*", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "clerk-user-id", "Authorization"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
 
 const kafka = new Kafka({
   clientId: "outbox-processor",
@@ -16,7 +28,7 @@ const producer = kafka.producer();
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
 
-app.use(express.json());
+app.options("*", cors(corsOptions));
 
 app.post("/hooks/:workflowId", async (req, res) => {
   const workflowId = req.params.workflowId;

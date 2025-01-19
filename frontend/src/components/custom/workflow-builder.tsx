@@ -72,7 +72,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       id: string;
       name: string;
       metadata: {};
-      triggerMetadata: {},
+      triggerMetadata: {};
     }[]
   >([]);
   const [selectActions, setSelectActions] = useState<
@@ -305,10 +305,37 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   };
 
   const handleRunWorkflow = async () => {
+    // combine all the metadata from actions
     const actionMetadata = selectActions.reduce((acc, action) => {
+      if (!action.metadata) return acc;
+
+      const processedMetadata = Object.entries(action.metadata).reduce(
+        (metaAcc, [key, value]) => {
+          // checking if the value is a reference to trigger's metadata
+          if (
+            typeof value === "string" &&
+            value.startsWith("{data.") &&
+            value.endsWith("}")
+          ) {
+            // extract the key from the e.g:- {data.email} -> email
+            const triggerKey = value.slice(6, -1);
+            const actualValue = selectTrigger?.metadata?.[triggerKey];
+            return {
+              ...metaAcc,
+              [key]: actualValue || value,
+            };
+          }
+          return {
+            ...metaAcc,
+            [key]: value,
+          };
+        },
+        {}
+      );
+
       return {
         ...acc,
-        ...(action.metadata || {}),
+        ...processedMetadata,
       };
     }, {});
 
@@ -345,6 +372,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       });
     }
   };
+
   return (
     <div className="flex flex-col w-full h-screen relative">
       <div className="w-full py-2 px-6 bg-[#f2f2f2]">

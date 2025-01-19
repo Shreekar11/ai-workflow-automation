@@ -65,11 +65,11 @@ async function main() {
           },
         },
       });
-
+      
       const currentAction = workflowRunDetails?.workflow.actions.find(
         (action) => action.sortingOrder === stage
       );
-
+      
       if (!currentAction) {
         console.log("Current action not found");
         return;
