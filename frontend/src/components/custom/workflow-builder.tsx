@@ -105,7 +105,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         metadata: workflow.trigger.metadata,
       };
       setSelectTrigger(trigger_data);
-      setFinalTrigger(trigger_data); // Initialize final trigger
+      setFinalTrigger(trigger_data);
       const action_data = workflow.actions.map((ax) => {
         return {
           id: ax.type.id,
@@ -243,11 +243,33 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const handlePublishWorkflow = async () => {
     const { id, name, metadata } = finalTrigger;
 
-    // filtering out empty metadata values
     const filteredActions = selectActions.map((action) => ({
       ...action,
       metadata: Object.fromEntries(
-        Object.entries(action.metadata).filter(([_, value]) => value !== "")
+        Object.entries(action.metadata)
+          .filter(([_, value]) => value !== "")
+          .map(([actionKey, actionValue]) => {
+            if (
+              typeof actionValue === "string" &&
+              actionValue.match(/{data\.[^}]+}/)
+            ) {
+              const match = actionValue.match(/{data\.([^}]+)}/);
+              if (match) {
+                const oldKey = match[1];
+
+                if (finalTrigger.metadata && oldKey in finalTrigger.metadata) {
+                  return [
+                    actionKey,
+                    actionValue.replace(
+                      `{data.${oldKey}}`,
+                      `{data.${actionKey}}`
+                    ),
+                  ];
+                }
+              }
+            }
+            return [actionKey, actionValue];
+          })
       ),
     }));
 

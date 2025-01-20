@@ -110,28 +110,25 @@ export const ActionMetadataFields = ({
 
   const getDisplayValue = (field: string, value: string) => {
     if (!value || !value.startsWith("{data.")) return value;
-    const dataField = value.replace("{data.", "").replace("}", "");
-    return selectTrigger?.metadata[dataField] || value;
+
+    const referencedField = value.replace("{data.", "").replace("}", "");
+    return finalTrigger?.metadata[field] || value;
   };
 
-  const updateTriggerMetadata = (field: string, selectedTriggerKey: string) => {
-    if (!selectTrigger?.metadata || !setSelectTrigger || !setFinalTrigger)
-      return;
+  const updateTriggerMetadata = (
+    field: string,
+    selectedValue: string,
+    selectedTriggerKey: string
+  ) => {
+    if (!setFinalTrigger || !selectTrigger?.metadata) return;
 
-    // Keep original metadata in selectTrigger
-    const selectedValue = selectTrigger.metadata[selectedTriggerKey];
-
-    // Update finalTrigger with field-based keys
-    setFinalTrigger((prev) => {
-      const newMetadata = { ...prev.metadata };
-      delete newMetadata[selectedTriggerKey];
-      newMetadata[field] = selectedValue;
-
-      return {
-        ...prev,
-        metadata: newMetadata,
-      };
-    });
+    setFinalTrigger((prev) => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        [field]: selectedValue,
+      },
+    }));
   };
 
   const renderField = (field: string) => {
@@ -198,8 +195,8 @@ export const ActionMetadataFields = ({
                 ).find(([_, val]) => val === newValue)?.[0];
 
                 if (selectedTriggerKey) {
-                  handleMetadataChange(field, `{data.${field}}`);
-                  updateTriggerMetadata(field, selectedTriggerKey);
+                  handleMetadataChange(field, `{data.${selectedTriggerKey}}`);
+                  updateTriggerMetadata(field, newValue, selectedTriggerKey);
                 }
               }}
             >
