@@ -87,9 +87,16 @@ function main() {
                 if (currentAction.type.id === config_1.availableGoogleSheetsId) {
                     const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
                     const sheetId = (0, parser_1.parser)((_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.sheetId, workflowRunMetadata);
-                    const range = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.range, workflowRunMetadata);
-                    const values = (0, parser_1.parser)((_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.values, workflowRunMetadata);
-                    const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, JSON.parse(values));
+                    let range = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.range, workflowRunMetadata);
+                    if (range.startsWith("Sheet!")) {
+                        range = range.replace("Sheet!", "Sheet1!");
+                    }
+                    else {
+                        range = `Sheet1!${range}`;
+                    }
+                    const valuesStr = (0, parser_1.parser)((_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.values, workflowRunMetadata);
+                    const values = valuesStr.split(",");
+                    const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, values);
                     yield sheetsService.appendToSheet();
                     console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
                 }

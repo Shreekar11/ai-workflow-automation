@@ -65,11 +65,11 @@ async function main() {
           },
         },
       });
-      
+
       const currentAction = workflowRunDetails?.workflow.actions.find(
         (action) => action.sortingOrder === stage
       );
-      
+
       if (!currentAction) {
         console.log("Current action not found");
         return;
@@ -109,20 +109,27 @@ async function main() {
           (currentAction.metadata as JsonObject)?.sheetId as string,
           workflowRunMetadata
         );
-        const range = parser(
+
+        let range = parser(
           (currentAction.metadata as JsonObject)?.range as string,
           workflowRunMetadata
         );
-        const values = parser(
+
+        if (range.startsWith("Sheet!")) {
+          range = range.replace("Sheet!", "Sheet1!");
+        } else {
+          range = `Sheet1!${range}`;
+        }
+
+        const valuesStr = parser(
           (currentAction.metadata as JsonObject)?.values as string,
           workflowRunMetadata
         );
 
-        const sheetsService = new GoogleSheetsService(
-          sheetId,
-          range,
-          JSON.parse(values)
-        );
+        const values = valuesStr.split(",");
+
+        const sheetsService = new GoogleSheetsService(sheetId, range, values);
+
         await sheetsService.appendToSheet();
         console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
       }
