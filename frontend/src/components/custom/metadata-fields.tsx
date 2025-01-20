@@ -7,6 +7,7 @@ import {
 
 // clerk user
 import { useUser } from "@clerk/nextjs";
+import { AlertCircle } from "lucide-react";
 
 // constants
 import { EMAIL_FIELDS, SHEETS_FIELDS } from "@/constant";
@@ -22,6 +23,7 @@ import {
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const MetadataDisplay = ({ type, metadata }: MetadataDisplayProps) => {
   if (type === "trigger" && Object.keys(metadata).length > 0) {
@@ -138,7 +140,10 @@ export const ActionMetadataFields = ({
 
     if (field === "from") {
       return (
-        <div className="flex flex-col space-y-2 justify-start items-start">
+        <div
+          key={field}
+          className="flex flex-col space-y-2 justify-start items-start"
+        >
           <div>
             From <span className="text-destructive">*</span>
           </div>
@@ -234,8 +239,24 @@ export const ActionMetadataFields = ({
   return (
     <div className="space-y-6">
       {selectedOption.name === "Email" && EMAIL_FIELDS.map(renderField)}
-      {selectedOption.name === "Google Sheets" &&
-        SHEETS_FIELDS.map(renderField)}
+      {selectedOption.name === "Google Sheets" && (
+        <>
+          {SHEETS_FIELDS.map(renderField)}
+          <Alert className="bg-red-50">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Important</AlertTitle>
+            <AlertDescription>
+              Please add the following service account email to your Google
+              Sheet and grant it Editor permissions:
+              <code className="block mt-2 p-2 bg-yellow-100 rounded-lg">
+                google-auth-service-account@workflow-automation-448218.iam.gserviceaccount.com
+              </code>
+              This step is crucial for automating the workflow with your Google
+              Sheet.
+            </AlertDescription>
+          </Alert>
+        </>
+      )}
     </div>
   );
 };
