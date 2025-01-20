@@ -177,6 +177,14 @@ class WorkflowService {
     deleteWorkflow(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                const workflowRunCount = yield tx.workflowRun.count({
+                    where: { workflowId: id },
+                });
+                if (workflowRunCount > 0) {
+                    yield tx.workflowRun.deleteMany({
+                        where: { workflowId: id },
+                    });
+                }
                 const triggerCount = yield tx.trigger.count({
                     where: { workflowId: id },
                 });
