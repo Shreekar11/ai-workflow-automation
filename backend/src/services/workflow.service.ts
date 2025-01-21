@@ -204,7 +204,6 @@ export class WorkflowService {
 
   public async deleteWorkflow(id: string) {
     return await this.prisma.$transaction(async (tx) => {
-
       const workflowRunCount = await tx.workflowRun.count({
         where: { workflowId: id },
       });
@@ -214,7 +213,7 @@ export class WorkflowService {
           where: { workflowId: id },
         });
       }
-      
+
       const triggerCount = await tx.trigger.count({
         where: { workflowId: id },
       });
