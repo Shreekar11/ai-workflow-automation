@@ -1,3 +1,4 @@
+import http from "http";
 import { createClient } from "redis";
 import {
   availableEmailId,
@@ -14,7 +15,6 @@ import { GoogleSheetsService } from "./services/sheets.service";
 dotenv.config();
 
 const client = new PrismaClient();
-
 const redisClient = createClient({
   url: "redis://localhost:6379",
 });
@@ -130,11 +130,10 @@ async function main() {
     await redisClient.connect();
     console.log("Connected to Redis");
 
-    // here processing messages continuously
+    // start processing messages
     while (true) {
       try {
         const result = await redisClient.brPop(QUEUE_NAME, 0);
-
         if (result) {
           const message = result.element;
           await processMessage(message);
@@ -150,17 +149,29 @@ async function main() {
   }
 }
 
+const server = http.createServer((req, res) => {
+  if (req.url === "/" && req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "Worker is running" }));
+  } else {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not Found" }));
+  }
+});
+
+server.listen(8000, () => {
+  console.log("Worker HTTP server listening on port 8080");
+});
+
 // force shutdown
 process.on("SIGTERM", async () => {
   console.log("Shutting down worker...");
   await redisClient.quit();
   await client.$disconnect();
-  process.exit(0);
-});
-
-//  redis disconnection
-redisClient.on("disconnect", () => {
-  console.error("Redis connection lost. Attempting to reconnect...");
+  server.close(() => {
+    console.log("HTTP server closed");
+    process.exit(0);
+  });
 });
 
 process.on("unhandledRejection", (error) => {

@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const http_1 = __importDefault(require("http"));
 const redis_1 = require("redis");
 const config_1 = require("./config");
 const client_1 = require("@prisma/client");
@@ -101,7 +102,7 @@ function main() {
         try {
             yield redisClient.connect();
             console.log("Connected to Redis");
-            // here processing messages continuously
+            // start processing messages
             while (true) {
                 try {
                     const result = yield redisClient.brPop(config_1.QUEUE_NAME, 0);
@@ -122,17 +123,29 @@ function main() {
         }
     });
 }
+const server = http_1.default.createServer((req, res) => {
+    if (req.url === "/" && req.method === "GET") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ status: "Worker is running" }));
+    }
+    else {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Not Found" }));
+    }
+});
+server.listen(8000, () => {
+    console.log("Worker HTTP server listening on port 8080");
+});
 // force shutdown
 process.on("SIGTERM", () => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Shutting down worker...");
     yield redisClient.quit();
     yield client.$disconnect();
-    process.exit(0);
+    server.close(() => {
+        console.log("HTTP server closed");
+        process.exit(0);
+    });
 }));
-//  redis disconnection
-redisClient.on("disconnect", () => {
-    console.error("Redis connection lost. Attempting to reconnect...");
-});
 process.on("unhandledRejection", (error) => {
     console.error("Unhandled promise rejection:", error);
 });
