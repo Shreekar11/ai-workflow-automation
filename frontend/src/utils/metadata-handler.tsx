@@ -13,7 +13,7 @@ export const initializeMetadata = (
   if (type === "trigger") {
     setMetadata({});
   } else {
-    const fields = EMAIL_FIELDS;
+    const fields = actionType === "Email" ? EMAIL_FIELDS : SHEETS_FIELDS;
     const initialMetadata = fields.reduce(
       (acc, field) => ({
         ...acc,

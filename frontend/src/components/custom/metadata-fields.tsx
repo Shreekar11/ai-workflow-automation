@@ -6,6 +6,7 @@ import {
 } from "@/types";
 
 // clerk user
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AlertCircle } from "lucide-react";
 
@@ -109,34 +110,33 @@ export const ActionMetadataFields = ({
 }: ActionMetadataFieldsProps) => {
   const { user } = useUser();
   const defaultEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+  const [customInputs, setCustomInputs] = useState<Record<string, boolean>>({});
 
   const getDisplayValue = (field: string, value: string) => {
     if (!value || !value.startsWith("{data.")) return value;
-
     const referencedField = value.replace("{data.", "").replace("}", "");
     return finalTrigger?.metadata[field] || value;
   };
 
-  const updateTriggerMetadata = (
-    field: string,
-    selectedValue: string,
-    selectedTriggerKey: string
-  ) => {
-    if (!setFinalTrigger || !selectTrigger?.metadata) return;
+  const handleCustomValueChange = (field: string, value: string) => {
+    handleMetadataChange(field, `{data.${field}}`);
 
-    setFinalTrigger((prev) => ({
-      ...prev,
-      metadata: {
-        ...prev.metadata,
-        [field]: selectedValue,
-      },
-    }));
+    if (setFinalTrigger) {
+      setFinalTrigger((prev) => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          [field]: value,
+        },
+      }));
+    }
   };
 
   const renderField = (field: string) => {
     const hasError = errors[field];
     const value = metadata[field];
     const displayValue = getDisplayValue(field, value);
+    const isCustomValue = customInputs[field];
 
     if (field === "from") {
       return (
@@ -193,15 +193,29 @@ export const ActionMetadataFields = ({
         {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
           <div className="space-y-2">
             <Select
-              value={value || ""}
+              value={isCustomValue ? "custom" : value || ""}
               onValueChange={(newValue) => {
-                const selectedTriggerKey = Object.entries(
-                  selectTrigger.metadata
-                ).find(([_, val]) => val === newValue)?.[0];
+                if (newValue === "custom") {
+                  setCustomInputs((prev) => ({ ...prev, [field]: true }));
+                  handleCustomValueChange(field, "");
+                } else {
+                  setCustomInputs((prev) => ({ ...prev, [field]: false }));
+                  const selectedTriggerKey = Object.entries(
+                    selectTrigger.metadata
+                  ).find(([_, val]) => val === newValue)?.[0];
 
-                if (selectedTriggerKey) {
-                  handleMetadataChange(field, `{data.${selectedTriggerKey}}`);
-                  updateTriggerMetadata(field, newValue, selectedTriggerKey);
+                  if (selectedTriggerKey) {
+                    handleMetadataChange(field, `{data.${field}}`);
+                    if (setFinalTrigger) {
+                      setFinalTrigger((prev) => ({
+                        ...prev,
+                        metadata: {
+                          ...prev.metadata,
+                          [field]: newValue,
+                        },
+                      }));
+                    }
+                  }
                 }
               }}
             >
@@ -209,7 +223,7 @@ export const ActionMetadataFields = ({
                 className={`w-full ${hasError ? "border-red-500" : ""}`}
               >
                 <SelectValue placeholder={`Select ${field}`}>
-                  {displayValue}
+                  {isCustomValue ? "Custom Value" : displayValue}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -218,8 +232,17 @@ export const ActionMetadataFields = ({
                     {key}: {val}
                   </SelectItem>
                 ))}
+                <SelectItem value="custom">Custom Value</SelectItem>
               </SelectContent>
             </Select>
+            {isCustomValue && (
+              <Input
+                placeholder={`Enter custom ${field}`}
+                value={finalTrigger?.metadata[field] || ""}
+                onChange={(e) => handleCustomValueChange(field, e.target.value)}
+                className={hasError ? "border-red-500" : ""}
+              />
+            )}
           </div>
         ) : (
           <Input
@@ -260,3 +283,5 @@ export const ActionMetadataFields = ({
     </div>
   );
 };
+
+export default ActionMetadataFields;

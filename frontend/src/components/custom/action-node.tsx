@@ -1,10 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
 
+const isDataFormat = (value: any): boolean => {
+  return typeof value === "string" && !!value.match(/^\{data\.[^}]+\}$/);
+};
+
 const resolveValue = (value: any, triggerMetadata: Record<string, any>) => {
   if (typeof value === "string" && value.startsWith("{data.")) {
     const fieldKey = value.replace("{data.", "").replace("}", "");
-    return triggerMetadata[fieldKey] || value;
+    return triggerMetadata[fieldKey];
   }
   return value;
 };
@@ -31,10 +35,20 @@ export default function ActionNode({
       const resolvedMetadata = Object.fromEntries(
         Object.entries(data.selectedOption.metadata)
           .filter(([key, value]) => key && value)
-          .map(([key, value]) => [
-            key,
-            resolveValue(value, data.selectedOption?.triggerMetadata || {}),
-          ])
+          .map(([key, value]) => {
+            if (isDataFormat(value)) {
+              const resolvedValue = resolveValue(
+                value,
+                data.selectedOption?.triggerMetadata || {}
+              );
+              if (resolvedValue && !isDataFormat(resolvedValue)) {
+                return [key, resolvedValue];
+              }
+              return null;
+            }
+            return [key, value];
+          })
+          .filter((entry): entry is [string, any] => entry !== null)
       );
       setDisplayMetadata(resolvedMetadata);
     } else {
