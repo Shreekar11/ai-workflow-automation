@@ -7,7 +7,7 @@ export const CreateUserSchema = z.object({
   lastName: z.string().default(""),
 });
 
-export const WorkFlowSchema = z.object({
+export const WorkflowSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
   availableTriggerId: z.string(),

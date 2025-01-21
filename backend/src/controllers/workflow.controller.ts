@@ -1,14 +1,19 @@
 import { Request, Response } from "express";
-import { WorkFlowSchema } from "../types";
+import { WorkflowSchema } from "../types";
 import { DELETE, GET, POST, PUT } from "../decorators/router";
 import { PrismaClient } from "@prisma/client";
 import { HTTPStatus } from "../constants";
 import { APIResponse } from "../interface/api";
 import { WorkflowService } from "../services/workflow.service";
 import { UserService } from "../services/user.service";
-import { UserNotFoundError } from "../modules/error";
+import {
+  UserNotFoundError,
+  WorkflowCreateError,
+  WorkflowError,
+  WorkflowNotFoundError,
+} from "../modules/error";
 
-export default class WorkFlowController {
+export default class WorkflowController {
   private prisma: PrismaClient;
   private workflowService: WorkflowService;
   private userService: UserService;
@@ -35,7 +40,7 @@ export default class WorkFlowController {
         });
       }
 
-      const parsedData = WorkFlowSchema.safeParse(body);
+      const parsedData = WorkflowSchema.safeParse(body);
       if (!parsedData.success) {
         return res.status(HTTPStatus.BAD_REQUEST).json({
           status: false,
@@ -103,15 +108,25 @@ export default class WorkFlowController {
         throw error;
       }
 
-      const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
-        userData
-      );
+      try {
+        const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
+          userData
+        );
 
-      return res.status(HTTPStatus.OK).json({
-        status: true,
-        message: "Workflows retrieved successfully",
-        data: userWorkFlowData,
-      });
+        return res.status(HTTPStatus.OK).json({
+          status: true,
+          message: "Workflows retrieved successfully",
+          data: userWorkFlowData,
+        });
+      } catch (error) {
+        if (error instanceof WorkflowNotFoundError) {
+          return res.status(HTTPStatus.NOT_FOUND).json({
+            status: false,
+            message: error.message,
+          });
+        }
+        throw error;
+      }
     } catch (err: any) {
       console.error("Error fetching workflows:", err);
       return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
@@ -157,23 +172,41 @@ export default class WorkFlowController {
         throw error;
       }
 
-      const workFlowData = await this.workflowService.fetchWorkFlowById(
-        id,
-        userData.id
-      );
+      try {
+        const workFlowData = await this.workflowService.fetchWorkFlowById(
+          id,
+          userData.id
+        );
 
-      if (!workFlowData) {
-        return res.status(HTTPStatus.NOT_FOUND).json({
-          status: false,
-          message: "Workflow not found",
+        if (!workFlowData) {
+          return res.status(HTTPStatus.NOT_FOUND).json({
+            status: false,
+            message: "Workflow not found",
+          });
+        }
+
+        if (workFlowData.userId !== userData.id) {
+          return res.status(HTTPStatus.CONFLICT).json({
+            status: false,
+            message:
+              "Access denied, You do not have permission to access this workflow",
+          });
+        }
+
+        return res.status(HTTPStatus.OK).json({
+          status: true,
+          message: "Workflow retrieved successfully",
+          data: workFlowData,
         });
+      } catch (error) {
+        if (error instanceof WorkflowError) {
+          return res.status(HTTPStatus.BAD_REQUEST).json({
+            status: false,
+            message: error.message,
+          });
+        }
+        throw error;
       }
-
-      return res.status(HTTPStatus.OK).json({
-        status: true,
-        message: "Workflow retrieved successfully",
-        data: workFlowData,
-      });
     } catch (err: any) {
       console.error("Error fetching workflow:", err);
       return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
@@ -196,14 +229,14 @@ export default class WorkFlowController {
         });
       }
 
-      const parsedData = WorkFlowSchema.safeParse(body);
+      const parsedData = WorkflowSchema.safeParse(body);
       if (!parsedData.success) {
         return res.status(HTTPStatus.BAD_REQUEST).json({
           status: false,
           message: "Invalid workflow data",
         });
       }
-
+      
       const updatedWorkflowData = await this.workflowService.updateWorkflow(
         parsedData
       );

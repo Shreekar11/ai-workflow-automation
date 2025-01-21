@@ -25,7 +25,7 @@ const constants_1 = require("../constants");
 const workflow_service_1 = require("../services/workflow.service");
 const user_service_1 = require("../services/user.service");
 const error_1 = require("../modules/error");
-class WorkFlowController {
+class WorkflowController {
     constructor() {
         this.prisma = new client_1.PrismaClient();
         this.workflowService = new workflow_service_1.WorkflowService();
@@ -43,7 +43,7 @@ class WorkFlowController {
                         message: "Unauthorized: Missing user ID",
                     });
                 }
-                const parsedData = types_1.WorkFlowSchema.safeParse(body);
+                const parsedData = types_1.WorkflowSchema.safeParse(body);
                 if (!parsedData.success) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
                         status: false,
@@ -103,12 +103,23 @@ class WorkFlowController {
                     }
                     throw error;
                 }
-                const userWorkFlowData = yield this.workflowService.fetchAllWorkflows(userData);
-                return res.status(constants_1.HTTPStatus.OK).json({
-                    status: true,
-                    message: "Workflows retrieved successfully",
-                    data: userWorkFlowData,
-                });
+                try {
+                    const userWorkFlowData = yield this.workflowService.fetchAllWorkflows(userData);
+                    return res.status(constants_1.HTTPStatus.OK).json({
+                        status: true,
+                        message: "Workflows retrieved successfully",
+                        data: userWorkFlowData,
+                    });
+                }
+                catch (error) {
+                    if (error instanceof error_1.WorkflowNotFoundError) {
+                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                            status: false,
+                            message: error.message,
+                        });
+                    }
+                    throw error;
+                }
             }
             catch (err) {
                 console.error("Error fetching workflows:", err);
@@ -150,18 +161,35 @@ class WorkFlowController {
                     }
                     throw error;
                 }
-                const workFlowData = yield this.workflowService.fetchWorkFlowById(id, userData.id);
-                if (!workFlowData) {
-                    return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
-                        status: false,
-                        message: "Workflow not found",
+                try {
+                    const workFlowData = yield this.workflowService.fetchWorkFlowById(id, userData.id);
+                    if (!workFlowData) {
+                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
+                            status: false,
+                            message: "Workflow not found",
+                        });
+                    }
+                    if (workFlowData.userId !== userData.id) {
+                        return res.status(constants_1.HTTPStatus.CONFLICT).json({
+                            status: false,
+                            message: "Access denied, You do not have permission to access this workflow",
+                        });
+                    }
+                    return res.status(constants_1.HTTPStatus.OK).json({
+                        status: true,
+                        message: "Workflow retrieved successfully",
+                        data: workFlowData,
                     });
                 }
-                return res.status(constants_1.HTTPStatus.OK).json({
-                    status: true,
-                    message: "Workflow retrieved successfully",
-                    data: workFlowData,
-                });
+                catch (error) {
+                    if (error instanceof error_1.WorkflowError) {
+                        return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                            status: false,
+                            message: error.message,
+                        });
+                    }
+                    throw error;
+                }
             }
             catch (err) {
                 console.error("Error fetching workflow:", err);
@@ -183,7 +211,7 @@ class WorkFlowController {
                         message: "Unauthorized",
                     });
                 }
-                const parsedData = types_1.WorkFlowSchema.safeParse(body);
+                const parsedData = types_1.WorkflowSchema.safeParse(body);
                 if (!parsedData.success) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
                         status: false,
@@ -261,34 +289,34 @@ class WorkFlowController {
         });
     }
 }
-exports.default = WorkFlowController;
+exports.default = WorkflowController;
 __decorate([
     (0, router_1.POST)("/api/v1/workflow"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "createWorkFlowData", null);
+], WorkflowController.prototype, "createWorkFlowData", null);
 __decorate([
     (0, router_1.GET)("/api/v1/workflow"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "getWorkFlowData", null);
+], WorkflowController.prototype, "getWorkFlowData", null);
 __decorate([
     (0, router_1.GET)("/api/v1/workflow/:id"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "getWorkFlowDataById", null);
+], WorkflowController.prototype, "getWorkFlowDataById", null);
 __decorate([
     (0, router_1.PUT)("/api/v1/workflow"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "updateWorkflow", null);
+], WorkflowController.prototype, "updateWorkflow", null);
 __decorate([
     (0, router_1.DELETE)("/api/v1/workflow/:id"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], WorkFlowController.prototype, "deleteWorkflow", null);
+], WorkflowController.prototype, "deleteWorkflow", null);

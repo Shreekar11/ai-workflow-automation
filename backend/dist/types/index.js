@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkFlowSchema = exports.CreateUserSchema = void 0;
+exports.WorkflowSchema = exports.CreateUserSchema = void 0;
 const zod_1 = require("zod");
 exports.CreateUserSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
@@ -8,7 +8,7 @@ exports.CreateUserSchema = zod_1.z.object({
     firstName: zod_1.z.string().default(""),
     lastName: zod_1.z.string().default(""),
 });
-exports.WorkFlowSchema = zod_1.z.object({
+exports.WorkflowSchema = zod_1.z.object({
     id: zod_1.z.string().optional(),
     name: zod_1.z.string(),
     availableTriggerId: zod_1.z.string(),
