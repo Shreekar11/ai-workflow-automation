@@ -12,14 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
-const kafkajs_1 = require("kafkajs");
+const redis_1 = require("redis");
 const config_1 = require("./config");
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
-// CORS configuration
+// cors configuration
 const corsOptions = {
     origin: ["*", "http://localhost:3000"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -28,18 +28,16 @@ const corsOptions = {
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
-const kafka = new kafkajs_1.Kafka({
-    clientId: "outbox-processor",
-    brokers: ["localhost:9092"],
+const redisClient = (0, redis_1.createClient)({
+    url: "redis://localhost:6379",
 });
-const producer = kafka.producer();
+redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
 app.options("*", (0, cors_1.default)(corsOptions));
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
     const body = req.body.data;
-    console.log(body);
     try {
         // store new trigger in db
         yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -71,17 +69,15 @@ function processOutboxMessages() {
                 take: BATCH_SIZE,
             });
             if (pendingRows.length > 0) {
-                yield producer.send({
-                    topic: config_1.TOPIC_NAME,
-                    messages: pendingRows.map((item) => {
-                        return {
-                            value: JSON.stringify({
-                                workflowRunId: item.workflowRunId,
-                                stage: 0,
-                            }),
-                        };
-                    }),
+                const pipeline = redisClient.multi();
+                pendingRows.forEach((item) => {
+                    const message = JSON.stringify({
+                        workflowRunId: item.workflowRunId,
+                        stage: 0,
+                    });
+                    pipeline.lPush(config_1.QUEUE_NAME, message);
                 });
+                yield pipeline.exec();
                 yield client.workflowRunOutbox.deleteMany({
                     where: {
                         id: {
@@ -100,17 +96,20 @@ function processOutboxMessages() {
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield producer.connect();
-            console.log("Connected to Kafka");
-            // start the background processor
+            yield redisClient.connect();
+            console.log("Connected to Redis");
             setInterval(processOutboxMessages, PROCESSING_INTERVAL);
             app.listen(5000, () => {
                 console.log("Server running on port 5000");
             });
+            // redis disconnection
+            redisClient.on("disconnect", () => {
+                console.error("Redis connection lost. Attempting to reconnect...");
+            });
             // force shutdown
             process.on("SIGTERM", () => __awaiter(this, void 0, void 0, function* () {
                 console.log("Shutting down server...");
-                yield producer.disconnect();
+                yield redisClient.quit();
                 yield client.$disconnect();
                 process.exit(0);
             }));
@@ -121,4 +120,7 @@ function startServer() {
         }
     });
 }
+process.on("unhandledRejection", (error) => {
+    console.error("Unhandled promise rejection:", error);
+});
 startServer().catch(console.error);

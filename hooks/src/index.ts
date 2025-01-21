@@ -1,13 +1,13 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { Kafka } from "kafkajs";
-import { TOPIC_NAME } from "./config";
+import { createClient } from "redis";
+import { QUEUE_NAME } from "./config";
 
 const client = new PrismaClient();
 const app = express();
 
-// CORS configuration
+// cors configuration
 const corsOptions = {
   origin: ["*", "http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -18,12 +18,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-const kafka = new Kafka({
-  clientId: "outbox-processor",
-  brokers: ["localhost:9092"],
+const redisClient = createClient({
+  url: "redis://localhost:6379",
 });
 
-const producer = kafka.producer();
+redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
@@ -33,8 +32,6 @@ app.options("*", cors(corsOptions));
 app.post("/hooks/:workflowId", async (req, res) => {
   const workflowId = req.params.workflowId;
   const body = req.body.data;
-
-  console.log(body);
 
   try {
     // store new trigger in db
@@ -69,17 +66,17 @@ async function processOutboxMessages() {
     });
 
     if (pendingRows.length > 0) {
-      await producer.send({
-        topic: TOPIC_NAME,
-        messages: pendingRows.map((item) => {
-          return {
-            value: JSON.stringify({
-              workflowRunId: item.workflowRunId,
-              stage: 0,
-            }),
-          };
-        }),
+      const pipeline = redisClient.multi();
+
+      pendingRows.forEach((item) => {
+        const message = JSON.stringify({
+          workflowRunId: item.workflowRunId,
+          stage: 0,
+        });
+        pipeline.lPush(QUEUE_NAME, message);
       });
+
+      await pipeline.exec();
 
       await client.workflowRunOutbox.deleteMany({
         where: {
@@ -98,20 +95,24 @@ async function processOutboxMessages() {
 
 async function startServer() {
   try {
-    await producer.connect();
-    console.log("Connected to Kafka");
+    await redisClient.connect();
+    console.log("Connected to Redis");
 
-    // start the background processor
     setInterval(processOutboxMessages, PROCESSING_INTERVAL);
 
     app.listen(5000, () => {
       console.log("Server running on port 5000");
     });
 
+    // redis disconnection
+    redisClient.on("disconnect", () => {
+      console.error("Redis connection lost. Attempting to reconnect...");
+    });
+
     // force shutdown
     process.on("SIGTERM", async () => {
       console.log("Shutting down server...");
-      await producer.disconnect();
+      await redisClient.quit();
       await client.$disconnect();
       process.exit(0);
     });
@@ -120,5 +121,9 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
+});
 
 startServer().catch(console.error);

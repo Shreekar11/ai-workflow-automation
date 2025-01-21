@@ -1,8 +1,8 @@
-import { Kafka } from "kafkajs";
+import { createClient } from "redis";
 import {
   availableEmailId,
   availableGoogleSheetsId,
-  TOPIC_NAME,
+  QUEUE_NAME,
 } from "./config";
 import { PrismaClient } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
@@ -15,151 +15,156 @@ dotenv.config();
 
 const client = new PrismaClient();
 
-const kafka = new Kafka({
-  clientId: "outbox-worker",
-  brokers: ["localhost:9092"],
+const redisClient = createClient({
+  url: "redis://localhost:6379",
 });
 
-async function main() {
-  const consumer = kafka.consumer({ groupId: "outbox-worker" });
-  await consumer.connect();
+redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 
-  const producer = kafka.producer();
-  await producer.connect();
+async function processMessage(message: string) {
+  try {
+    const parsedValue = JSON.parse(message);
+    const workflowRunId = parsedValue.workflowRunId;
+    const stage = parsedValue.stage;
 
-  await consumer.subscribe({
-    topic: TOPIC_NAME,
-    fromBeginning: true,
-  });
-
-  await consumer.run({
-    autoCommit: false,
-    eachMessage: async ({ topic, partition, message }) => {
-      console.log({
-        partition,
-        offset: message.offset,
-        value: message.value?.toString(),
-      });
-
-      if (!message.value?.toString()) {
-        return;
-      }
-
-      const parsedValue = JSON.parse(message.value?.toString());
-      const workflowRunId = parsedValue.workflowRunId;
-      const stage = parsedValue.stage;
-
-      const workflowRunDetails = await client.workflowRun.findFirst({
-        where: {
-          id: workflowRunId,
-        },
-        include: {
-          workflow: {
-            include: {
-              actions: {
-                include: {
-                  type: true,
-                },
+    const workflowRunDetails = await client.workflowRun.findFirst({
+      where: {
+        id: workflowRunId,
+      },
+      include: {
+        workflow: {
+          include: {
+            actions: {
+              include: {
+                type: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
-      const currentAction = workflowRunDetails?.workflow.actions.find(
-        (action) => action.sortingOrder === stage
+    const currentAction = workflowRunDetails?.workflow.actions.find(
+      (action) => action.sortingOrder === stage
+    );
+
+    if (!currentAction) {
+      console.log("Current action not found");
+      return;
+    }
+
+    // email action
+    if (currentAction.type.id === availableEmailId) {
+      const workflowRunMetadata = workflowRunDetails?.metadata;
+      const to = parser(
+        (currentAction.metadata as JsonObject)?.to as string,
+        workflowRunMetadata
+      );
+      const from = parser(
+        (currentAction.metadata as JsonObject)?.from as string,
+        workflowRunMetadata
+      );
+      const subject = parser(
+        (currentAction.metadata as JsonObject)?.subject as string,
+        workflowRunMetadata
+      );
+      const body = parser(
+        (currentAction.metadata as JsonObject)?.body as string,
+        workflowRunMetadata
       );
 
-      if (!currentAction) {
-        console.log("Current action not found");
-        return;
+      const emailService = new EmailService(to, from, subject, body);
+      await emailService.sendEmailFunction();
+      console.log(`Sending out Email to ${to}, body is ${body}`);
+    }
+
+    // google sheets action
+    if (currentAction.type.id === availableGoogleSheetsId) {
+      const workflowRunMetadata = workflowRunDetails?.metadata;
+      const sheetId = parser(
+        (currentAction.metadata as JsonObject)?.sheetId as string,
+        workflowRunMetadata
+      );
+
+      let range = parser(
+        (currentAction.metadata as JsonObject)?.range as string,
+        workflowRunMetadata
+      );
+
+      if (range.startsWith("Sheet!")) {
+        range = range.replace("Sheet!", "Sheet1!");
+      } else {
+        range = `Sheet1!${range}`;
       }
 
-      console.log(currentAction);
+      const valuesStr = parser(
+        (currentAction.metadata as JsonObject)?.values as string,
+        workflowRunMetadata
+      );
 
-      // email action
-      if (currentAction.type.id === availableEmailId) {
-        const workflowRunMetadata = workflowRunDetails?.metadata;
-        const to = parser(
-          (currentAction.metadata as JsonObject)?.to as string,
-          workflowRunMetadata
-        );
-        const from = parser(
-          (currentAction.metadata as JsonObject)?.from as string,
-          workflowRunMetadata
-        );
-        const subject = parser(
-          (currentAction.metadata as JsonObject)?.subject as string,
-          workflowRunMetadata
-        );
-        const body = parser(
-          (currentAction.metadata as JsonObject)?.body as string,
-          workflowRunMetadata
-        );
+      const values = valuesStr.split(",");
 
-        const emailService = new EmailService(to, from, subject, body);
-        await emailService.sendEmailFunction();
-        console.log(`Sending out Email to ${to}, body is ${body}`);
-      }
+      const sheetsService = new GoogleSheetsService(sheetId, range, values);
 
-      // google sheets action
-      if (currentAction.type.id === availableGoogleSheetsId) {
-        const workflowRunMetadata = workflowRunDetails?.metadata;
-        const sheetId = parser(
-          (currentAction.metadata as JsonObject)?.sheetId as string,
-          workflowRunMetadata
-        );
+      await sheetsService.appendToSheet();
+      console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
+    }
 
-        let range = parser(
-          (currentAction.metadata as JsonObject)?.range as string,
-          workflowRunMetadata
-        );
+    const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
+    if (lastStage !== stage) {
+      const nextMessage = JSON.stringify({
+        stage: stage + 1,
+        workflowRunId,
+      });
+      await redisClient.lPush(QUEUE_NAME, nextMessage);
+    }
 
-        if (range.startsWith("Sheet!")) {
-          range = range.replace("Sheet!", "Sheet1!");
-        } else {
-          range = `Sheet1!${range}`;
-        }
-
-        const valuesStr = parser(
-          (currentAction.metadata as JsonObject)?.values as string,
-          workflowRunMetadata
-        );
-
-        const values = valuesStr.split(",");
-
-        const sheetsService = new GoogleSheetsService(sheetId, range, values);
-
-        await sheetsService.appendToSheet();
-        console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
-      }
-
-      const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
-      if (lastStage !== stage) {
-        await producer.send({
-          topic: TOPIC_NAME,
-          messages: [
-            {
-              value: JSON.stringify({
-                stage: stage + 1,
-                workflowRunId,
-              }),
-            },
-          ],
-        });
-      }
-
-      console.log("Processing completed");
-
-      await consumer.commitOffsets([
-        {
-          topic: TOPIC_NAME,
-          partition,
-          offset: (parseInt(message.offset) + 1).toString(),
-        },
-      ]);
-    },
-  });
+    console.log("Processing completed");
+  } catch (error) {
+    console.error("Error processing message:", error);
+  }
 }
 
-main();
+async function main() {
+  try {
+    await redisClient.connect();
+    console.log("Connected to Redis");
+
+    // here processing messages continuously
+    while (true) {
+      try {
+        const result = await redisClient.brPop(QUEUE_NAME, 0);
+
+        if (result) {
+          const message = result.element;
+          await processMessage(message);
+        }
+      } catch (error) {
+        console.error("Error processing queue message:", error);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  } catch (error) {
+    console.error("Failed to start worker:", error);
+    process.exit(1);
+  }
+}
+
+// force shutdown
+process.on("SIGTERM", async () => {
+  console.log("Shutting down worker...");
+  await redisClient.quit();
+  await client.$disconnect();
+  process.exit(0);
+});
+
+//  redis disconnection
+redisClient.on("disconnect", () => {
+  console.error("Redis connection lost. Attempting to reconnect...");
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
+});
+
+main().catch(console.error);

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const kafkajs_1 = require("kafkajs");
+const redis_1 = require("redis");
 const config_1 = require("./config");
 const client_1 = require("@prisma/client");
 const parser_1 = require("./utils/parser");
@@ -21,109 +21,119 @@ const mail_service_1 = require("./services/mail.service");
 const sheets_service_1 = require("./services/sheets.service");
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
-const kafka = new kafkajs_1.Kafka({
-    clientId: "outbox-worker",
-    brokers: ["localhost:9092"],
+const redisClient = (0, redis_1.createClient)({
+    url: "redis://localhost:6379",
 });
-function main() {
+redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+function processMessage(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        const consumer = kafka.consumer({ groupId: "outbox-worker" });
-        yield consumer.connect();
-        const producer = kafka.producer();
-        yield producer.connect();
-        yield consumer.subscribe({
-            topic: config_1.TOPIC_NAME,
-            fromBeginning: true,
-        });
-        yield consumer.run({
-            autoCommit: false,
-            eachMessage: (_a) => __awaiter(this, [_a], void 0, function* ({ topic, partition, message }) {
-                var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-                console.log({
-                    partition,
-                    offset: message.offset,
-                    value: (_b = message.value) === null || _b === void 0 ? void 0 : _b.toString(),
-                });
-                if (!((_c = message.value) === null || _c === void 0 ? void 0 : _c.toString())) {
-                    return;
-                }
-                const parsedValue = JSON.parse((_d = message.value) === null || _d === void 0 ? void 0 : _d.toString());
-                const workflowRunId = parsedValue.workflowRunId;
-                const stage = parsedValue.stage;
-                const workflowRunDetails = yield client.workflowRun.findFirst({
-                    where: {
-                        id: workflowRunId,
-                    },
-                    include: {
-                        workflow: {
-                            include: {
-                                actions: {
-                                    include: {
-                                        type: true,
-                                    },
+        var _a, _b, _c, _d, _e, _f, _g;
+        try {
+            const parsedValue = JSON.parse(message);
+            const workflowRunId = parsedValue.workflowRunId;
+            const stage = parsedValue.stage;
+            const workflowRunDetails = yield client.workflowRun.findFirst({
+                where: {
+                    id: workflowRunId,
+                },
+                include: {
+                    workflow: {
+                        include: {
+                            actions: {
+                                include: {
+                                    type: true,
                                 },
                             },
                         },
                     },
+                },
+            });
+            const currentAction = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.find((action) => action.sortingOrder === stage);
+            if (!currentAction) {
+                console.log("Current action not found");
+                return;
+            }
+            // email action
+            if (currentAction.type.id === config_1.availableEmailId) {
+                const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
+                const to = (0, parser_1.parser)((_a = currentAction.metadata) === null || _a === void 0 ? void 0 : _a.to, workflowRunMetadata);
+                const from = (0, parser_1.parser)((_b = currentAction.metadata) === null || _b === void 0 ? void 0 : _b.from, workflowRunMetadata);
+                const subject = (0, parser_1.parser)((_c = currentAction.metadata) === null || _c === void 0 ? void 0 : _c.subject, workflowRunMetadata);
+                const body = (0, parser_1.parser)((_d = currentAction.metadata) === null || _d === void 0 ? void 0 : _d.body, workflowRunMetadata);
+                const emailService = new mail_service_1.EmailService(to, from, subject, body);
+                yield emailService.sendEmailFunction();
+                console.log(`Sending out Email to ${to}, body is ${body}`);
+            }
+            // google sheets action
+            if (currentAction.type.id === config_1.availableGoogleSheetsId) {
+                const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
+                const sheetId = (0, parser_1.parser)((_e = currentAction.metadata) === null || _e === void 0 ? void 0 : _e.sheetId, workflowRunMetadata);
+                let range = (0, parser_1.parser)((_f = currentAction.metadata) === null || _f === void 0 ? void 0 : _f.range, workflowRunMetadata);
+                if (range.startsWith("Sheet!")) {
+                    range = range.replace("Sheet!", "Sheet1!");
+                }
+                else {
+                    range = `Sheet1!${range}`;
+                }
+                const valuesStr = (0, parser_1.parser)((_g = currentAction.metadata) === null || _g === void 0 ? void 0 : _g.values, workflowRunMetadata);
+                const values = valuesStr.split(",");
+                const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, values);
+                yield sheetsService.appendToSheet();
+                console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
+            }
+            const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
+            if (lastStage !== stage) {
+                const nextMessage = JSON.stringify({
+                    stage: stage + 1,
+                    workflowRunId,
                 });
-                const currentAction = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.find((action) => action.sortingOrder === stage);
-                if (!currentAction) {
-                    console.log("Current action not found");
-                    return;
-                }
-                console.log(currentAction);
-                // email action
-                if (currentAction.type.id === config_1.availableEmailId) {
-                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
-                    const to = (0, parser_1.parser)((_e = currentAction.metadata) === null || _e === void 0 ? void 0 : _e.to, workflowRunMetadata);
-                    const from = (0, parser_1.parser)((_f = currentAction.metadata) === null || _f === void 0 ? void 0 : _f.from, workflowRunMetadata);
-                    const subject = (0, parser_1.parser)((_g = currentAction.metadata) === null || _g === void 0 ? void 0 : _g.subject, workflowRunMetadata);
-                    const body = (0, parser_1.parser)((_h = currentAction.metadata) === null || _h === void 0 ? void 0 : _h.body, workflowRunMetadata);
-                    const emailService = new mail_service_1.EmailService(to, from, subject, body);
-                    yield emailService.sendEmailFunction();
-                    console.log(`Sending out Email to ${to}, body is ${body}`);
-                }
-                // google sheets action
-                if (currentAction.type.id === config_1.availableGoogleSheetsId) {
-                    const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
-                    const sheetId = (0, parser_1.parser)((_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.sheetId, workflowRunMetadata);
-                    let range = (0, parser_1.parser)((_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.range, workflowRunMetadata);
-                    if (range.startsWith("Sheet!")) {
-                        range = range.replace("Sheet!", "Sheet1!");
-                    }
-                    else {
-                        range = `Sheet1!${range}`;
-                    }
-                    const valuesStr = (0, parser_1.parser)((_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.values, workflowRunMetadata);
-                    const values = valuesStr.split(",");
-                    const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, values);
-                    yield sheetsService.appendToSheet();
-                    console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
-                }
-                const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
-                if (lastStage !== stage) {
-                    yield producer.send({
-                        topic: config_1.TOPIC_NAME,
-                        messages: [
-                            {
-                                value: JSON.stringify({
-                                    stage: stage + 1,
-                                    workflowRunId,
-                                }),
-                            },
-                        ],
-                    });
-                }
-                console.log("Processing completed");
-                yield consumer.commitOffsets([
-                    {
-                        topic: config_1.TOPIC_NAME,
-                        partition,
-                        offset: (parseInt(message.offset) + 1).toString(),
-                    },
-                ]);
-            }),
-        });
+                yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
+            }
+            console.log("Processing completed");
+        }
+        catch (error) {
+            console.error("Error processing message:", error);
+        }
     });
 }
-main();
+function main() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield redisClient.connect();
+            console.log("Connected to Redis");
+            // here processing messages continuously
+            while (true) {
+                try {
+                    const result = yield redisClient.brPop(config_1.QUEUE_NAME, 0);
+                    if (result) {
+                        const message = result.element;
+                        yield processMessage(message);
+                    }
+                }
+                catch (error) {
+                    console.error("Error processing queue message:", error);
+                    yield new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+            }
+        }
+        catch (error) {
+            console.error("Failed to start worker:", error);
+            process.exit(1);
+        }
+    });
+}
+// force shutdown
+process.on("SIGTERM", () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Shutting down worker...");
+    yield redisClient.quit();
+    yield client.$disconnect();
+    process.exit(0);
+}));
+//  redis disconnection
+redisClient.on("disconnect", () => {
+    console.error("Redis connection lost. Attempting to reconnect...");
+});
+process.on("unhandledRejection", (error) => {
+    console.error("Unhandled promise rejection:", error);
+});
+main().catch(console.error);
