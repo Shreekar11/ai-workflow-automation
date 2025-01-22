@@ -9,11 +9,12 @@ import axios from "axios";
 const client = new PrismaClient();
 const app = express();
 
-// cors configuration
 const corsOptions = {
   origin: [
-    process.env.FRONTEND_URL || "http://localhost:3000",
+    "*",
+    "https://workflows-flax.vercel.app",
     "https://clerk.com",
+    "http://localhost:3000",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
@@ -52,7 +53,6 @@ const PROCESSING_INTERVAL = 5000;
 
 app.options("*", cors(corsOptions));
 
-// cron job
 function initHealthCheck() {
   const healthCheckUrl = process.env.WEBHOOK_URL;
   if (!healthCheckUrl) {
