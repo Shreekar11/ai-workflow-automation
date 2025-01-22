@@ -15,6 +15,7 @@ import React, { useState } from "react";
 import { toast } from "@/lib/hooks/useToast";
 import { Workflow } from "@/types";
 import { deleteWorkflow } from "@/lib/actions/workflow.action";
+import { useToken } from "@/lib/hooks/useToken";
 
 interface DeleteDialogProps {
   user: any;
@@ -37,11 +38,17 @@ export function DeleteDialog({
   title = "Delete Confirmation",
   description = "Are you sure you want to delete this item? This action cannot be undone.",
 }: DeleteDialogProps) {
+  const { token, sessionId } = useToken();
   const [isDeleting, setIsDeleting] = useState(false);
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const response = await deleteWorkflow(workflowId, user?.id || "");
+      const response = await deleteWorkflow(
+        workflowId,
+        user?.id || "",
+        token,
+        sessionId || ""
+      );
       if (!response.status) {
         throw new Error(response.message || "Error deleting workflow");
       }

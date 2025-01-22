@@ -31,6 +31,7 @@ import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
 import AddActionButton from "./add-action-button";
 import { api } from "@/app/api/client";
+import { useToken } from "@/lib/hooks/useToken";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
@@ -44,6 +45,7 @@ const nodeTypes = {
 export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const router = useRouter();
   const { user } = useUser();
+  const { token, sessionId } = useToken();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -300,13 +302,17 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
             filteredActions,
             finalTrigger,
             workflowName,
-            user?.id || ""
+            user?.id || "",
+            token,
+            sessionId || ""
           )
         : await publishWorkflow(
             filteredActions,
             finalTrigger,
             workflowName,
-            user?.id || ""
+            user?.id || "",
+            token,
+            sessionId || ""
           );
 
       if (!response.status) {

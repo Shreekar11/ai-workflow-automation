@@ -25,6 +25,7 @@ const constants_1 = require("../constants");
 const workflow_service_1 = require("../services/workflow.service");
 const user_service_1 = require("../services/user.service");
 const error_1 = require("../modules/error");
+const middlewares_1 = require("../middlewares");
 class WorkflowController {
     constructor() {
         this.prisma = new client_1.PrismaClient();
@@ -33,16 +34,10 @@ class WorkflowController {
     }
     createWorkFlowData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             try {
                 const { body } = req;
-                const clerkUserId = (_a = req.headers["clerk-user-id"]) === null || _a === void 0 ? void 0 : _a.toString();
-                if (!clerkUserId) {
-                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
-                        status: false,
-                        message: "Unauthorized: Missing user ID",
-                    });
-                }
+                const user = req.user;
                 const parsedData = types_1.WorkflowSchema.safeParse(body);
                 if (!parsedData.success) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
@@ -52,7 +47,7 @@ class WorkflowController {
                 }
                 let userData;
                 try {
-                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
+                    userData = yield this.userService.fetchUserByClerkId(user.id);
                 }
                 catch (error) {
                     if (error instanceof error_1.UserNotFoundError) {
@@ -81,18 +76,12 @@ class WorkflowController {
     }
     getWorkFlowData(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
+            const user = req.user;
             try {
-                const clerkUserId = (_a = req.headers["clerk-user-id"]) === null || _a === void 0 ? void 0 : _a.toString();
-                if (!clerkUserId) {
-                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
-                        status: false,
-                        message: "Unauthorized: Missing user ID",
-                    });
-                }
                 let userData;
                 try {
-                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
+                    userData = yield this.userService.fetchUserByClerkId(user.id);
                 }
                 catch (error) {
                     if (error instanceof error_1.UserNotFoundError) {
@@ -132,16 +121,10 @@ class WorkflowController {
     }
     getWorkFlowDataById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             try {
+                const user = req.user;
                 const { id } = req.params;
-                const clerkUserId = (_a = req.headers["clerk-user-id"]) === null || _a === void 0 ? void 0 : _a.toString();
-                if (!clerkUserId) {
-                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
-                        status: false,
-                        message: "Unauthorized: Missing user ID",
-                    });
-                }
                 if (!id) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
                         status: false,
@@ -150,7 +133,7 @@ class WorkflowController {
                 }
                 let userData;
                 try {
-                    userData = yield this.userService.fetchUserByClerkId(clerkUserId);
+                    userData = yield this.userService.fetchUserByClerkId(user.id);
                 }
                 catch (error) {
                     if (error instanceof error_1.UserNotFoundError) {
@@ -202,15 +185,9 @@ class WorkflowController {
     }
     updateWorkflow(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             try {
                 const body = req.body;
-                const clerkUserId = req.headers["clerk-user-id"];
-                if (!clerkUserId) {
-                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
-                        status: false,
-                        message: "Unauthorized",
-                    });
-                }
                 const parsedData = types_1.WorkflowSchema.safeParse(body);
                 if (!parsedData.success) {
                     return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
@@ -248,15 +225,9 @@ class WorkflowController {
     }
     deleteWorkflow(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             try {
                 const { id } = req.params;
-                const clerkUserId = req.headers["clerk-user-id"];
-                if (!clerkUserId) {
-                    return res.status(constants_1.HTTPStatus.UNAUTHORIZED).json({
-                        status: false,
-                        message: "Unauthorized",
-                    });
-                }
                 const existingWorkflow = yield this.prisma.workflow.findUnique({
                     where: { id },
                 });

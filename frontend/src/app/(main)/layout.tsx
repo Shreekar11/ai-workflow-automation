@@ -21,11 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${everett.className} bg-[#FBF8F6]`}>
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    <main className={`${everett.className} bg-[#FBF8F6]`}>
+      {children}
+      <Toaster />
+    </main>
   );
 }

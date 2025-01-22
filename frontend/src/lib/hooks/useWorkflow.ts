@@ -1,36 +1,42 @@
 import { Workflow } from "@/types";
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getWorkFlow } from "../actions/workflow.action";
+import { useToken } from "./useToken";
 
 export function useWorkflow(id: string | string[]) {
   const { user } = useUser();
+  const { token, sessionId } = useToken();
   const [loading, setLoading] = useState(true);
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchWorkflow = async () => {
+  const fetchWorkflow = useCallback(async () => {
+    if (!user?.id || !token || !id) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (!user?.id) {
-        return;
-      }
-      const response = await getWorkFlow(id, user.id);
+      const response = await getWorkFlow(id, user.id, token, sessionId || "");
+
       if (!response.status) {
-        throw new Error(response.message || "Error fetching workflows");
+        throw new Error(response.message || "Error fetching workflow");
       }
-      const data = response.data;
-      setWorkflow(data);
+
+      setWorkflow(response.data);
+      setError(null);
     } catch (err: any) {
-      console.error("Error fetching workflows:", err);
+      setError(err.message || "Failed to fetch workflow");
+      console.error("Error fetching workflow:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user?.id, token, sessionId]);
 
   useEffect(() => {
-    if (user?.id) {
-      fetchWorkflow();
-    }
-  }, [user?.id]);
+    fetchWorkflow();
+  }, [fetchWorkflow]);
 
-  return { loading, workflow };
+  return { loading, workflow, error, refetch: fetchWorkflow };
 }

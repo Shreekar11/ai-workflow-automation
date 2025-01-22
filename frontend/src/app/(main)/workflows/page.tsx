@@ -15,7 +15,7 @@ import { useUser } from "@clerk/nextjs";
 const WorkflowPage = () => {
   const router = useRouter();
   const { user } = useUser();
-  const { loading, workflows, setWorkflows } = useWorkflows();
+  const { isLoading, workflows, setWorkflows } = useWorkflows();
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleViewWorkflow = (id: string) => {
@@ -73,7 +73,7 @@ const WorkflowPage = () => {
             workflows={filteredWorkflows}
             setWorkflows={setWorkflows}
             onViewWorkflow={handleViewWorkflow}
-            loading={loading}
+            loading={isLoading}
           />
         </div>
       </main>

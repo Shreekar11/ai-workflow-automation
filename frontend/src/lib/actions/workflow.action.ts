@@ -1,11 +1,14 @@
 import { api } from "@/app/api/client";
+import { auth } from "@clerk/nextjs/server";
 import { isAxiosError } from "axios";
 
 export const publishWorkflow = async (
   selectActions: { id: string; name: string; metadata: any }[],
   selectTrigger: { id: string; name: string; metadata: any },
   workflowName: string,
-  userId: string
+  userId: string,
+  token: string,
+  sessionId: string
 ) => {
   try {
     const response = await api.post(
@@ -22,6 +25,8 @@ export const publishWorkflow = async (
       {
         headers: {
           "clerk-user-id": userId,
+          Authorization: `Bearer ${token}`,
+          "clerk-session-id": sessionId,
         },
       }
     );
@@ -54,11 +59,17 @@ export const publishWorkflow = async (
   }
 };
 
-export const getAllUsersWorkFlow = async (userId: string) => {
+export const getAllUsersWorkFlow = async (
+  userId: string,
+  token: string,
+  sessionId: string
+) => {
   try {
     const response = await api.get("/api/v1/workflow", {
       headers: {
         "clerk-user-id": userId,
+        Authorization: `Bearer ${token}`,
+        "clerk-session-id": sessionId,
       },
     });
     const data = response.data;
@@ -89,11 +100,18 @@ export const getAllUsersWorkFlow = async (userId: string) => {
   }
 };
 
-export const getWorkFlow = async (id: string | string[], userId: string) => {
+export const getWorkFlow = async (
+  id: string | string[],
+  userId: string,
+  token: string,
+  sessionId: string
+) => {
   try {
     const response = await api.get(`/api/v1/workflow/${id}`, {
       headers: {
         "clerk-user-id": userId,
+        Authorization: `Bearer ${token}`,
+        "clerk-session-id": sessionId,
       },
     });
     const data = response.data;
@@ -126,10 +144,12 @@ export const getWorkFlow = async (id: string | string[], userId: string) => {
 
 export const updateWorkflow = async (
   workflowId: string,
-  selectActions: { id: string; name: string, metadata: any }[],
-  selectTrigger: { id: string; name: string, metadata: any },
+  selectActions: { id: string; name: string; metadata: any }[],
+  selectTrigger: { id: string; name: string; metadata: any },
   workflowName: string,
-  userId: string
+  userId: string,
+  token: string,
+  sessionId: string
 ) => {
   try {
     const response = await api.put(
@@ -147,6 +167,8 @@ export const updateWorkflow = async (
       {
         headers: {
           "clerk-user-id": userId,
+          Authorization: `Bearer ${token}`,
+          "clerk-session-id": sessionId,
         },
       }
     );
@@ -179,11 +201,18 @@ export const updateWorkflow = async (
   }
 };
 
-export const deleteWorkflow = async (id: string, userId: string) => {
+export const deleteWorkflow = async (
+  id: string,
+  userId: string,
+  token: string,
+  sessionId: string
+) => {
   try {
     const response = await api.delete(`/api/v1/workflow/${id}`, {
       headers: {
         "clerk-user-id": userId,
+        Authorization: `Bearer ${token}`,
+        "clerk-session-id": sessionId,
       },
     });
 

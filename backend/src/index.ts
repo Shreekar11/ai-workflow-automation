@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import logger from "./modules/logger";
 import Initializer from "./initializer";
 import { PrismaClient } from "@prisma/client";
+import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
 
 dotenv.config();
 
@@ -44,13 +45,14 @@ class Server {
     // connect to the database
     await this.prisma.$connect();
     console.log("Database connected successfully");
-
+    
     this.app.use(bodyParser.json());
     this.app.use(
       bodyParser.urlencoded({
         extended: true,
       })
     );
+    this.app.use(ClerkExpressWithAuth());
     this.app.use(cors());
     this.app.use(this.log);
     new Initializer().init(this.app);

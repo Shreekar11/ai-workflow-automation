@@ -8,10 +8,10 @@ import { WorkflowService } from "../services/workflow.service";
 import { UserService } from "../services/user.service";
 import {
   UserNotFoundError,
-  WorkflowCreateError,
   WorkflowError,
   WorkflowNotFoundError,
 } from "../modules/error";
+import { AuthMiddleware } from "../middlewares";
 
 export default class WorkflowController {
   private prisma: PrismaClient;
@@ -29,16 +29,11 @@ export default class WorkflowController {
     req: Request,
     res: Response<APIResponse>
   ): Promise<Response<APIResponse>> {
+    await AuthMiddleware.verifyToken(req, res, () => {});
+
     try {
       const { body } = req;
-      const clerkUserId = req.headers["clerk-user-id"]?.toString();
-
-      if (!clerkUserId) {
-        return res.status(HTTPStatus.UNAUTHORIZED).json({
-          status: false,
-          message: "Unauthorized: Missing user ID",
-        });
-      }
+      const user = req.user;
 
       const parsedData = WorkflowSchema.safeParse(body);
       if (!parsedData.success) {
@@ -50,7 +45,7 @@ export default class WorkflowController {
 
       let userData;
       try {
-        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+        userData = await this.userService.fetchUserByClerkId(user.id);
       } catch (error) {
         if (error instanceof UserNotFoundError) {
           return res.status(HTTPStatus.NOT_FOUND).json({
@@ -85,19 +80,13 @@ export default class WorkflowController {
     req: Request,
     res: Response<APIResponse>
   ): Promise<Response<APIResponse>> {
+    await AuthMiddleware.verifyToken(req, res, () => {});
+    const user = req.user;
+
     try {
-      const clerkUserId = req.headers["clerk-user-id"]?.toString();
-
-      if (!clerkUserId) {
-        return res.status(HTTPStatus.UNAUTHORIZED).json({
-          status: false,
-          message: "Unauthorized: Missing user ID",
-        });
-      }
-
       let userData;
       try {
-        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+        userData = await this.userService.fetchUserByClerkId(user.id);
       } catch (error) {
         if (error instanceof UserNotFoundError) {
           return res.status(HTTPStatus.NOT_FOUND).json({
@@ -141,16 +130,11 @@ export default class WorkflowController {
     req: Request,
     res: Response<APIResponse>
   ): Promise<Response<APIResponse>> {
-    try {
-      const { id } = req.params;
-      const clerkUserId = req.headers["clerk-user-id"]?.toString();
+    await AuthMiddleware.verifyToken(req, res, () => {});
 
-      if (!clerkUserId) {
-        return res.status(HTTPStatus.UNAUTHORIZED).json({
-          status: false,
-          message: "Unauthorized: Missing user ID",
-        });
-      }
+    try {
+      const user = req.user;
+      const { id } = req.params;
 
       if (!id) {
         return res.status(HTTPStatus.BAD_REQUEST).json({
@@ -161,7 +145,7 @@ export default class WorkflowController {
 
       let userData;
       try {
-        userData = await this.userService.fetchUserByClerkId(clerkUserId);
+        userData = await this.userService.fetchUserByClerkId(user.id);
       } catch (error) {
         if (error instanceof UserNotFoundError) {
           return res.status(HTTPStatus.NOT_FOUND).json({
@@ -218,17 +202,10 @@ export default class WorkflowController {
 
   @PUT("/api/v1/workflow")
   public async updateWorkflow(req: Request, res: Response<APIResponse>) {
+    await AuthMiddleware.verifyToken(req, res, () => {});
+
     try {
       const body = req.body;
-      const clerkUserId = req.headers["clerk-user-id"];
-
-      if (!clerkUserId) {
-        return res.status(HTTPStatus.UNAUTHORIZED).json({
-          status: false,
-          message: "Unauthorized",
-        });
-      }
-
       const parsedData = WorkflowSchema.safeParse(body);
       if (!parsedData.success) {
         return res.status(HTTPStatus.BAD_REQUEST).json({
@@ -236,7 +213,7 @@ export default class WorkflowController {
           message: "Invalid workflow data",
         });
       }
-      
+
       const updatedWorkflowData = await this.workflowService.updateWorkflow(
         parsedData
       );
@@ -272,17 +249,11 @@ export default class WorkflowController {
 
   @DELETE("/api/v1/workflow/:id")
   public async deleteWorkflow(req: Request, res: Response<APIResponse>) {
+    
+    await AuthMiddleware.verifyToken(req, res, () => {});
+
     try {
       const { id } = req.params;
-      const clerkUserId = req.headers["clerk-user-id"];
-
-      if (!clerkUserId) {
-        return res.status(HTTPStatus.UNAUTHORIZED).json({
-          status: false,
-          message: "Unauthorized",
-        });
-      }
-
       const existingWorkflow = await this.prisma.workflow.findUnique({
         where: { id },
       });

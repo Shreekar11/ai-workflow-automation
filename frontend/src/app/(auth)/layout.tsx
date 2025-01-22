@@ -19,9 +19,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body className={everett.className}>{children}</body>
-    </html>
-  );
+  return <main className={everett.className}>{children}</main>;
 }

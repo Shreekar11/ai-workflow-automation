@@ -20,6 +20,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const logger_1 = __importDefault(require("./modules/logger"));
 const initializer_1 = __importDefault(require("./initializer"));
 const client_1 = require("@prisma/client");
+const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
 dotenv_1.default.config();
 class Server {
     constructor() {
@@ -45,6 +46,7 @@ class Server {
             this.app.use(body_parser_1.default.urlencoded({
                 extended: true,
             }));
+            this.app.use((0, clerk_sdk_node_1.ClerkExpressWithAuth)());
             this.app.use((0, cors_1.default)());
             this.app.use(this.log);
             new initializer_1.default().init(this.app);
