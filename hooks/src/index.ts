@@ -56,7 +56,7 @@ app.options("*", cors(corsOptions));
 function initHealthCheck() {
   const healthCheckUrl = process.env.WEBHOOK_URL;
   if (!healthCheckUrl) {
-    console.error("BACKEND_URL not configured for health check");
+    console.error("WEBHOOK_URL not configured for health check");
     return;
   }
 

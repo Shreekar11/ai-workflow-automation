@@ -27,7 +27,7 @@ redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 function initHealthCheck() {
   const healthCheckUrl = process.env.WORKER_URL;
   if (!healthCheckUrl) {
-    console.error("BACKEND_URL not configured for health check");
+    console.error("WORKER_URL not configured for health check");
     return;
   }
 

@@ -383,9 +383,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       };
     }, {});
 
-    //kafka-topics.sh --create --topic workflow-events --bootstrap-server localhost:9092
-    // kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic workflow-events
-
     try {
       const response = await api.post(
         `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
