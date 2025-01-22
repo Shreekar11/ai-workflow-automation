@@ -1,8 +1,7 @@
-# docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
-  backend:
+  primary:
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,7 +27,7 @@ services:
         npm run dev
       "
     networks:
-      - app-network
+      - workflows-network
     restart: unless-stopped
 
   db:
@@ -42,7 +41,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - workflows-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -54,5 +53,6 @@ volumes:
   postgres-data:
 
 networks:
-  app-network:
+  workflows-network:
+    name: workflows-network
     driver: bridge

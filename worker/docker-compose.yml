@@ -1,13 +1,12 @@
-# docker-compose.yml
 version: "3.8"
 
 services:
-  backend:
+  worker:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/workflows
@@ -16,43 +15,17 @@ services:
       - ./src:/usr/src/app/src
       - ./prisma:/usr/src/app/prisma
       - /usr/src/app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
     command: >
       sh -c "
         sleep 5 &&
         npx prisma generate &&
-        npx prisma migrate deploy &&
-        npx prisma db seed &&
         npm run dev
       "
     networks:
-      - app-network
+      - workflows-network
     restart: unless-stopped
-
-  db:
-    image: postgres:14-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=workflows
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-volumes:
-  postgres-data:
 
 networks:
-  app-network:
-    driver: bridge
+  workflows-network:
+    external: true
+    name: workflows-network
