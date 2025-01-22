@@ -61,7 +61,7 @@ class Server {
             const corsOptions = {
                 origin: [
                     "*",
-                    process.env.FRONTEND_URL,
+                    "https://workflows-flax.vercel.app",
                     "http://localhost:3000",
                     "https://clerk.com",
                 ].filter(Boolean),

@@ -21,11 +21,12 @@ const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
-// cors configuration
 const corsOptions = {
     origin: [
-        process.env.FRONTEND_URL || "http://localhost:3000",
+        "*",
+        "https://workflows-flax.vercel.app",
         "https://clerk.com",
+        "http://localhost:3000",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
@@ -54,11 +55,10 @@ redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
 app.options("*", (0, cors_1.default)(corsOptions));
-// cron job
 function initHealthCheck() {
     const healthCheckUrl = process.env.WEBHOOK_URL;
     if (!healthCheckUrl) {
-        console.error("BACKEND_URL not configured for health check");
+        console.error("WEBHOOK_URL not configured for health check");
         return;
     }
     node_cron_1.default.schedule("*/5 * * * *", () => __awaiter(this, void 0, void 0, function* () {
