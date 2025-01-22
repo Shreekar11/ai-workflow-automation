@@ -11,15 +11,36 @@ import { parser } from "./utils/parser";
 import dotenv from "dotenv";
 import { EmailService } from "./services/mail.service";
 import { GoogleSheetsService } from "./services/sheets.service";
+import cron from 'node-cron'
+import axios from "axios";
 
 dotenv.config();
 
 const client = new PrismaClient();
 const redisClient = createClient({
-  url: "redis://localhost:6379",
+  url: process.env.REDIS_URL || "redis://localhost:6379",
 });
 
 redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+
+// cron job
+function initHealthCheck() {
+  const healthCheckUrl = process.env.WORKER_URL;
+  if (!healthCheckUrl) {
+    console.error("BACKEND_URL not configured for health check");
+    return;
+  }
+
+  cron.schedule("*/5 * * * *", async () => {
+    try {
+      const response = await axios.get(healthCheckUrl);
+      console.log(`Health check succeeded: ${response.status}`);
+    } catch (error: any) {
+      console.error(`Health check failed: ${error.message}`);
+    }
+  });
+  console.log("Health check cron job initialized");
+}
 
 async function processMessage(message: string) {
   try {
@@ -129,6 +150,8 @@ async function main() {
   try {
     await redisClient.connect();
     console.log("Connected to Redis");
+
+    initHealthCheck()
 
     // start processing messages
     while (true) {

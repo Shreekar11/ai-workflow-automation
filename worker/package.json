@@ -13,9 +13,12 @@
   "dependencies": {
     "@prisma/client": "^6.2.0",
     "@types/dotenv": "^8.2.3",
+    "@types/node-cron": "^3.0.11",
+    "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "googleapis": "^144.0.0",
     "kafkajs": "^2.2.4",
+    "node-cron": "^3.0.3",
     "prisma": "^6.2.0",
     "redis": "^4.7.0"
   },

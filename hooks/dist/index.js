@@ -17,29 +17,65 @@ const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
 const redis_1 = require("redis");
 const config_1 = require("./config");
+const node_cron_1 = __importDefault(require("node-cron"));
+const axios_1 = __importDefault(require("axios"));
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
 // cors configuration
 const corsOptions = {
-    origin: ["*", "http://localhost:3000"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "clerk-user-id", "Authorization"],
+    origin: [
+        process.env.FRONTEND_URL || "http://localhost:3000",
+        "https://clerk.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+        "Content-Type",
+        "clerk-user-id",
+        "Authorization",
+        "clerk-session-id",
+        "x-csrf-token",
+    ],
     credentials: true,
+    maxAge: 600,
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
+app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    next();
+});
 const redisClient = (0, redis_1.createClient)({
-    url: "redis://localhost:6379",
+    url: process.env.REDIS_URL || "redis://localhost:6379",
 });
 redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 const BATCH_SIZE = 10;
 const PROCESSING_INTERVAL = 5000;
 app.options("*", (0, cors_1.default)(corsOptions));
+// cron job
+function initHealthCheck() {
+    const healthCheckUrl = process.env.WEBHOOK_URL;
+    if (!healthCheckUrl) {
+        console.error("BACKEND_URL not configured for health check");
+        return;
+    }
+    node_cron_1.default.schedule("*/5 * * * *", () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield axios_1.default.get(healthCheckUrl);
+            console.log(`Health check succeeded: ${response.status}`);
+        }
+        catch (error) {
+            console.error(`Health check failed: ${error.message}`);
+        }
+    }));
+    console.log("Health check cron job initialized");
+}
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
     const body = req.body.data;
     try {
-        // store new trigger in db
         yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const run = yield tx.workflowRun.create({
                 data: {
@@ -60,7 +96,6 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(500).json({ status: false, message: "Internal server error" });
     }
 }));
-// processor function
 function processOutboxMessages() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -98,15 +133,14 @@ function startServer() {
         try {
             yield redisClient.connect();
             console.log("Connected to Redis");
+            initHealthCheck();
             setInterval(processOutboxMessages, PROCESSING_INTERVAL);
             app.listen(5000, () => {
                 console.log("Server running on port 5000");
             });
-            // redis disconnection
             redisClient.on("disconnect", () => {
                 console.error("Redis connection lost. Attempting to reconnect...");
             });
-            // force shutdown
             process.on("SIGTERM", () => __awaiter(this, void 0, void 0, function* () {
                 console.log("Shutting down server...");
                 yield redisClient.quit();

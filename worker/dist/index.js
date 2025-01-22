@@ -20,12 +20,32 @@ const parser_1 = require("./utils/parser");
 const dotenv_1 = __importDefault(require("dotenv"));
 const mail_service_1 = require("./services/mail.service");
 const sheets_service_1 = require("./services/sheets.service");
+const node_cron_1 = __importDefault(require("node-cron"));
+const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
 const redisClient = (0, redis_1.createClient)({
-    url: "redis://localhost:6379",
+    url: process.env.REDIS_URL || "redis://localhost:6379",
 });
 redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+// cron job
+function initHealthCheck() {
+    const healthCheckUrl = process.env.WORKER_URL;
+    if (!healthCheckUrl) {
+        console.error("BACKEND_URL not configured for health check");
+        return;
+    }
+    node_cron_1.default.schedule("*/5 * * * *", () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield axios_1.default.get(healthCheckUrl);
+            console.log(`Health check succeeded: ${response.status}`);
+        }
+        catch (error) {
+            console.error(`Health check failed: ${error.message}`);
+        }
+    }));
+    console.log("Health check cron job initialized");
+}
 function processMessage(message) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f, _g;
@@ -102,6 +122,7 @@ function main() {
         try {
             yield redisClient.connect();
             console.log("Connected to Redis");
+            initHealthCheck();
             // start processing messages
             while (true) {
                 try {

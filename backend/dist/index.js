@@ -21,6 +21,8 @@ const logger_1 = __importDefault(require("./modules/logger"));
 const initializer_1 = __importDefault(require("./initializer"));
 const client_1 = require("@prisma/client");
 const clerk_sdk_node_1 = require("@clerk/clerk-sdk-node");
+const node_cron_1 = __importDefault(require("node-cron"));
+const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 class Server {
     constructor() {
@@ -33,23 +35,68 @@ class Server {
         };
         this.app = (0, express_1.default)();
         this.prisma = new client_1.PrismaClient();
+        this.initHealthCheck();
+    }
+    initHealthCheck() {
+        const healthCheckUrl = process.env.BACKEND_URL;
+        node_cron_1.default.schedule("*/5 * * * *", () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield axios_1.default.get(healthCheckUrl);
+                logger_1.default.info(`Health check succeeded: ${response.status}`);
+            }
+            catch (error) {
+                logger_1.default.error(`Health check failed: ${error.message}`);
+            }
+        }));
+        logger_1.default.info("Health check cron job initialized");
     }
     static get fn() {
         return this.instance;
     }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
-            // connect to the database
             yield this.prisma.$connect();
             console.log("Database connected successfully");
+            // cors configuration
+            const corsOptions = {
+                origin: [
+                    "*",
+                    process.env.FRONTEND_URL,
+                    "http://localhost:3000",
+                    "https://clerk.com",
+                ].filter(Boolean),
+                methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+                allowedHeaders: [
+                    "Content-Type",
+                    "Authorization",
+                    "x-csrf-token",
+                    "clerk-session-id",
+                    "clerk-user-id",
+                ],
+                credentials: true,
+                maxAge: 600,
+            };
             this.app.use(body_parser_1.default.json());
             this.app.use(body_parser_1.default.urlencoded({
                 extended: true,
             }));
             this.app.use((0, clerk_sdk_node_1.ClerkExpressWithAuth)());
-            this.app.use((0, cors_1.default)());
+            this.app.use((0, cors_1.default)(corsOptions));
+            // security headers
+            this.app.use((req, res, next) => {
+                res.setHeader("X-Content-Type-Options", "nosniff");
+                res.setHeader("X-Frame-Options", "DENY");
+                res.setHeader("X-XSS-Protection", "1; mode=block");
+                res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+                next();
+            });
             this.app.use(this.log);
             new initializer_1.default().init(this.app);
+            this.app.get("/", (req, res) => {
+                return res.status(200).json({
+                    message: "Server running",
+                });
+            });
             this.app.listen(this.port, () => {
                 console.log(`Server is running on port ${this.port}`);
             });
