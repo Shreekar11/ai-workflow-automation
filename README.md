@@ -17,6 +17,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Clean and MVC OOPs architecture
 - Secure Clerk Authentication and Authorization
 - Beautiful User Interface
+- React Flow for User-Friendly Experience
 
 
 ## System Architecture
@@ -42,6 +43,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **Next.js** - React framework for production
 - **TypeScript** - Superset of JavaScript for type safety
 - **Tailwind CSS** - Utility-first CSS framework
+- **React Flow** - React library to built user friendly workflows
 
 ### Deployment
 - **Render** - Deployment platform for backend services
