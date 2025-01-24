@@ -12,9 +12,8 @@ const everett = localFont({
 export const metadata: Metadata = {
   title: "Workflow Dashboard",
   description:
-    "Workflow is a purpose-built tool for automating and streamlining your processes",
+    "Unlock seamless productivity with workflow automation platform. Streamline complex processes, reduce manual tasks, and boost team efficiency across all business operations.",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
