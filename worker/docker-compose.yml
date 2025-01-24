@@ -10,6 +10,7 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/workflows
+      - REDIS_URL=redis://redis:6379
       - PORT=8000
     volumes:
       - ./src:/usr/src/app/src
@@ -24,6 +25,19 @@ services:
     networks:
       - workflows-network
     restart: unless-stopped
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    networks:
+      - workflows-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
 
 networks:
   workflows-network:
