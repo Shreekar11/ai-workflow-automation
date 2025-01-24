@@ -6,44 +6,46 @@
 
 ## Solution
 
-Workflow Automation is an advanced platform for seamless workflow creation and management. It enables users to effortlessly design and configure automated workflows using diverse trigger providers and multiple actions, leveraging a robust event-driven architecture for reliable and asynchronous execution.
+Workflow Automation enables seamless automation of your workflows. Users can effortlessly create workflows and configure them to the available trigger providers and multiple available actions with precision. Designed with a robust event-driven architecture, the application ensures reliable and asynchronous execution of actions upon each trigger, providing high performance.
 
-## Key Features
+## Features
 
-- Intuitive Workflow Creation Interface
-- Webhook Integration
-- Google Sheets Automation
-- Advanced Mailing Services
-- Clean and Modular Architecture
+- Streamlined Worflow Creation
+- Webhook trigger provider
+- Automate your Google Sheet
+- Mailing service for instant mails
+- Clean and MVC OOPs architecture
 - Secure Clerk Authentication and Authorization
-- Responsive User Interface
+- Beautiful User Interface
+
 
 ## System Architecture
 
 ![Architecture Diagram](assets/architecture.png)
 
-## Database Schema
+
+## DB Diagram
 
 ![DB Diagram](assets/db-diagram.png)
 
 ## Tech Stack
 
 ### Backend
-- **PostgreSQL**: Robust SQL database for complex data relations
-- **Prisma**: Efficient ORM for database interactions
-- **Redis**: In-memory database and queue management
-- **Node.js**: Server-side JavaScript runtime
-- **Express**: Lightweight web framework
-- **Nodemailer**: Email transmission service
+- **PostgerSQL** - SQL database for storing data and maintain complex data relations
+- **Prisma** - Efficient ORM for database interactions
+- **Redis** - In-memory database and queue management
+- **Node.js** - JavaScript runtime for server-side development
+- **Express** - Web framework for Node.js
+- **Nodemailer** - For sending emails
 
 ### Frontend
-- **Next.js**: React framework for production
-- **TypeScript**: Enhanced JavaScript with type safety
-- **Tailwind CSS**: Utility-first styling framework
+- **Next.js** - React framework for production
+- **TypeScript** - Superset of JavaScript for type safety
+- **Tailwind CSS** - Utility-first CSS framework
 
 ### Deployment
-- **Render**: Backend service hosting
-- **Vercel**: Frontend deployment platform
+- **Render** - Deployment platform for backend services
+- **Vercel** - Deployment platform for frontend
 
 ## Deployment Links
 
@@ -52,27 +54,24 @@ Workflow Automation is an advanced platform for seamless workflow creation and m
 - Webhook: [Webhook Server](https://workflow-hooks.onrender.com)
 - Worker: [Worker Server](https://workflow-worker-o8lo.onrender.com)
 
-## Future Roadmap
+## Solution Future Aspects
 
-- Expand trigger and action provider ecosystem
-- Implement direct provider integrations
+- Add more Trigger and Action provider to expand the Workflow Automation
+- Provide user to connect with the provider to reduce manual workload
 - Add notification channels (Slack, Discord)
 - Integrate AI for enhanced workflow automation
-- Explore microservices architecture
 
-## Solution Evaluation
+## Pros and Cons of Proposed Solution
 
-### Strengths
-- User-friendly, intuitive interface
+### Pros
+- Streamlined and user-friendly interface
 - Event-driven asynchronous processing
-- Modular, clean architectural design
-- Robust backend with fallback mechanisms
+- Clean architecture with a fallback mechanism
+- MVC OOPs backend codebase architecture
 
-### Improvement Opportunities
+### Cons
 - Transition to microservices architecture
 - Enhance caching mechanisms
-- Develop more comprehensive fallback strategies
-
 
 ## Getting Started
 
