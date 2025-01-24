@@ -1,5 +1,3 @@
-1st draft
-
 # [Workflow Automation](https://workflows-flax.vercel.app)
 
 ![alt text](assets/landing.png)
@@ -8,73 +6,73 @@
 
 ## Solution
 
-Workflow Automation enables seamless automation of your workflows. Users can effortlessly create workflows and configure them to the available trigger providers and multiple available actions with precision. Designed with a robust event-driven architecture, the application ensures reliable and asynchronous execution of actions upon each trigger, providing high performance.
+Workflow Automation is an advanced platform for seamless workflow creation and management. It enables users to effortlessly design and configure automated workflows using diverse trigger providers and multiple actions, leveraging a robust event-driven architecture for reliable and asynchronous execution.
 
-## Features
+## Key Features
 
-- Streamlined Worflow Creation
-- Webhook trigger provider
-- Automate your Google Sheet
-- Mailing service for instant mails
-- Clean architecture
-- MVC OOPs architecture
-- Clerk Authentication
-- Clerk Authorization
-- Beautiful User Interface
-
+- Intuitive Workflow Creation Interface
+- Webhook Integration
+- Google Sheets Automation
+- Advanced Mailing Services
+- Clean and Modular Architecture
+- Secure Clerk Authentication and Authorization
+- Responsive User Interface
 
 ## System Architecture
 
 ![Architecture Diagram](assets/architecture.png)
 
-
-## DB Diagram
+## Database Schema
 
 ![DB Diagram](assets/db-diagram.png)
 
 ## Tech Stack
 
-- **PostgerSQL** - SQL database for storing data and maintain complex relations
-- **Prisma** - ORM
-- **Redis** - In-memory database, used as a Queue
-- **Next.js** - React framework for production
-- **Tailwind CSS** - Utility-first CSS framework
-- **TypeScript** - Superset of JavaScript for type safety
-- **Node.js** - JavaScript runtime for server-side development
-- **Express** - Web framework for Node.js
-- **Nodemailer** - For sending emails
-- **Render** - Deployment platform for backend services
-- **Vercel** - Deployment platform for frontend
+### Backend
+- **PostgreSQL**: Robust SQL database for complex data relations
+- **Prisma**: Efficient ORM for database interactions
+- **Redis**: In-memory database and queue management
+- **Node.js**: Server-side JavaScript runtime
+- **Express**: Lightweight web framework
+- **Nodemailer**: Email transmission service
 
-## Deployment Platform
+### Frontend
+- **Next.js**: React framework for production
+- **TypeScript**: Enhanced JavaScript with type safety
+- **Tailwind CSS**: Utility-first styling framework
 
-- **Render** - Backend deployment
-- **Vercel** - Frontend deployment
+### Deployment
+- **Render**: Backend service hosting
+- **Vercel**: Frontend deployment platform
 
-## Deployed Links
-  Frontend Deployment - [Workflow Automation](https://workflows-flax.vercel.app)
-  Backend Deployment - [Backend server](https://automate-workflow-backend.onrender.com)
-  Webhook Deployment - [Webhook server](https://workflow-hooks.onrender.com)
-  Worker Deployment - [Worker server](https://workflow-worker-o8lo.onrender.com)
-  
-## Solution Future Aspects
+## Deployment Links
 
-- Add more Trigger and Action provider to expand the Workflow Automation
-- Provide user to connect with the provider to reduce manual workload
-- Notification providers such as Slack, Discord
-- Integrating AI to make to more robust, easy to use and automate workflows quickly
+- Frontend: [Workflow Automation](https://workflows-flax.vercel.app)
+- Backend: [Backend Server](https://automate-workflow-backend.onrender.com)
+- Webhook: [Webhook Server](https://workflow-hooks.onrender.com)
+- Worker: [Worker Server](https://workflow-worker-o8lo.onrender.com)
 
-## Pros and Cons of Proposed Solution
+## Future Roadmap
 
-### Pros
-- Streamlined and user-friendly interface
-- Event-driven arcitecture to process actions asynchronously
-- Clean architecture with a fallback mechanism
-- MVC OOPs backend codebase architecture
+- Expand trigger and action provider ecosystem
+- Implement direct provider integrations
+- Add notification channels (Slack, Discord)
+- Integrate AI for enhanced workflow automation
+- Explore microservices architecture
 
-### Cons
-- Monolithic backend structure; could benefit from microservices
-- Potential for improvements with caching and additional fallback mechanisms
+## Solution Evaluation
+
+### Strengths
+- User-friendly, intuitive interface
+- Event-driven asynchronous processing
+- Modular, clean architectural design
+- Robust backend with fallback mechanisms
+
+### Improvement Opportunities
+- Transition to microservices architecture
+- Enhance caching mechanisms
+- Develop more comprehensive fallback strategies
+
 
 ## Getting Started
 
@@ -206,7 +204,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 To install Docker, run the following commands in your terminal:
 
-    ```bash
+    ```
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     ```
