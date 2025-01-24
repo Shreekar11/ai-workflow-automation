@@ -140,6 +140,11 @@ function startServer() {
             app.listen(5000, () => {
                 console.log("Server running on port 5000");
             });
+            app.get('/', (req, res) => {
+                return res.status(200).json({
+                    message: "Hooks server is running",
+                });
+            });
             redisClient.on("disconnect", () => {
                 console.error("Redis connection lost. Attempting to reconnect...");
             });

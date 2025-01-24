@@ -1,5 +1,6 @@
+import http from "http";
 import cors from "cors";
-import express from "express";
+import express, { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { createClient } from "redis";
 import { QUEUE_NAME } from "./config";
@@ -147,6 +148,12 @@ async function startServer() {
     app.listen(5000, () => {
       console.log("Server running on port 5000");
     });
+
+    app.get('/', (req: any, res: any) => {
+      return res.status(200).json({
+        message: "Hooks server is running",
+      })
+    })
 
     redisClient.on("disconnect", () => {
       console.error("Redis connection lost. Attempting to reconnect...");
