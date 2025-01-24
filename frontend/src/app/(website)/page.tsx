@@ -25,7 +25,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
       <Navbar />
-      <main className="pt-32 md:pt-40">
+      <main className="pt-32 md:pt-40 flex justify-center items-center">
         <AnimatedGridPattern
           width={40}
           height={40}
@@ -38,7 +38,7 @@ export default function Page() {
           duration={3}
           repeatDelay={1}
         />
-        <div className="container relative z-10 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="container relative z-10 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="max-w-4xl mx-auto text-center">
             <motion.h1
               className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6"
@@ -52,7 +52,7 @@ export default function Page() {
               </span>
             </motion.h1>
             <motion.p
-              className="sm:text-xl text-gray-600 text-sm mb-8"
+              className="sm:text-xl text-gray-600 text-sm mb-8 max-w-2xl mx-auto"
               initial={{ filter: "blur(8px)", opacity: 0 }}
               animate={{ filter: "blur(0px)", opacity: 1 }}
               transition={{ duration: 1, delay: 0.4 }}
@@ -74,14 +74,6 @@ export default function Page() {
               >
                 Start Automating <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              {/* <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push("/demo")}
-                className="w-full sm:w-auto border-[#FF7801] text-[#FF7801] hover:bg-[#FF7801]/10 transition-all duration-300 ease-in-out transform hover:scale-105"
-              >
-                Watch Demo
-              </Button> */}
             </motion.div>
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left max-w-2xl mx-auto"

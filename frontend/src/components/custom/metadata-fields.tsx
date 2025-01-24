@@ -8,12 +8,18 @@ import {
 // clerk user
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, HelpCircle } from "lucide-react";
 
 // constants
 import { EMAIL_FIELDS, SHEETS_FIELDS } from "@/constant";
 
 // ui components
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -98,6 +104,26 @@ export const TriggerMetadataFields = ({
   );
 };
 
+const FIELD_DESCRIPTIONS: {
+  email: any;
+  sheets: any;
+} = {
+  email: {
+    to: "The email address of the recipient who will receive the email.",
+    from: "The email address from which the email will be sent (defaults to your email).",
+    subject: "The title or headline of the email that summarizes its content.",
+    body: "The main text content of the email message.",
+  },
+  sheets: {
+    sheetId:
+      "The unique ID found in the Google Sheets URL. For example, in 'https://docs.google.com/spreadsheets/d/1ABC123xyz/edit#gid=0', the sheetId is '1ABC123xyz'.",
+    range:
+      "Specify the cell range to update, e.g., 'A1:C1' to modify cells A1, B1, and C1. Follows standard spreadsheet notation.",
+    values:
+      "Comma-separated values to insert into the specified range. Example: 'John,Doe,25' for a range of A1:C1.",
+  },
+};
+
 export const ActionMetadataFields = ({
   selectedOption,
   metadata,
@@ -120,13 +146,17 @@ export const ActionMetadataFields = ({
   };
 
   const handleCustomValueChange = (field: string, value: string) => {
-    handleMetadataChange(field, `{data.${field}}`, (key: string, val: string) => {
-      setDisplayTrigger((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
-      setCustomInputs((prev) => ({ ...prev, [field]: true }));
-    });
+    handleMetadataChange(
+      field,
+      `{data.${field}}`,
+      (key: string, val: string) => {
+        setDisplayTrigger((prev) => ({
+          ...prev,
+          [key]: value,
+        }));
+        setCustomInputs((prev) => ({ ...prev, [field]: true }));
+      }
+    );
 
     if (setFinalTrigger) {
       setFinalTrigger((prev) => ({
@@ -145,15 +175,32 @@ export const ActionMetadataFields = ({
     const displayValue = getDisplayValue(field, value);
     const isCustomValue = customInputs[field];
 
+    // Determine field description based on selected option
+    const fieldDescription =
+      selectedOption.name === "Google Sheets"
+        ? FIELD_DESCRIPTIONS.sheets[field]
+        : FIELD_DESCRIPTIONS.email[field];
+
     if (field === "from") {
       return (
         <div
           key={field}
           className="flex flex-col space-y-2 justify-start items-start"
         >
-          <div>
-            From <span className="text-destructive">*</span>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="flex items-center gap-1">
+                <div>
+                  From <span className="text-destructive">*</span>
+                </div>
+                <HelpCircle className="h-4 w-4 text-gray-500" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                {fieldDescription}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
             <div className="w-full space-y-2">
               <Select
@@ -198,10 +245,21 @@ export const ActionMetadataFields = ({
 
     return (
       <div key={field} className="space-y-2">
-        <label className="text-sm font-medium flex items-center gap-1">
-          {field.charAt(0).toUpperCase() + field.slice(1)}
-          <span className="text-destructive">*</span>
-        </label>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="flex items-center gap-1">
+              <label className="text-sm font-medium">
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+                <span className="text-destructive">*</span>
+              </label>
+              <HelpCircle className="h-4 w-4 text-gray-500" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              {fieldDescription}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {Object.keys(selectTrigger?.metadata || {}).length > 0 ? (
           <div className="space-y-2">
             <Select
@@ -285,7 +343,6 @@ export const ActionMetadataFields = ({
 
   return (
     <div className="space-y-6">
-      {selectedOption.name === "Email" && EMAIL_FIELDS.map(renderField)}
       {selectedOption.name === "Google Sheets" && (
         <>
           {SHEETS_FIELDS.map(renderField)}
@@ -304,6 +361,7 @@ export const ActionMetadataFields = ({
           </Alert>
         </>
       )}
+      {selectedOption.name === "Email" && EMAIL_FIELDS.map(renderField)}
     </div>
   );
 };
