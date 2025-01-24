@@ -5,9 +5,12 @@ import { createClient } from "redis";
 import { QUEUE_NAME } from "./config";
 import cron from "node-cron";
 import axios from "axios";
+import dotenv from "dotenv";
 
 const client = new PrismaClient();
 const app = express();
+
+dotenv.config();
 
 const corsOptions = {
   origin: [

@@ -7,6 +7,12 @@ import { NodeCardProps, OptionType } from "@/types";
 // utility classes
 import { initializeMetadata, validateForm } from "@/utils/metadata-handler";
 
+type HandleMetadataChangeType = (
+  key: string, 
+  value: string, 
+  callback?: (key: string, value: string) => void
+) => void;
+
 export const useNodeCardState = ({
   type,
   workflow,
@@ -17,6 +23,7 @@ export const useNodeCardState = ({
   const [stage, setStage] = useState<"select" | "configure">("select");
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [metadata, setMetadata] = useState<Record<string, string>>({});
+  const [displayTrigger, setDisplayTrigger] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -49,9 +56,13 @@ export const useNodeCardState = ({
     initializeMetadata(type, option.name, setMetadata);
   };
 
-  const handleMetadataChange = (key: string, value: string) => {
+  const handleMetadataChange: HandleMetadataChangeType = (key, value, callback) => {
     setMetadata((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: false }));
+    
+    if (callback) {
+      callback(key, value);
+    }
   };
 
   const handleSubmit = () => {
@@ -71,6 +82,7 @@ export const useNodeCardState = ({
         type: type,
         name: selectedOption.name,
         metadata: finalMetadata,
+        data: displayTrigger,
       });
       resetForm();
       onClose();
@@ -82,6 +94,8 @@ export const useNodeCardState = ({
     selectedOption,
     metadata,
     setMetadata,
+    displayTrigger,
+    setDisplayTrigger,
     errors,
     setErrors,
     handleOptionSelect,

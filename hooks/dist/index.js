@@ -19,8 +19,10 @@ const redis_1 = require("redis");
 const config_1 = require("./config");
 const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const client = new client_1.PrismaClient();
 const app = (0, express_1.default)();
+dotenv_1.default.config();
 const corsOptions = {
     origin: [
         "*",

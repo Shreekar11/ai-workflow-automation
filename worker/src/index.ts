@@ -183,7 +183,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(8000, () => {
-  console.log("Worker HTTP server listening on port 8080");
+  console.log("Worker HTTP server listening on port 8000");
 });
 
 // force shutdown

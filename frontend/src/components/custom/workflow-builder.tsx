@@ -161,7 +161,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   }, []);
 
   const handleSelectOption = useCallback(
-    (option: { id: string; type: string; name: string; metadata: any }) => {
+    (option: {
+      id: string;
+      type: string;
+      name: string;
+      metadata: Record<string, string>;
+      data: Record<string, string>;
+    }) => {
       if (!selectedNode) {
         handleCloseSheet();
         return;
@@ -229,7 +235,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                     name: option.name,
                     metadata: option.metadata,
                     triggerMetadata:
-                      finalTrigger.metadata || workflow?.trigger.metadata,
+                      option.data || workflow?.trigger.metadata,
                   },
                 },
               }

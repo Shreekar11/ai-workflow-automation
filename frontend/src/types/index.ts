@@ -79,6 +79,7 @@ export interface NodeCardProps {
     type: string;
     name: string;
     metadata: Record<string, string>;
+    data: Record<string, string>;
   }) => void;
   type: "trigger" | "action";
 }
@@ -103,6 +104,9 @@ export interface ActionMetadataFieldsProps {
   selectTrigger: {
     metadata: Record<string, string>;
   };
+  setDisplayTrigger: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
   setSelectTrigger: React.Dispatch<
     React.SetStateAction<{
       id: string;
@@ -122,5 +126,9 @@ export interface ActionMetadataFieldsProps {
       metadata: Record<string, string>;
     }>
   >;
-  handleMetadataChange: (key: string, value: string) => void;
+  handleMetadataChange: (
+    key: string, 
+    value: string, 
+    callback?: (key: string, value: string) => void
+  ) => void;
 }

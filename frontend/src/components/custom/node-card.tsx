@@ -16,7 +16,6 @@ import { useNodeCardState } from "@/lib/hooks/useNode";
 import {
   ActionMetadataFields,
   TriggerMetadataFields,
-  MetadataDisplay,
 } from "./metadata-fields";
 
 export default function NodeCard({
@@ -37,6 +36,8 @@ export default function NodeCard({
     selectedOption,
     metadata,
     setMetadata,
+    displayTrigger,
+    setDisplayTrigger,
     errors,
     setErrors,
     handleOptionSelect,
@@ -126,13 +127,13 @@ export default function NodeCard({
                     setErrors={setErrors}
                     handleMetadataChange={handleMetadataChange}
                   />
-                  <MetadataDisplay type="trigger" metadata={metadata} />
                 </>
               ) : (
                 <ActionMetadataFields
                   selectedOption={selectedOption}
                   metadata={metadata}
                   errors={errors}
+                  setDisplayTrigger={setDisplayTrigger}
                   selectTrigger={selectTrigger}
                   setSelectTrigger={setSelectTrigger}
                   finalTrigger={finalTrigger}

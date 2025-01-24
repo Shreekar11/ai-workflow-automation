@@ -102,6 +102,7 @@ export const ActionMetadataFields = ({
   selectedOption,
   metadata,
   errors,
+  setDisplayTrigger,
   selectTrigger,
   setSelectTrigger,
   finalTrigger,
@@ -119,7 +120,13 @@ export const ActionMetadataFields = ({
   };
 
   const handleCustomValueChange = (field: string, value: string) => {
-    handleMetadataChange(field, `{data.${field}}`);
+    handleMetadataChange(field, `{data.${field}}`, (key: string, val: string) => {
+      setDisplayTrigger((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+      setCustomInputs((prev) => ({ ...prev, [field]: true }));
+    });
 
     if (setFinalTrigger) {
       setFinalTrigger((prev) => ({
@@ -152,7 +159,12 @@ export const ActionMetadataFields = ({
               <Select
                 value={value || defaultEmail}
                 onValueChange={(newValue) =>
-                  handleMetadataChange(field, newValue)
+                  handleMetadataChange(field, newValue, (key) => {
+                    setDisplayTrigger((prev) => ({
+                      ...prev,
+                      [key]: newValue,
+                    }));
+                  })
                 }
               >
                 <SelectTrigger
@@ -196,25 +208,30 @@ export const ActionMetadataFields = ({
               value={isCustomValue ? "custom" : value || ""}
               onValueChange={(newValue) => {
                 if (newValue === "custom") {
-                  setCustomInputs((prev) => ({ ...prev, [field]: true }));
-                  handleCustomValueChange(field, "");
+                  handleMetadataChange(field, newValue, (key) => {
+                    setCustomInputs((prev) => ({ ...prev, [key]: true }));
+                    setDisplayTrigger((prev) => ({
+                      ...prev,
+                      [key]: newValue,
+                    }));
+                  });
                 } else {
-                  setCustomInputs((prev) => ({ ...prev, [field]: false }));
-                  const selectedTriggerKey = Object.entries(
-                    selectTrigger.metadata
-                  ).find(([_, val]) => val === newValue)?.[0];
+                  handleMetadataChange(field, `{data.${field}}`, (key) => {
+                    setCustomInputs((prev) => ({ ...prev, [key]: false }));
+                    setDisplayTrigger((prev) => ({
+                      ...prev,
+                      [key]: newValue,
+                    }));
+                  });
 
-                  if (selectedTriggerKey) {
-                    handleMetadataChange(field, `{data.${field}}`);
-                    if (setFinalTrigger) {
-                      setFinalTrigger((prev) => ({
-                        ...prev,
-                        metadata: {
-                          ...prev.metadata,
-                          [field]: newValue,
-                        },
-                      }));
-                    }
+                  if (setFinalTrigger) {
+                    setFinalTrigger((prev) => ({
+                      ...prev,
+                      metadata: {
+                        ...prev.metadata,
+                        [field]: newValue,
+                      },
+                    }));
                   }
                 }
               }}
@@ -248,7 +265,14 @@ export const ActionMetadataFields = ({
           <Input
             placeholder={`Enter ${field}`}
             value={displayValue}
-            onChange={(e) => handleMetadataChange(field, e.target.value)}
+            onChange={(e) =>
+              handleMetadataChange(field, e.target.value, (key, val) => {
+                setDisplayTrigger((prev) => ({
+                  ...prev,
+                  [key]: val,
+                }));
+              })
+            }
             className={hasError ? "border-red-500" : ""}
           />
         )}
@@ -283,5 +307,3 @@ export const ActionMetadataFields = ({
     </div>
   );
 };
-
-export default ActionMetadataFields;

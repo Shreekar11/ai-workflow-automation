@@ -32,7 +32,7 @@ redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 function initHealthCheck() {
     const healthCheckUrl = process.env.WORKER_URL;
     if (!healthCheckUrl) {
-        console.error("BACKEND_URL not configured for health check");
+        console.error("WORKER_URL not configured for health check");
         return;
     }
     node_cron_1.default.schedule("*/5 * * * *", () => __awaiter(this, void 0, void 0, function* () {
@@ -155,7 +155,7 @@ const server = http_1.default.createServer((req, res) => {
     }
 });
 server.listen(8000, () => {
-    console.log("Worker HTTP server listening on port 8080");
+    console.log("Worker HTTP server listening on port 8000");
 });
 // force shutdown
 process.on("SIGTERM", () => __awaiter(void 0, void 0, void 0, function* () {
