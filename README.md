@@ -148,6 +148,8 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
     npm run dev
     ```
 
+3. Server will run on endpoint :- [http://localhost:8080](http://localhost:8080) 
+
 ### Running Webhook Server
 
 1. Create a `.env` file in the root directory and add your environment variables:
