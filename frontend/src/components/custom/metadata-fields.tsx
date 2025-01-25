@@ -8,10 +8,14 @@ import {
 // clerk user
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { AlertCircle, HelpCircle } from "lucide-react";
 
 // constants
-import { EMAIL_FIELDS, SHEETS_FIELDS } from "@/constant";
+import {
+  EMAIL_FIELDS,
+  SHEETS_FIELDS,
+  getPlaceholder,
+  FIELD_DESCRIPTIONS,
+} from "@/constant";
 
 // ui components
 import {
@@ -27,9 +31,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Plus, AlertCircle, HelpCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const MetadataDisplay = ({ type, metadata }: MetadataDisplayProps) => {
@@ -104,26 +108,6 @@ export const TriggerMetadataFields = ({
   );
 };
 
-const FIELD_DESCRIPTIONS: {
-  email: any;
-  sheets: any;
-} = {
-  email: {
-    to: "The email address of the recipient who will receive the email.",
-    from: "The email address from which the email will be sent (defaults to your email).",
-    subject: "The title or headline of the email that summarizes its content.",
-    body: "The main text content of the email message.",
-  },
-  sheets: {
-    sheetId:
-      "The unique ID found in the Google Sheets URL. For example, in 'https://docs.google.com/spreadsheets/d/1ABC123xyz/edit#gid=0', the sheetId is '1ABC123xyz'.",
-    range:
-      "Specify the cell range to update, e.g., 'A1:C1' to modify cells A1, B1, and C1. Follows standard spreadsheet notation.",
-    values:
-      "Comma-separated values to insert into the specified range. Example: 'John,Doe,25' for a range of A1:C1.",
-  },
-};
-
 export const ActionMetadataFields = ({
   selectedOption,
   metadata,
@@ -175,7 +159,6 @@ export const ActionMetadataFields = ({
     const displayValue = getDisplayValue(field, value);
     const isCustomValue = customInputs[field];
 
-    // Determine field description based on selected option
     const fieldDescription =
       selectedOption.name === "Google Sheets"
         ? FIELD_DESCRIPTIONS.sheets[field]
@@ -230,7 +213,7 @@ export const ActionMetadataFields = ({
             </div>
           ) : (
             <Input
-              placeholder="Enter sender email"
+              placeholder={getPlaceholder(selectedOption, field)}
               value={value || defaultEmail}
               onChange={(e) => handleMetadataChange(field, e.target.value)}
               className={`w-full ${hasError ? "border-red-500" : ""}`}
@@ -312,7 +295,7 @@ export const ActionMetadataFields = ({
             </Select>
             {isCustomValue && (
               <Input
-                placeholder={`Enter custom ${field}`}
+                placeholder={getPlaceholder(selectedOption, field)}
                 value={finalTrigger?.metadata[field] || ""}
                 onChange={(e) => handleCustomValueChange(field, e.target.value)}
                 className={hasError ? "border-red-500" : ""}
@@ -321,7 +304,7 @@ export const ActionMetadataFields = ({
           </div>
         ) : (
           <Input
-            placeholder={`Enter ${field}`}
+            placeholder={getPlaceholder(selectedOption, field)}
             value={displayValue}
             onChange={(e) =>
               handleMetadataChange(field, e.target.value, (key, val) => {
