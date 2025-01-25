@@ -101,7 +101,7 @@ async function processMessage(message: string) {
 
         await client.workflowRun.update({
           where: { id: workflowRunDetails?.id },
-          data: { status: "success" },
+          data: { status: "completed" },
         });
       }
 
