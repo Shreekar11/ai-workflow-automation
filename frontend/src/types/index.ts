@@ -35,6 +35,9 @@ export interface Workflow {
       name: string;
     };
   };
+  workflowRuns: {
+    metadata: any,
+  }[];
 }
 
 export interface OptionType {

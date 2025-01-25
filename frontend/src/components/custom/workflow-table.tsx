@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 // icons
-import { Eye, Plus, Trash } from "lucide-react";
+import { ChevronRight, Eye, Plus, Trash } from "lucide-react";
 
 // components
 import {
@@ -19,6 +19,7 @@ import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DeleteDialog } from "./delete-dialog";
 import { Button } from "@/components/ui/button";
+import WorkflowRunDialog from "./workflow-run-dialog";
 
 interface WorkflowTableProps {
   workflows: Workflow[];
@@ -37,6 +38,9 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
   const { user } = useUser();
   const [workflowId, setWorkflowId] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(
+    null
+  );
   const handleCreateWorkflow = () => {
     router.push("/workflows/create");
   };
@@ -59,6 +63,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             <TableHead>Trigger</TableHead>
             <TableHead>Actions</TableHead>
             <TableHead>Webhook</TableHead>
+            <TableHead>Workflow Runs</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead className="text-right">View</TableHead>
             <TableHead className="w-[50px]"></TableHead>
@@ -82,6 +87,9 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-6 w-28" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-20" />
                 </TableCell>
                 <TableCell className="text-right">
                   <Skeleton className="h-8 w-16 ml-auto" />
@@ -118,6 +126,20 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                 </TableCell>
                 <TableCell className="font-mono text-sm">
                   {`${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow.id}`}
+                </TableCell>
+                <TableCell
+                  className="cursor-pointer"
+                  onClick={() => setSelectedWorkflow(workflow)}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-between"
+                  >
+                    <span>{workflow.workflowRuns.length}</span>
+                    <span className="sr-only">View workflow runs</span>
+                    <ChevronRight className="h-4 w-4 opacity-50" />
+                  </Button>
                 </TableCell>
                 <TableCell>{formatDate(workflow.timestamp)}</TableCell>
                 <TableCell className="text-right">
@@ -165,6 +187,11 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
           )}
         </TableBody>
       </Table>
+
+      <WorkflowRunDialog
+        selectedWorkflow={selectedWorkflow}
+        setSelectedWorkflow={setSelectedWorkflow}
+      />
 
       <DeleteDialog
         user={user}

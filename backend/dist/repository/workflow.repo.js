@@ -57,6 +57,7 @@ class WorkFlowRepo extends base_repo_1.default {
                             type: true,
                         },
                     },
+                    workflowRuns: true,
                 },
             });
             return workFlowData;

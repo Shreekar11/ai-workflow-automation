@@ -58,6 +58,7 @@ export default class WorkFlowRepo extends Repository<Workflow> {
             type: true,
           },
         },
+        workflowRuns: true,
       },
     });
 
