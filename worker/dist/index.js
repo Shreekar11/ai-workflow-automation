@@ -87,7 +87,7 @@ function processMessage(message) {
                     console.log(`Sending out Email to ${to}, body is ${body}`);
                     yield client.workflowRun.update({
                         where: { id: workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.id },
-                        data: { status: "success" },
+                        data: { status: "completed" },
                     });
                 }
                 // google sheets action
