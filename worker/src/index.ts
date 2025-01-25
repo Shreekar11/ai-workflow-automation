@@ -11,7 +11,7 @@ import { parser } from "./utils/parser";
 import dotenv from "dotenv";
 import { EmailService } from "./services/mail.service";
 import { GoogleSheetsService } from "./services/sheets.service";
-import cron from 'node-cron'
+import cron from "node-cron";
 import axios from "axios";
 
 dotenv.config();
@@ -74,61 +74,82 @@ async function processMessage(message: string) {
       return;
     }
 
-    // email action
-    if (currentAction.type.id === availableEmailId) {
-      const workflowRunMetadata = workflowRunDetails?.metadata;
-      const to = parser(
-        (currentAction.metadata as JsonObject)?.to as string,
-        workflowRunMetadata
-      );
-      const from = parser(
-        (currentAction.metadata as JsonObject)?.from as string,
-        workflowRunMetadata
-      );
-      const subject = parser(
-        (currentAction.metadata as JsonObject)?.subject as string,
-        workflowRunMetadata
-      );
-      const body = parser(
-        (currentAction.metadata as JsonObject)?.body as string,
-        workflowRunMetadata
-      );
+    try {
+      // email action
+      if (currentAction.type.id === availableEmailId) {
+        const workflowRunMetadata = workflowRunDetails?.metadata;
+        const to = parser(
+          (currentAction.metadata as JsonObject)?.to as string,
+          workflowRunMetadata
+        );
+        const from = parser(
+          (currentAction.metadata as JsonObject)?.from as string,
+          workflowRunMetadata
+        );
+        const subject = parser(
+          (currentAction.metadata as JsonObject)?.subject as string,
+          workflowRunMetadata
+        );
+        const body = parser(
+          (currentAction.metadata as JsonObject)?.body as string,
+          workflowRunMetadata
+        );
 
-      const emailService = new EmailService(to, from, subject, body);
-      await emailService.sendEmailFunction();
-      console.log(`Sending out Email to ${to}, body is ${body}`);
-    }
+        const emailService = new EmailService(to, from, subject, body);
+        await emailService.sendEmailFunction();
+        console.log(`Sending out Email to ${to}, body is ${body}`);
 
-    // google sheets action
-    if (currentAction.type.id === availableGoogleSheetsId) {
-      const workflowRunMetadata = workflowRunDetails?.metadata;
-      const sheetId = parser(
-        (currentAction.metadata as JsonObject)?.sheetId as string,
-        workflowRunMetadata
-      );
-
-      let range = parser(
-        (currentAction.metadata as JsonObject)?.range as string,
-        workflowRunMetadata
-      );
-
-      if (range.startsWith("Sheet!")) {
-        range = range.replace("Sheet!", "Sheet1!");
-      } else {
-        range = `Sheet1!${range}`;
+        await client.workflowRun.update({
+          where: { id: workflowRunDetails?.id },
+          data: { status: "success" },
+        });
       }
 
-      const valuesStr = parser(
-        (currentAction.metadata as JsonObject)?.values as string,
-        workflowRunMetadata
-      );
+      // google sheets action
+      if (currentAction.type.id === availableGoogleSheetsId) {
+        const workflowRunMetadata = workflowRunDetails?.metadata;
+        const sheetId = parser(
+          (currentAction.metadata as JsonObject)?.sheetId as string,
+          workflowRunMetadata
+        );
 
-      const values = valuesStr.split(",");
+        let range = parser(
+          (currentAction.metadata as JsonObject)?.range as string,
+          workflowRunMetadata
+        );
 
-      const sheetsService = new GoogleSheetsService(sheetId, range, values);
+        if (range.startsWith("Sheet!")) {
+          range = range.replace("Sheet!", "Sheet1!");
+        } else {
+          range = `Sheet1!${range}`;
+        }
 
-      await sheetsService.appendToSheet();
-      console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
+        const valuesStr = parser(
+          (currentAction.metadata as JsonObject)?.values as string,
+          workflowRunMetadata
+        );
+
+        const values = valuesStr.split(",");
+
+        const sheetsService = new GoogleSheetsService(sheetId, range, values);
+
+        await sheetsService.appendToSheet();
+        console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
+
+        await client.workflowRun.update({
+          where: { id: workflowRunDetails?.id },
+          data: { status: "completed" },
+        });
+      }
+    } catch (error: any) {
+      await client.workflowRun.update({
+        where: { id: workflowRunDetails?.id },
+        data: {
+          status: "failed",
+        },
+      });
+
+      throw error;
     }
 
     const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
@@ -151,7 +172,7 @@ async function main() {
     await redisClient.connect();
     console.log("Connected to Redis");
 
-    initHealthCheck()
+    initHealthCheck();
 
     // start processing messages
     while (true) {

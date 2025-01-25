@@ -85,6 +85,7 @@ app.post("/hooks/:workflowId", async (req, res) => {
         data: {
           workflowId,
           metadata: body,
+          status: "pending"
         },
       });
 

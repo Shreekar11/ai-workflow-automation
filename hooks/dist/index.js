@@ -83,6 +83,7 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
                 data: {
                     workflowId,
                     metadata: body,
+                    status: "pending"
                 },
             });
             yield tx.workflowRunOutbox.create({

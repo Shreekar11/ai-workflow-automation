@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface WorkflowRunDialogProps {
   selectedWorkflow: Workflow | null;
@@ -16,6 +17,9 @@ const WorkflowRunDialog = ({
   selectedWorkflow,
   setSelectedWorkflow,
 }: WorkflowRunDialogProps) => {
+  function capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
   return (
     <Dialog
       open={selectedWorkflow !== null}
@@ -38,12 +42,33 @@ const WorkflowRunDialog = ({
               {selectedWorkflow && selectedWorkflow?.workflowRuns.length > 0 ? (
                 <div className="space-y-4">
                   {selectedWorkflow?.workflowRuns.map((workflowRun, index) => (
-                    <pre
-                      key={index}
-                      className="bg-muted p-4 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
-                    >
-                      {JSON.stringify(workflowRun?.metadata, null, 2)}
-                    </pre>
+                    <div key={index} className="bg-muted p-4 rounded-md ">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">Status:</span>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            workflowRun.status.toLowerCase() === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : workflowRun.status.toLowerCase() === "failed"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {workflowRun.status.toLowerCase() === "completed" && (
+                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                          )}
+                          {workflowRun.status.toLowerCase() === "failed" && (
+                            <XCircle className="w-4 h-4 mr-1" />
+                          )}
+                          {capitalizeFirstLetter(
+                            selectedWorkflow?.workflowRuns[0]?.status
+                          )}
+                        </span>
+                      </div>
+                      <pre className="overflow-x-auto whitespace-pre-wrap break-all">
+                        {JSON.stringify(workflowRun?.metadata, null, 2)}
+                      </pre>
+                    </div>
                   ))}
                 </div>
               ) : (

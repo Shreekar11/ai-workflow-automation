@@ -36,7 +36,8 @@ export interface Workflow {
     };
   };
   workflowRuns: {
-    metadata: any,
+    metadata: any;
+    status: string;
   }[];
 }
 

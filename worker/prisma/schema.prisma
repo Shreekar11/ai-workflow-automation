@@ -69,6 +69,7 @@ model AvailableTrigger {
 model WorkflowRun {
   id         String             @id @default(uuid())
   workflowId String
+  status     String
   metadata   Json
   workflow   Workflow           @relation(fields: [workflowId], references: [id])
   runOutbox  WorkflowRunOutbox?
