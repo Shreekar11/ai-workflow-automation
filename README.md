@@ -38,7 +38,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **Node.js** - JavaScript runtime for server-side development
 - **Express** - Web framework for Node.js
 - **Nodemailer** - For sending emails
-- **Zod** - Zod used for validation
+- **Zod** - Used for validation
 
 ### Frontend
 - **Next.js** - React framework for production
@@ -70,8 +70,8 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 ### Pros
 - Streamlined and user-friendly interface
 - Event-driven asynchronous processing
-- Clean architecture with a fallback mechanism
-- MVC OOPs backend codebase architecture
+- Clean and MVC OOPs architecture
+- Dedicated Webhook Server for scalable event handling
 
 ### Cons
 - Transition to microservices architecture
