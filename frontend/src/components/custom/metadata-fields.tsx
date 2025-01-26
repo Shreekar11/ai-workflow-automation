@@ -8,6 +8,7 @@ import {
 // clerk user
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { toast } from "@/lib/hooks/useToast";
 
 // constants
 import {
@@ -122,6 +123,26 @@ export const ActionMetadataFields = ({
   const { user } = useUser();
   const defaultEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const [customInputs, setCustomInputs] = useState<Record<string, boolean>>({});
+
+  const codeContent =
+    "google-auth-service-account@workflow-automation-448218.iam.gserviceaccount.com";
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent);
+      toast({
+        title: "Copied!",
+        description: "The email has been copied to your clipboard.",
+        variant: "success",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy the email. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getDisplayValue = (field: string, value: string) => {
     if (!value || !value.startsWith("{data.")) return value;
@@ -335,9 +356,14 @@ export const ActionMetadataFields = ({
             <AlertDescription>
               Please add the following service account email to your Google
               Sheet and grant it Editor permissions:
-              <code className="block mt-2 p-2 bg-yellow-100 rounded-lg">
-                google-auth-service-account@workflow-automation-448218.iam.gserviceaccount.com
-              </code>
+              <div className="relative mt-2">
+                <code
+                  onClick={copyToClipboard}
+                  className="hover:cursor-pointer block p-2 pr-10 hover:bg-yellow-200 bg-yellow-100 rounded-lg overflow-x-auto"
+                >
+                  {codeContent}
+                </code>
+              </div>
               This step is crucial for automating the workflow with your Google
               Sheet.
             </AlertDescription>
