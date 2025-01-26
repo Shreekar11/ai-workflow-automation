@@ -38,6 +38,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **Node.js** - JavaScript runtime for server-side development
 - **Express** - Web framework for Node.js
 - **Nodemailer** - For sending emails
+- **Zod** - Zod used for validation
 
 ### Frontend
 - **Next.js** - React framework for production
@@ -216,13 +217,13 @@ To install Docker, run the following commands in your terminal:
 ## Development Environment For Server
 
 - Navigate into **backend** directory
+- Add the `.env` file in the directory. The env file being used for development is called `.env`
 - To get started with development first build the dev containers using the following command
 
     ```bash
     docker-compose build
     ```
 
-- The env file being used for development is called `.env`
 - Run the containers using the command
 
     ```bash
@@ -232,13 +233,13 @@ To install Docker, run the following commands in your terminal:
 ## Development Environment For Client
 
 - Navigate into **frontend** directory
+- Add the `.env` file in the directory. The env file being used for development is called `.env`
 - To get started with development first build the dev containers using the following command
 
     ```bash
     docker-compose build
     ```
 
-- The env file being used for development is called `.env`
 - Run the containers using the command
 
     ```bash
@@ -246,13 +247,13 @@ To install Docker, run the following commands in your terminal:
     ```
 
 - Navigate into **hooks** directory
+- Add the `.env` file in the directory. The env file being used for development is called `.env`
 - To get started with development first build the dev containers using the following command
 
     ```bash
     docker-compose build
     ```
 
-- The env file being used for development is called `.env`
 - Run the containers using the command
 
     ```bash
@@ -260,13 +261,13 @@ To install Docker, run the following commands in your terminal:
     ```
 
 - Navigate into **worker** directory
+- Add the `.env` file in the directory. The env file being used for development is called `.env`
 - To get started with development first build the dev containers using the following command
 
     ```bash
     docker-compose build
     ```
 
-- The env file being used for development is called `.env`
 - Run the containers using the command
 
     ```bash
