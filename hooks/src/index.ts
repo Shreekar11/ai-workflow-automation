@@ -76,7 +76,7 @@ function initHealthCheck() {
 
 app.post("/hooks/:workflowId", async (req, res) => {
   const workflowId = req.params.workflowId;
-  const body = req.body.data;
+  const body = req.body.data ? req.body.data : req.body;
 
   try {
     await client.$transaction(async (tx) => {

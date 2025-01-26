@@ -76,7 +76,7 @@ function initHealthCheck() {
 }
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
-    const body = req.body.data;
+    const body = req.body.data ? req.body.data : req.body;
     try {
         yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const run = yield tx.workflowRun.create({
