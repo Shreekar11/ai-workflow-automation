@@ -1,6 +1,6 @@
 # [Workflow Automation](https://workflows-flax.vercel.app)
 
-![alt text](assets/landing.png)
+![Landing Page](assets/landing.png)
 
 > Automate your Workflows with ease
 
@@ -62,6 +62,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Provide user to connect with the provider to reduce manual workload
 - Add notification channels (Slack, Discord)
 - Integrate AI for enhanced workflow automation
+- Create a Webhook secret key to authenticate and secure the Webhook endpoint
 
 ## Pros and Cons of Proposed Solution
 
@@ -73,7 +74,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 ### Cons
 - Transition to microservices architecture
-- Enhance caching mechanisms
+- Securing the Webhook endpoint using unique secret key
 
 ## Getting Started
 
