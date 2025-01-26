@@ -234,8 +234,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                       ),
                     name: option.name,
                     metadata: option.metadata,
-                    triggerMetadata:
-                      option.data || workflow?.trigger.metadata,
+                    triggerMetadata: option.data || workflow?.trigger.metadata,
                   },
                 },
               }
@@ -250,6 +249,25 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
   const handlePublishWorkflow = async () => {
     const { id, name, metadata } = finalTrigger;
+
+    if (!id || !name || !metadata) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Trigger not selected. Please select a trigger!",
+      });
+      return;
+    }
+    if (!(selectActions.length > 0)) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Actions not selected. Please select an action!",
+      });
+      return;
+    }
+
+    setIsLoading(true);
 
     const filteredActions = selectActions.map((action) => ({
       ...action,
@@ -281,24 +299,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       ),
     }));
 
-    if (!id || !name || !metadata) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "Trigger not selected. Please select a trigger!",
-      });
-      return;
-    }
-    if (!(selectActions.length > 0)) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "Actions not selected. Please select an action!",
-      });
-      return;
-    }
-
-    setIsLoading(true);
     try {
       let response;
 
@@ -394,11 +394,6 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
         {
           data: actionMetadata,
-        },
-        {
-          headers: {
-            "clerk-user-id": user?.id,
-          },
         }
       );
 
@@ -412,6 +407,9 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         title: "Success!",
         description: "Workflow run successful",
       });
+      setTimeout(() => {
+        router.push("/workflows");
+      }, 1000);
     } catch (err) {
       console.log("Error: ", err);
 

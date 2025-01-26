@@ -170,7 +170,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 py-10 text-center">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="text-gray-500">
                     No workflows yet. Create your first workflow to get started!

@@ -83,7 +83,7 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
                 data: {
                     workflowId,
                     metadata: body,
-                    status: "pending"
+                    status: "running",
                 },
             });
             yield tx.workflowRunOutbox.create({
@@ -141,7 +141,7 @@ function startServer() {
             app.listen(5000, () => {
                 console.log("Server running on port 5000");
             });
-            app.get('/', (req, res) => {
+            app.get("/", (req, res) => {
                 return res.status(200).json({
                     message: "Hooks server is running",
                 });
