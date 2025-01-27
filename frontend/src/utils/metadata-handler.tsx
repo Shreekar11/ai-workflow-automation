@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus } from "lucide-react";
-import { OptionType, ValidationResult, ValidationRules } from "@/types";
+import { OptionType } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,8 +35,10 @@ export const validateForm = (
   type: string,
   metadata: Record<string, string>,
   selectedOption: OptionType,
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
+  displayTrigger: any
 ) => {
+  console.log(displayTrigger);
   const validationErrors: Record<string, boolean> = {};
   const errorMessages: Record<string, string> = {};
   let isValid = true;
@@ -62,10 +64,12 @@ export const validateForm = (
       user?.emailAddresses?.[0]?.emailAddress
     ) {
       metadata.from = user.emailAddresses[0].emailAddress;
+      displayTrigger.from = user.emailAddresses[0].emailAddress;
     }
 
     fields.forEach((field) => {
-      const value = metadata[field] || "";
+      const value = displayTrigger[field] || "";
+      console.log(value);
 
       if (!rules[field].required && !value) {
         return;
@@ -113,9 +117,11 @@ export const validateForm = (
 
       if (rules[field].custom && !rules[field].custom(value)) {
         validationErrors[field] = true;
-        errorMessages[
-          field
-        ] = `Invalid ${field} format. Values should be comma-separated without spaces`;
+        const customMessage =
+          field === "values"
+            ? "Invalid format. Values should be comma-separated without spaces"
+            : `Invalid ${field} format`;
+        errorMessages[field] = customMessage;
         isValid = false;
         return;
       }
@@ -123,13 +129,14 @@ export const validateForm = (
 
     if (
       selectedOption?.name === "Google Sheets" &&
-      metadata.range &&
-      metadata.values
+      displayTrigger.range &&
+      displayTrigger.values
     ) {
-      const rangeMatch = metadata.range.match(/[A-Z]+[0-9]+:[A-Z]+[0-9]+$/);
+      const rangeMatch = displayTrigger.range.match(
+        /[A-Z]+[0-9]+:[A-Z]+[0-9]+$/
+      );
       if (rangeMatch) {
-        // Split values without trimming to maintain strict format checking
-        const valueCount = metadata.values.split(",").length;
+        const valueCount = displayTrigger.values.split(",").length;
         const [start, end] = rangeMatch[0].split(":");
         const startCol = start.match(/[A-Z]+/)?.[0];
         const endCol = end.match(/[A-Z]+/)?.[0];

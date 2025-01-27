@@ -83,10 +83,10 @@ export const useNodeCardState = ({
       type,
       metadata,
       selectedOption,
-      setErrors
+      setErrors,
+      displayTrigger
     );
 
-    // If validation result is an object with isValid property
     if (typeof validationResult === "object" && "isValid" in validationResult) {
       if (validationResult.isValid) {
         const finalMetadata =
@@ -106,19 +106,15 @@ export const useNodeCardState = ({
         resetForm();
         onClose();
       } else {
-        // Update error messages in the component state
         setErrorMessages(validationResult.errorMessages);
 
-        // Optionally show a toast notification for validation failure
         toast({
           title: "Validation Error",
           description: "Please fix the errors before submitting.",
           variant: "destructive",
         });
       }
-    }
-    // For backward compatibility with boolean return type
-    else if (validationResult === true) {
+    } else if (validationResult === true) {
       const finalMetadata =
         type === "trigger"
           ? Object.fromEntries(

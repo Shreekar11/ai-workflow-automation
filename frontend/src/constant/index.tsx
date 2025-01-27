@@ -29,6 +29,10 @@ export const SHEETS_VALIDATION_RULES: Record<string, ValidationRules> = {
   range: {
     required: true,
     pattern: /^[^!]+![A-Z]+[0-9]+:[A-Z]+[0-9]+$/,
+    custom: (value: string) => {
+      const sheetRangeRegex = /^.+![A-Z]+[0-9]+:[A-Z]+[0-9]+$/;
+      return sheetRangeRegex.test(value);
+    },
   },
   values: {
     required: true,
