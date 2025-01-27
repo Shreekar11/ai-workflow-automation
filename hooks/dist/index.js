@@ -92,7 +92,13 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
                 },
             });
         }));
-        res.status(200).json({ status: true, message: "Webhook Trigger received" });
+        res
+            .status(200)
+            .json({
+            status: true,
+            message: "Webhook processed successfully",
+            workflowId: workflowId,
+        });
     }
     catch (error) {
         console.error("Error processing webhook:", error);

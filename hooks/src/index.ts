@@ -95,7 +95,13 @@ app.post("/hooks/:workflowId", async (req, res) => {
       });
     });
 
-    res.status(200).json({ status: true, message: "Webhook Trigger received" });
+    res
+      .status(200)
+      .json({
+        status: true,
+        message: "Webhook processed successfully",
+        workflowId: workflowId,
+      });
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
