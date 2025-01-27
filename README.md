@@ -8,13 +8,13 @@
 
 Workflow Automation enables seamless automation of your workflows. Users can effortlessly create workflows and configure them to the available trigger providers and multiple available actions with precision. Designed with a robust event-driven architecture, the application ensures reliable and asynchronous execution of actions upon each trigger, providing high performance.
 
-### Demo Video
+## Demo Video
 
 [Watch Workflow Automation Demo 🚀](https://www.loom.com/share/45ca04286a0e4497b78689a3fbe48b3f?sid=5e3795c0-6343-4087-86af-b4b46e82b206)
 
 ## Features
 
-- Streamlined Worflow Creation
+- Streamlined Workflow Creation
 - Webhook trigger provider
 - Automate your Google Sheet
 - Mailing service for instant mails
