@@ -1,5 +1,40 @@
 import { ReactNode } from "react";
 import { Mail, Webhook, FileSpreadsheet } from "lucide-react";
+import { ValidationRules } from "@/types";
+
+export const EMAIL_VALIDATION_RULES: Record<string, ValidationRules> = {
+  to: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  },
+  from: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  },
+  subject: {
+    required: true,
+    maxLength: 255,
+  },
+  body: {
+    required: true,
+    minLength: 1,
+  },
+};
+
+export const SHEETS_VALIDATION_RULES: Record<string, ValidationRules> = {
+  sheetId: {
+    required: true,
+    pattern: /^[-_a-zA-Z0-9]+$/,
+  },
+  range: {
+    required: true,
+    pattern: /^[^!]+![A-Z]+[0-9]+:[A-Z]+[0-9]+$/,
+  },
+  values: {
+    required: true,
+    custom: (value: string) => value.split(",").length > 0,
+  },
+};
 
 export const EMAIL_FIELDS = ["to", "from", "subject", "body"];
 export const SHEETS_FIELDS = ["sheetId", "range", "values"];

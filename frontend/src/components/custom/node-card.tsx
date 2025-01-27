@@ -13,10 +13,7 @@ import { Button } from "@/components/ui/button";
 import { optionStyles } from "@/constant";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNodeCardState } from "@/lib/hooks/useNode";
-import {
-  ActionMetadataFields,
-  TriggerMetadataFields,
-} from "./metadata-fields";
+import { ActionMetadataFields, TriggerMetadataFields } from "./metadata-fields";
 
 export default function NodeCard({
   workflow,
@@ -40,6 +37,7 @@ export default function NodeCard({
     setDisplayTrigger,
     errors,
     setErrors,
+    errorMessages,
     handleOptionSelect,
     handleMetadataChange,
     handleSubmit,
@@ -133,6 +131,7 @@ export default function NodeCard({
                   selectedOption={selectedOption}
                   metadata={metadata}
                   errors={errors}
+                  errorMessages={errorMessages}
                   setDisplayTrigger={setDisplayTrigger}
                   selectTrigger={selectTrigger}
                   setSelectTrigger={setSelectTrigger}

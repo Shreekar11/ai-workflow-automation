@@ -113,6 +113,7 @@ export const ActionMetadataFields = ({
   selectedOption,
   metadata,
   errors,
+  errorMessages,
   setDisplayTrigger,
   selectTrigger,
   setSelectTrigger,
@@ -175,7 +176,7 @@ export const ActionMetadataFields = ({
   };
 
   const renderField = (field: string) => {
-    const hasError = errors[field];
+    const hasError = errorMessages[field];
     const value = metadata[field];
     const displayValue = getDisplayValue(field, value);
     const isCustomValue = customInputs[field];
@@ -241,7 +242,9 @@ export const ActionMetadataFields = ({
             />
           )}
           {hasError && (
-            <p className="text-sm text-destructive">This field is required</p>
+            <p className="text-sm text-destructive">
+              {hasError || "This field is required"}
+            </p>
           )}
         </div>
       );
@@ -339,7 +342,9 @@ export const ActionMetadataFields = ({
           />
         )}
         {hasError && (
-          <p className="text-sm text-destructive">This field is required</p>
+          <p className="text-sm text-destructive">
+            {hasError || "This field is required"}
+          </p>
         )}
       </div>
     );

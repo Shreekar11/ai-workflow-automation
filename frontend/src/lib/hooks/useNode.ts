@@ -6,10 +6,11 @@ import { NodeCardProps, OptionType } from "@/types";
 
 // utility classes
 import { initializeMetadata, validateForm } from "@/utils/metadata-handler";
+import { toast } from "./useToast";
 
 type HandleMetadataChangeType = (
-  key: string, 
-  value: string, 
+  key: string,
+  value: string,
   callback?: (key: string, value: string) => void
 ) => void;
 
@@ -23,8 +24,13 @@ export const useNodeCardState = ({
   const [stage, setStage] = useState<"select" | "configure">("select");
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [metadata, setMetadata] = useState<Record<string, string>>({});
-  const [displayTrigger, setDisplayTrigger] = useState<Record<string, string>>({});
+  const [displayTrigger, setDisplayTrigger] = useState<Record<string, string>>(
+    {}
+  );
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [errorMessages, setErrorMessages] = useState<Record<string, string>>(
+    {}
+  );
 
   useEffect(() => {
     if (selectedOption && workflow) {
@@ -56,20 +62,63 @@ export const useNodeCardState = ({
     initializeMetadata(type, option.name, setMetadata);
   };
 
-  const handleMetadataChange: HandleMetadataChangeType = (key, value, callback) => {
+  const handleMetadataChange: HandleMetadataChangeType = (
+    key,
+    value,
+    callback
+  ) => {
     setMetadata((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: false }));
-    
+
     if (callback) {
       callback(key, value);
     }
   };
 
   const handleSubmit = () => {
-    if (
-      selectedOption &&
-      validateForm(user, type, metadata, selectedOption, setErrors)
-    ) {
+    if (!selectedOption) return;
+
+    const validationResult = validateForm(
+      user,
+      type,
+      metadata,
+      selectedOption,
+      setErrors
+    );
+
+    // If validation result is an object with isValid property
+    if (typeof validationResult === "object" && "isValid" in validationResult) {
+      if (validationResult.isValid) {
+        const finalMetadata =
+          type === "trigger"
+            ? Object.fromEntries(
+                Object.entries(metadata).filter(([key, value]) => key && value)
+              )
+            : metadata;
+
+        onSelect({
+          id: selectedOption.id,
+          type: type,
+          name: selectedOption.name,
+          metadata: finalMetadata,
+          data: displayTrigger,
+        });
+        resetForm();
+        onClose();
+      } else {
+        // Update error messages in the component state
+        setErrorMessages(validationResult.errorMessages);
+
+        // Optionally show a toast notification for validation failure
+        toast({
+          title: "Validation Error",
+          description: "Please fix the errors before submitting.",
+          variant: "destructive",
+        });
+      }
+    }
+    // For backward compatibility with boolean return type
+    else if (validationResult === true) {
       const finalMetadata =
         type === "trigger"
           ? Object.fromEntries(
@@ -98,6 +147,7 @@ export const useNodeCardState = ({
     setDisplayTrigger,
     errors,
     setErrors,
+    errorMessages,
     handleOptionSelect,
     handleMetadataChange,
     handleSubmit,

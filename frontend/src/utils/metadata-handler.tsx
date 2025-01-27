@@ -1,9 +1,14 @@
 import React from "react";
 import { Plus } from "lucide-react";
-import { OptionType } from "@/types";
+import { OptionType, ValidationResult, ValidationRules } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EMAIL_FIELDS, SHEETS_FIELDS } from "@/constant";
+import {
+  EMAIL_FIELDS,
+  EMAIL_VALIDATION_RULES,
+  SHEETS_FIELDS,
+  SHEETS_VALIDATION_RULES,
+} from "@/constant";
 
 export const initializeMetadata = (
   type: string,
@@ -32,24 +37,26 @@ export const validateForm = (
   selectedOption: OptionType,
   setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
 ) => {
-  if (type === "trigger") {
-    const newErrors: Record<string, boolean> = {};
-    let isValid = true;
+  const validationErrors: Record<string, boolean> = {};
+  const errorMessages: Record<string, string> = {};
+  let isValid = true;
 
+  if (type === "trigger") {
     Object.entries(metadata).forEach(([key, value]) => {
-      if (!key || !value) {
-        newErrors[key] = true;
+      if (!value || value.trim() === "") {
+        validationErrors[key] = true;
+        errorMessages[key] = `${key} is required`;
         isValid = false;
       }
     });
-
-    setErrors(newErrors);
-    return isValid;
-  } else {
+  }
+  else {
+    const rules =
+      selectedOption?.name === "Email"
+        ? EMAIL_VALIDATION_RULES
+        : SHEETS_VALIDATION_RULES;
     const fields =
       selectedOption?.name === "Email" ? EMAIL_FIELDS : SHEETS_FIELDS;
-    const newErrors: Record<string, boolean> = {};
-    let isValid = true;
 
     if (
       selectedOption?.name === "Email" &&
@@ -59,17 +66,87 @@ export const validateForm = (
     }
 
     fields.forEach((field) => {
-      const value = metadata[field];
+      const value = metadata[field] || "";
 
-      if (!value) {
-        newErrors[field] = true;
+      if (!rules[field].required && !value) {
+        return;
+      }
+
+      if (rules[field].required && (!value || value.trim() === "")) {
+        validationErrors[field] = true;
+        errorMessages[field] = `${field} is required`;
         isValid = false;
+        return;
+      }
+
+      if (rules[field].pattern && value && !rules[field].pattern.test(value)) {
+        validationErrors[field] = true;
+        errorMessages[field] = `Invalid ${field} format`;
+        isValid = false;
+        return;
+      }
+
+      if (
+        rules[field].minLength &&
+        value &&
+        value.length < rules[field].minLength
+      ) {
+        validationErrors[field] = true;
+        errorMessages[
+          field
+        ] = `${field} must be at least ${rules[field].minLength} characters`;
+        isValid = false;
+        return;
+      }
+
+      if (
+        rules[field].maxLength &&
+        value &&
+        value.length > rules[field].maxLength
+      ) {
+        validationErrors[field] = true;
+        errorMessages[
+          field
+        ] = `${field} cannot exceed ${rules[field].maxLength} characters`;
+        isValid = false;
+        return;
+      }
+
+      if (rules[field].custom && !rules[field].custom(value)) {
+        validationErrors[field] = true;
+        errorMessages[field] = `Invalid ${field} format`;
+        isValid = false;
+        return;
       }
     });
 
-    setErrors(newErrors);
-    return isValid;
+    if (
+      selectedOption?.name === "Google Sheets" &&
+      metadata.range &&
+      metadata.values
+    ) {
+      const rangeMatch = metadata.range.match(/[A-Z]+[0-9]+:[A-Z]+[0-9]+$/);
+      if (rangeMatch) {
+        const valueCount = metadata.values.split(",").length;
+        const [start, end] = rangeMatch[0].split(":");
+        const startCol = start.match(/[A-Z]+/)?.[0];
+        const endCol = end.match(/[A-Z]+/)?.[0];
+
+        if (startCol && endCol) {
+          const expectedColumns =
+            endCol.charCodeAt(0) - startCol.charCodeAt(0) + 1;
+          if (valueCount !== expectedColumns) {
+            validationErrors.values = true;
+            errorMessages.values = `Number of values (${valueCount}) does not match the range columns (${expectedColumns})`;
+            isValid = false;
+          }
+        }
+      }
+    }
   }
+
+  setErrors(validationErrors);
+  return { isValid, errorMessages };
 };
 
 export const renderMetadataExample = (type: string, metadata: any) => {

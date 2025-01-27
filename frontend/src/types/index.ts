@@ -105,6 +105,7 @@ export interface ActionMetadataFieldsProps {
   selectedOption: OptionType;
   metadata: Record<string, string>;
   errors: Record<string, boolean>;
+  errorMessages: Record<string, string>;
   selectTrigger: {
     metadata: Record<string, string>;
   };
@@ -131,8 +132,21 @@ export interface ActionMetadataFieldsProps {
     }>
   >;
   handleMetadataChange: (
-    key: string, 
-    value: string, 
+    key: string,
+    value: string,
     callback?: (key: string, value: string) => void
   ) => void;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  message: string;
+}
+
+export interface ValidationRules {
+  required?: boolean;
+  pattern?: RegExp;
+  minLength?: number;
+  maxLength?: number;
+  custom?: (value: string) => boolean;
 }
