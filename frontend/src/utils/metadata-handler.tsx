@@ -49,8 +49,7 @@ export const validateForm = (
         isValid = false;
       }
     });
-  }
-  else {
+  } else {
     const rules =
       selectedOption?.name === "Email"
         ? EMAIL_VALIDATION_RULES
@@ -114,7 +113,9 @@ export const validateForm = (
 
       if (rules[field].custom && !rules[field].custom(value)) {
         validationErrors[field] = true;
-        errorMessages[field] = `Invalid ${field} format`;
+        errorMessages[
+          field
+        ] = `Invalid ${field} format. Values should be comma-separated without spaces`;
         isValid = false;
         return;
       }
@@ -127,6 +128,7 @@ export const validateForm = (
     ) {
       const rangeMatch = metadata.range.match(/[A-Z]+[0-9]+:[A-Z]+[0-9]+$/);
       if (rangeMatch) {
+        // Split values without trimming to maintain strict format checking
         const valueCount = metadata.values.split(",").length;
         const [start, end] = rangeMatch[0].split(":");
         const startCol = start.match(/[A-Z]+/)?.[0];

@@ -24,7 +24,7 @@ export const EMAIL_VALIDATION_RULES: Record<string, ValidationRules> = {
 export const SHEETS_VALIDATION_RULES: Record<string, ValidationRules> = {
   sheetId: {
     required: true,
-    pattern: /^[-_a-zA-Z0-9]+$/,
+    minLength: 1,
   },
   range: {
     required: true,
@@ -32,7 +32,14 @@ export const SHEETS_VALIDATION_RULES: Record<string, ValidationRules> = {
   },
   values: {
     required: true,
-    custom: (value: string) => value.split(",").length > 0,
+    pattern: /^[^,]+(?:,[^,]+)*$/,
+    custom: (value: string) => {
+      if (/\s/.test(value)) {
+        return false;
+      }
+      const values = value.split(",");
+      return values.length > 0 && values.every((v) => v.length > 0);
+    },
   },
 };
 
