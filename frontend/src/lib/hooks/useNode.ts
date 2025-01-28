@@ -139,7 +139,6 @@ export const useNodeCardState = ({
     selectedOption,
     metadata,
     setMetadata,
-    displayTrigger,
     setDisplayTrigger,
     errors,
     setErrors,

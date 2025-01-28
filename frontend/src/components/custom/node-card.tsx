@@ -33,7 +33,6 @@ export default function NodeCard({
     selectedOption,
     metadata,
     setMetadata,
-    displayTrigger,
     setDisplayTrigger,
     errors,
     setErrors,

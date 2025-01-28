@@ -150,3 +150,15 @@ export interface ValidationRules {
   maxLength?: number;
   custom?: (value: string) => boolean;
 }
+
+export interface TriggerType {
+  id: string;
+  name: string;
+  metadata: Record<string, string>;
+}
+export interface ActionType {
+  id: string;
+  name: string;
+  metadata: Record<string, string>;
+  triggerMetadata?: Record<string, string>;
+}

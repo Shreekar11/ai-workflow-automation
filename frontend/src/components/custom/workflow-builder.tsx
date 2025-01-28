@@ -1,10 +1,12 @@
 "use client";
 
-import { Workflow } from "@/types";
+import { api } from "@/app/api/client";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useToken } from "@/lib/hooks/useToken";
 import { useToast } from "@/lib/hooks/useToast";
 import { useState, useCallback, useEffect } from "react";
+import { ActionType, TriggerType, Workflow } from "@/types";
 import { createInitialEdges, createInitialNodes } from "@/utils/flow-handler";
 import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
 
@@ -23,15 +25,13 @@ import "reactflow/dist/style.css";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { ArrowLeft, FileSpreadsheet, Mail, Webhook } from "lucide-react";
 import { PulsatingButton } from "../ui/pulsating-button";
+import { ArrowLeft, FileSpreadsheet, Mail, Webhook } from "lucide-react";
 
 import NodeCard from "./node-card";
 import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
 import AddActionButton from "./add-action-button";
-import { api } from "@/app/api/client";
-import { useToken } from "@/lib/hooks/useToken";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
@@ -59,38 +59,18 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     workflow?.name || "Untitled Workflow"
   );
 
-  const [selectTrigger, setSelectTrigger] = useState<{
-    id: string;
-    name: string;
-    metadata: any;
-  }>({
+  const [selectTrigger, setSelectTrigger] = useState<TriggerType>({
     id: workflow?.triggerId || "",
     name: workflow?.trigger?.type?.name || "",
     metadata: {},
   });
 
-  const [actionData, setActionData] = useState<
-    {
-      id: string;
-      name: string;
-      metadata: {};
-      triggerMetadata: {};
-    }[]
-  >([]);
-  const [selectActions, setSelectActions] = useState<
-    {
-      id: string;
-      name: string;
-      metadata: {};
-      triggerMetadata?: {};
-    }[]
-  >(actionData || []);
+  const [actionData, setActionData] = useState<ActionType[]>([]);
+  const [selectActions, setSelectActions] = useState<ActionType[]>(
+    actionData || []
+  );
 
-  const [finalTrigger, setFinalTrigger] = useState<{
-    id: string;
-    name: string;
-    metadata: any;
-  }>({
+  const [finalTrigger, setFinalTrigger] = useState<TriggerType>({
     id: workflow?.triggerId || "",
     name: workflow?.trigger?.type?.name || "",
     metadata: {},
