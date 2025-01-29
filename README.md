@@ -250,6 +250,8 @@ To install Docker, run the following commands in your terminal:
     docker-compose -up
     ```
 
+## Development Environment For Webhook Server
+
 - Navigate into **hooks** directory
 - Add the `.env` file in the directory. The env file being used for development is called `.env`
 - To get started with development first build the dev containers using the following command
@@ -263,6 +265,8 @@ To install Docker, run the following commands in your terminal:
     ```bash
     docker-compose -up
     ```
+
+## Development Environment For Worker Server
 
 - Navigate into **worker** directory
 - Add the `.env` file in the directory. The env file being used for development is called `.env`
