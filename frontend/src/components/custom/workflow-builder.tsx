@@ -403,16 +403,16 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
   return (
     <div className="flex flex-col w-full h-screen relative">
-      <div className="w-full py-2 px-6 bg-[#f2f2f2]">
+      <div className="w-full py-2 px-4 sm:px-6">
         <div
           className="border rounded-xl p-2 bg-white/50 backdrop-blur-lg 
-        w-full max-w-screen-lg mx-auto flex items-center justify-between"
+        w-full max-w-screen-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md"
         >
-          <div className="flex items-center gap-4 w-[50%]">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
             <Button
               variant="ghost"
               onClick={() => router.push("/workflows")}
-              className="p-2 hover:bg-gray-100 "
+              className="p-2 hover:bg-gray-100"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -420,11 +420,11 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
               type="text"
               value={workflowName}
               onChange={(e) => setWorkflowName(e.target.value)}
-              className="text-lg bg-white"
+              className="text-lg bg-white flex-grow sm:w-64"
               placeholder="Workflow Name"
             />
           </div>
-          <div className="flex justify-center items-center gap-3">
+          <div className="flex justify-center items-center gap-3 w-full sm:w-auto">
             <AddActionButton onClick={handleAddAction} />
             <Button
               variant="outline"
@@ -462,7 +462,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           nodeTypes={nodeTypes}
         >
           <Controls />
-          <Background variant={"dots" as BackgroundVariant} gap={12} size={1} />
+          <Background variant={"dots" as BackgroundVariant} gap={20} size={1} />
           {!!selectedNode && (
             <div className="absolute top-10 right-32 h-full w-96 z-10">
               <NodeCard

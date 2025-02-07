@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className={`${everett.className} bg-[#FBF8F6]`}>
+    <main className={`${everett.className} bg-[#FFFFFF]`}>
       {children}
       <Toaster />
     </main>
