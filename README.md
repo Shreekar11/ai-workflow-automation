@@ -51,8 +51,8 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **React Flow** - React library to built user friendly workflows
 
 ### Deployment
-- **Render** - Deployment platform for backend services
 - **Vercel** - Deployment platform for frontend
+- **Render** - Deployment platform for backend services
 
 ## Deployment Links
 
