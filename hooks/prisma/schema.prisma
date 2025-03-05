@@ -36,6 +36,7 @@ model Trigger {
   metadata   Json             @default("{}")
   type       AvailableTrigger @relation(fields: [triggerId], references: [id])
   workflow   Workflow         @relation(fields: [workflowId], references: [id])
+  webhookKey WebhookKey?
   timestamp  DateTime         @default(now())
 }
 
@@ -81,4 +82,12 @@ model WorkflowRunOutbox {
   workflowRunId String      @unique
   workflowRun   WorkflowRun @relation(fields: [workflowRunId], references: [id])
   timestamp     DateTime    @default(now())
+}
+
+model WebhookKey {
+  id        String   @id @default(uuid())
+  secretKey String   @unique
+  triggerId String   @unique
+  trigger   Trigger  @relation(fields: [triggerId], references: [id])
+  timestamp DateTime @default(now())
 }

@@ -78,6 +78,8 @@ app.post("/hooks/:workflowId", async (req, res) => {
   const workflowId = req.params.workflowId;
   const body = req.body.data ? req.body.data : req.body;
 
+  // add a check to ensure the webhook secret key is correct for the workflow
+
   try {
     await client.$transaction(async (tx) => {
       const run = await tx.workflowRun.create({

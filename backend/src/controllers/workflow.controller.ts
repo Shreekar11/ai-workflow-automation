@@ -56,6 +56,7 @@ export default class WorkflowController {
         throw error;
       }
 
+      // after creating the worflow with webhook trigger, create a webhook secret key for the workflow
       const workflow = await this.workflowService.createWorkflow(
         userData,
         parsedData
