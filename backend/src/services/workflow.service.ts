@@ -61,12 +61,12 @@ export class WorkflowService {
               },
             });
 
-            if(availableTrigger?.name === "Webhook") {
+            if (availableTrigger?.name === "Webhook") {
               await tx.webhookKey.create({
                 data: {
                   triggerId: trigger.id,
                   secretKey: generateRandomString(),
-                }
+                },
               });
             }
 
@@ -230,11 +230,17 @@ export class WorkflowService {
         });
       }
 
-      const triggerCount = await tx.trigger.count({
+      const triggerData = await tx.trigger.findFirst({
         where: { workflowId: id },
       });
 
-      if (triggerCount > 0) {
+      if (triggerData) {
+        await tx.webhookKey.delete({
+          where: {
+            triggerId: triggerData.id,
+          },
+        });
+
         await tx.trigger.delete({
           where: { workflowId: id },
         });

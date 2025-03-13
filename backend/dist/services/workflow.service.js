@@ -61,7 +61,7 @@ class WorkflowService {
                                 data: {
                                     triggerId: trigger.id,
                                     secretKey: (0, utils_1.generateRandomString)(),
-                                }
+                                },
                             });
                         }
                         return yield tx.workflow.update({
@@ -199,10 +199,15 @@ class WorkflowService {
                         where: { workflowId: id },
                     });
                 }
-                const triggerCount = yield tx.trigger.count({
+                const triggerData = yield tx.trigger.findFirst({
                     where: { workflowId: id },
                 });
-                if (triggerCount > 0) {
+                if (triggerData) {
+                    yield tx.webhookKey.delete({
+                        where: {
+                            triggerId: triggerData.id,
+                        },
+                    });
                     yield tx.trigger.delete({
                         where: { workflowId: id },
                     });
