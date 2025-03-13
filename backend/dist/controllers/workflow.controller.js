@@ -58,11 +58,17 @@ class WorkflowController {
                     }
                     throw error;
                 }
+                // after creating the worflow with webhook trigger, create a webhook secret key for the workflow
                 const workflow = yield this.workflowService.createWorkflow(userData, parsedData);
+                const webhookSecret = yield this.prisma.webhookKey.findFirst({
+                    where: {
+                        triggerId: workflow.triggerId,
+                    },
+                });
                 return res.status(constants_1.HTTPStatus.CREATED).json({
                     status: true,
                     message: "Workflow created successfully",
-                    data: workflow,
+                    data: Object.assign(Object.assign({}, workflow), { webhookSecret: webhookSecret === null || webhookSecret === void 0 ? void 0 : webhookSecret.secretKey }),
                 });
             }
             catch (err) {

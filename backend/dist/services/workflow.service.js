@@ -16,6 +16,7 @@ exports.WorkflowService = void 0;
 const client_1 = require("@prisma/client");
 const workflow_repo_1 = __importDefault(require("../repository/workflow.repo"));
 const error_1 = require("../modules/error");
+const utils_1 = require("../utils");
 class WorkflowService {
     constructor() {
         this.prisma = new client_1.PrismaClient();
@@ -50,6 +51,19 @@ class WorkflowService {
                                 metadata: parsedData.data.triggerMetadata,
                             },
                         });
+                        const availableTrigger = yield tx.availableTrigger.findUnique({
+                            where: {
+                                id: parsedData.data.availableTriggerId,
+                            },
+                        });
+                        if ((availableTrigger === null || availableTrigger === void 0 ? void 0 : availableTrigger.name) === "Webhook") {
+                            yield tx.webhookKey.create({
+                                data: {
+                                    triggerId: trigger.id,
+                                    secretKey: (0, utils_1.generateRandomString)(),
+                                }
+                            });
+                        }
                         return yield tx.workflow.update({
                             where: { id: newWorkflow.id },
                             data: { triggerId: trigger.id },

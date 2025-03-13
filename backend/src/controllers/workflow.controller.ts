@@ -62,10 +62,19 @@ export default class WorkflowController {
         parsedData
       );
 
+      const webhookSecret = await this.prisma.webhookKey.findFirst({
+        where: {
+          triggerId: workflow.triggerId,
+        },
+      });
+
       return res.status(HTTPStatus.CREATED).json({
         status: true,
         message: "Workflow created successfully",
-        data: workflow,
+        data: {
+          ...workflow,
+          webhookSecret: webhookSecret?.secretKey,
+        },
       });
     } catch (err: any) {
       console.error("Error creating workflow:", err);

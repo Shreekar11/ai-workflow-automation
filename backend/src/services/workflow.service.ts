@@ -8,6 +8,7 @@ import {
   WorkflowError,
   WorkflowNotFoundError,
 } from "../modules/error";
+import { generateRandomString } from "../utils";
 
 export class WorkflowService {
   private prisma: PrismaClient;
@@ -53,6 +54,21 @@ export class WorkflowService {
                 metadata: parsedData.data.triggerMetadata,
               },
             });
+
+            const availableTrigger = await tx.availableTrigger.findUnique({
+              where: {
+                id: parsedData.data.availableTriggerId,
+              },
+            });
+
+            if(availableTrigger?.name === "Webhook") {
+              await tx.webhookKey.create({
+                data: {
+                  triggerId: trigger.id,
+                  secretKey: generateRandomString(),
+                }
+              });
+            }
 
             return await tx.workflow.update({
               where: { id: newWorkflow.id },
