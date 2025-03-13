@@ -74,11 +74,32 @@ function initHealthCheck() {
   console.log("Health check cron job initialized");
 }
 
-app.post("/hooks/:workflowId", async (req, res) => {
+app.post("/hooks/:workflowId", async (req, res): Promise<any> => {
   const workflowId = req.params.workflowId;
   const body = req.body.data ? req.body.data : req.body;
+  const secret = req.headers["x-webhook-secret"];
 
   try {
+    // get triggerId for the workflow
+    const triggerId = await client.workflow.findFirst({
+      where: {
+        id: workflowId,
+      },
+    });
+    // check to ensure the webhook secret key is correct for the workflow
+    const webhookSecret = await client.webhookKey.findFirst({
+      where: {
+        triggerId: triggerId?.triggerId,
+      },
+    });
+
+    if (webhookSecret?.secretKey !== secret) {
+      return res.status(401).json({
+        status: false,
+        message: "Unauthorized",
+      });
+    }
+
     await client.$transaction(async (tx) => {
       const run = await tx.workflowRun.create({
         data: {
@@ -95,16 +116,16 @@ app.post("/hooks/:workflowId", async (req, res) => {
       });
     });
 
-    res
-      .status(200)
-      .json({
-        status: true,
-        message: "Webhook processed successfully",
-        workflowId: workflowId,
-      });
+    return res.status(200).json({
+      status: true,
+      message: "Webhook processed successfully",
+      workflowId: workflowId,
+    });
   } catch (error) {
     console.error("Error processing webhook:", error);
-    res.status(500).json({ status: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 });
 

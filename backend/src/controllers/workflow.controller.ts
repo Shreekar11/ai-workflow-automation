@@ -56,15 +56,25 @@ export default class WorkflowController {
         throw error;
       }
 
+      // after creating the worflow with webhook trigger, create a webhook secret key for the workflow
       const workflow = await this.workflowService.createWorkflow(
         userData,
         parsedData
       );
 
+      const webhookSecret = await this.prisma.webhookKey.findFirst({
+        where: {
+          triggerId: workflow.triggerId,
+        },
+      });
+
       return res.status(HTTPStatus.CREATED).json({
         status: true,
         message: "Workflow created successfully",
-        data: workflow,
+        data: {
+          ...workflow,
+          webhookSecret: webhookSecret?.secretKey,
+        },
       });
     } catch (err: any) {
       console.error("Error creating workflow:", err);
@@ -101,7 +111,7 @@ export default class WorkflowController {
         const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
           userData
         );
-
+        
         return res.status(HTTPStatus.OK).json({
           status: true,
           message: "Workflows retrieved successfully",
@@ -157,19 +167,19 @@ export default class WorkflowController {
       }
 
       try {
-        const workFlowData = await this.workflowService.fetchWorkFlowById(
+        const workflowData = await this.workflowService.fetchWorkFlowById(
           id,
           userData.id
         );
 
-        if (!workFlowData) {
+        if (!workflowData) {
           return res.status(HTTPStatus.NOT_FOUND).json({
             status: false,
             message: "Workflow not found",
           });
         }
 
-        if (workFlowData.userId !== userData.id) {
+        if (workflowData.workflow.userId !== userData.id) {
           return res.status(HTTPStatus.CONFLICT).json({
             status: false,
             message:
@@ -180,7 +190,7 @@ export default class WorkflowController {
         return res.status(HTTPStatus.OK).json({
           status: true,
           message: "Workflow retrieved successfully",
-          data: workFlowData,
+          data: workflowData,
         });
       } catch (error) {
         if (error instanceof WorkflowError) {
@@ -249,7 +259,6 @@ export default class WorkflowController {
 
   @DELETE("/api/v1/workflow/:id")
   public async deleteWorkflow(req: Request, res: Response<APIResponse>) {
-    
     await AuthMiddleware.verifyToken(req, res, () => {});
 
     try {

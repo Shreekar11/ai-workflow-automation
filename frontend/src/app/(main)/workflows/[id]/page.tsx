@@ -24,7 +24,9 @@ const WorkflowPlayPage = () => {
   return (
     <main className="w-full h-screen flex flex-col">
       <div className="flex-grow">
-        <WorkflowBuilder workflow={workflow || null} />
+        <WorkflowBuilder
+          workflow={workflow || null}
+        />
       </div>
     </main>
   );

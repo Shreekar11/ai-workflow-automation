@@ -77,7 +77,26 @@ function initHealthCheck() {
 app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const workflowId = req.params.workflowId;
     const body = req.body.data ? req.body.data : req.body;
+    const secret = req.headers["x-webhook-secret"];
     try {
+        // get triggerId for the workflow
+        const triggerId = yield client.workflow.findFirst({
+            where: {
+                id: workflowId,
+            },
+        });
+        // check to ensure the webhook secret key is correct for the workflow
+        const webhookSecret = yield client.webhookKey.findFirst({
+            where: {
+                triggerId: triggerId === null || triggerId === void 0 ? void 0 : triggerId.triggerId,
+            },
+        });
+        if ((webhookSecret === null || webhookSecret === void 0 ? void 0 : webhookSecret.secretKey) !== secret) {
+            return res.status(401).json({
+                status: false,
+                message: "Unauthorized",
+            });
+        }
         yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const run = yield tx.workflowRun.create({
                 data: {
@@ -92,9 +111,7 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
                 },
             });
         }));
-        res
-            .status(200)
-            .json({
+        return res.status(200).json({
             status: true,
             message: "Webhook processed successfully",
             workflowId: workflowId,
@@ -102,7 +119,9 @@ app.post("/hooks/:workflowId", (req, res) => __awaiter(void 0, void 0, void 0, f
     }
     catch (error) {
         console.error("Error processing webhook:", error);
-        res.status(500).json({ status: false, message: "Internal server error" });
+        return res
+            .status(500)
+            .json({ status: false, message: "Internal server error" });
     }
 }));
 function processOutboxMessages() {

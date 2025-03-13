@@ -35,9 +35,9 @@ export const useNodeCardState = ({
   useEffect(() => {
     if (selectedOption && workflow) {
       if (type === "trigger") {
-        setMetadata(workflow.trigger?.metadata || {});
+        setMetadata(workflow.workflow.trigger?.metadata || {});
       } else {
-        const matchingAction = workflow.actions?.find(
+        const matchingAction = workflow.workflow.actions?.find(
           (action) => action.type.name === selectedOption.name
         );
         if (matchingAction) {

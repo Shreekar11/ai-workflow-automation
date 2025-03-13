@@ -56,12 +56,12 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   );
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [workflowName, setWorkflowName] = useState(
-    workflow?.name || "Untitled Workflow"
+    workflow?.workflow?.name || "Untitled Workflow"
   );
 
   const [selectTrigger, setSelectTrigger] = useState<TriggerType>({
-    id: workflow?.triggerId || "",
-    name: workflow?.trigger?.type?.name || "",
+    id: workflow?.workflow?.triggerId || "",
+    name: workflow?.workflow?.trigger?.type?.name || "",
     metadata: {},
   });
 
@@ -71,8 +71,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   );
 
   const [finalTrigger, setFinalTrigger] = useState<TriggerType>({
-    id: workflow?.triggerId || "",
-    name: workflow?.trigger?.type?.name || "",
+    id: workflow?.workflow?.triggerId || "",
+    name: workflow?.workflow?.trigger?.type?.name || "",
     metadata: {},
   });
 
@@ -80,20 +80,20 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     if (workflow) {
       setNodes(createInitialNodes(workflow));
       setEdges(createInitialEdges(workflow));
-      setWorkflowName(workflow.name);
+      setWorkflowName(workflow.workflow.name);
       const trigger_data = {
-        id: workflow.trigger.type.id,
-        name: workflow.trigger.type.name,
-        metadata: workflow.trigger.metadata,
+        id: workflow.workflow.trigger.type.id,
+        name: workflow.workflow.trigger.type.name,
+        metadata: workflow.workflow.trigger.metadata,
       };
       setSelectTrigger(trigger_data);
       setFinalTrigger(trigger_data);
-      const action_data = workflow.actions.map((ax) => {
+      const action_data = workflow.workflow.actions.map((ax) => {
         return {
           id: ax.type.id,
           name: ax.type.name,
           metadata: ax.metadata,
-          triggerMetadata: workflow.trigger.metadata,
+          triggerMetadata: workflow.workflow.trigger.metadata,
         };
       });
       setActionData(action_data);
@@ -214,7 +214,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
                       ),
                     name: option.name,
                     metadata: option.metadata,
-                    triggerMetadata: option.data || workflow?.trigger.metadata,
+                    triggerMetadata:
+                      option.data || workflow?.workflow?.trigger.metadata,
                   },
                 },
               }
@@ -284,7 +285,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
       response = workflow
         ? await updateWorkflow(
-            workflow.id,
+            workflow.workflow.id,
             filteredActions,
             finalTrigger,
             workflowName,
@@ -325,7 +326,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
         description:
-          err.message || workflow
+          err.message || workflow?.workflow?.id
             ? "Error updating workflow"
             : "Error creating workflow",
       });
@@ -371,9 +372,14 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
     try {
       const response = await api.post(
-        `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
+        `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.workflow?.id}`,
         {
           data: actionMetadata,
+        },
+        {
+          headers: {
+            "x-webhook-secret": workflow?.webhookKey.secretKey || "",
+          },
         }
       );
 

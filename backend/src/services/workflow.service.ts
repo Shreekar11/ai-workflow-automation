@@ -8,6 +8,7 @@ import {
   WorkflowError,
   WorkflowNotFoundError,
 } from "../modules/error";
+import { generateRandomString } from "../utils";
 
 export class WorkflowService {
   private prisma: PrismaClient;
@@ -53,6 +54,21 @@ export class WorkflowService {
                 metadata: parsedData.data.triggerMetadata,
               },
             });
+
+            const availableTrigger = await tx.availableTrigger.findUnique({
+              where: {
+                id: parsedData.data.availableTriggerId,
+              },
+            });
+
+            if (availableTrigger?.name === "Webhook") {
+              await tx.webhookKey.create({
+                data: {
+                  triggerId: trigger.id,
+                  secretKey: generateRandomString(),
+                },
+              });
+            }
 
             return await tx.workflow.update({
               where: { id: newWorkflow.id },
@@ -109,7 +125,28 @@ export class WorkflowService {
         throw new WorkflowNotFoundError();
       }
 
-      return workflows;
+      const workflowData = await Promise.all(
+        workflows.map(async (workflow) => {
+          const triggerData = await this.prisma.trigger.findFirst({
+            where: {
+              workflowId: workflow.id,
+            },
+          });
+
+          const webhookKey = await this.prisma.webhookKey.findFirst({
+            where: {
+              triggerId: triggerData?.id,
+            },
+          });
+
+          return {
+            workflow,
+            webhookKey,
+          };
+        })
+      );
+
+      return workflowData;
     } catch (error) {
       if (error instanceof WorkflowError) {
         throw error;
@@ -132,7 +169,19 @@ export class WorkflowService {
         throw new WorkflowNotFoundError();
       }
 
-      return workflow;
+      const triggerData = await this.prisma.trigger.findFirst({
+        where: {
+          workflowId: workflow.id,
+        },
+      });
+
+      const webhookKey = await this.prisma.webhookKey.findFirst({
+        where: {
+          triggerId: triggerData?.id,
+        },
+      });
+
+      return { workflow, webhookKey };
     } catch (error) {
       if (error instanceof WorkflowError) {
         throw error;
@@ -214,11 +263,17 @@ export class WorkflowService {
         });
       }
 
-      const triggerCount = await tx.trigger.count({
+      const triggerData = await tx.trigger.findFirst({
         where: { workflowId: id },
       });
 
-      if (triggerCount > 0) {
+      if (triggerData) {
+        await tx.webhookKey.delete({
+          where: {
+            triggerId: triggerData.id,
+          },
+        });
+
         await tx.trigger.delete({
           where: { workflowId: id },
         });

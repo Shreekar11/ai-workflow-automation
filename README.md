@@ -22,6 +22,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Secure Clerk Authentication and Authorization
 - Beautiful User Interface
 - React Flow for User-Friendly Experience
+- Webhook secret key to authenticate and secure the Webhook endpoint
 
 
 ## System Architecture
@@ -67,7 +68,6 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Provide user to connect with the provider to reduce manual workload
 - Add notification channels (Slack, Discord)
 - Integrate AI for enhanced workflow automation
-- Create a Webhook secret key to authenticate and secure the Webhook endpoint
 
 ## Pros and Cons of Proposed Solution
 

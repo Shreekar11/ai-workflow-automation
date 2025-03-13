@@ -16,6 +16,7 @@ exports.WorkflowService = void 0;
 const client_1 = require("@prisma/client");
 const workflow_repo_1 = __importDefault(require("../repository/workflow.repo"));
 const error_1 = require("../modules/error");
+const utils_1 = require("../utils");
 class WorkflowService {
     constructor() {
         this.prisma = new client_1.PrismaClient();
@@ -50,6 +51,19 @@ class WorkflowService {
                                 metadata: parsedData.data.triggerMetadata,
                             },
                         });
+                        const availableTrigger = yield tx.availableTrigger.findUnique({
+                            where: {
+                                id: parsedData.data.availableTriggerId,
+                            },
+                        });
+                        if ((availableTrigger === null || availableTrigger === void 0 ? void 0 : availableTrigger.name) === "Webhook") {
+                            yield tx.webhookKey.create({
+                                data: {
+                                    triggerId: trigger.id,
+                                    secretKey: (0, utils_1.generateRandomString)(),
+                                },
+                            });
+                        }
                         return yield tx.workflow.update({
                             where: { id: newWorkflow.id },
                             data: { triggerId: trigger.id },
@@ -93,7 +107,23 @@ class WorkflowService {
                 if (!workflows || workflows.length === 0) {
                     throw new error_1.WorkflowNotFoundError();
                 }
-                return workflows;
+                const workflowData = yield Promise.all(workflows.map((workflow) => __awaiter(this, void 0, void 0, function* () {
+                    const triggerData = yield this.prisma.trigger.findFirst({
+                        where: {
+                            workflowId: workflow.id,
+                        },
+                    });
+                    const webhookKey = yield this.prisma.webhookKey.findFirst({
+                        where: {
+                            triggerId: triggerData === null || triggerData === void 0 ? void 0 : triggerData.id,
+                        },
+                    });
+                    return {
+                        workflow,
+                        webhookKey,
+                    };
+                })));
+                return workflowData;
             }
             catch (error) {
                 if (error instanceof error_1.WorkflowError) {
@@ -111,7 +141,17 @@ class WorkflowService {
                 if (!workflow) {
                     throw new error_1.WorkflowNotFoundError();
                 }
-                return workflow;
+                const triggerData = yield this.prisma.trigger.findFirst({
+                    where: {
+                        workflowId: workflow.id,
+                    },
+                });
+                const webhookKey = yield this.prisma.webhookKey.findFirst({
+                    where: {
+                        triggerId: triggerData === null || triggerData === void 0 ? void 0 : triggerData.id,
+                    },
+                });
+                return { workflow, webhookKey };
             }
             catch (error) {
                 if (error instanceof error_1.WorkflowError) {
@@ -185,10 +225,15 @@ class WorkflowService {
                         where: { workflowId: id },
                     });
                 }
-                const triggerCount = yield tx.trigger.count({
+                const triggerData = yield tx.trigger.findFirst({
                     where: { workflowId: id },
                 });
-                if (triggerCount > 0) {
+                if (triggerData) {
+                    yield tx.webhookKey.delete({
+                        where: {
+                            triggerId: triggerData.id,
+                        },
+                    });
                     yield tx.trigger.delete({
                         where: { workflowId: id },
                     });

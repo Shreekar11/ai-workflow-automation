@@ -58,11 +58,17 @@ class WorkflowController {
                     }
                     throw error;
                 }
+                // after creating the worflow with webhook trigger, create a webhook secret key for the workflow
                 const workflow = yield this.workflowService.createWorkflow(userData, parsedData);
+                const webhookSecret = yield this.prisma.webhookKey.findFirst({
+                    where: {
+                        triggerId: workflow.triggerId,
+                    },
+                });
                 return res.status(constants_1.HTTPStatus.CREATED).json({
                     status: true,
                     message: "Workflow created successfully",
-                    data: workflow,
+                    data: Object.assign(Object.assign({}, workflow), { webhookSecret: webhookSecret === null || webhookSecret === void 0 ? void 0 : webhookSecret.secretKey }),
                 });
             }
             catch (err) {
@@ -145,14 +151,14 @@ class WorkflowController {
                     throw error;
                 }
                 try {
-                    const workFlowData = yield this.workflowService.fetchWorkFlowById(id, userData.id);
-                    if (!workFlowData) {
+                    const workflowData = yield this.workflowService.fetchWorkFlowById(id, userData.id);
+                    if (!workflowData) {
                         return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
                             status: false,
                             message: "Workflow not found",
                         });
                     }
-                    if (workFlowData.userId !== userData.id) {
+                    if (workflowData.workflow.userId !== userData.id) {
                         return res.status(constants_1.HTTPStatus.CONFLICT).json({
                             status: false,
                             message: "Access denied, You do not have permission to access this workflow",
@@ -161,7 +167,7 @@ class WorkflowController {
                     return res.status(constants_1.HTTPStatus.OK).json({
                         status: true,
                         message: "Workflow retrieved successfully",
-                        data: workFlowData,
+                        data: workflowData,
                     });
                 }
                 catch (error) {

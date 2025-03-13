@@ -29,14 +29,14 @@ export const createInitialNodes = (workflow?: Workflow | null): Node[] => {
         label: "Trigger",
         selectedOption: {
           icon: <Webhook />,
-          metadata: workflow.trigger.metadata,
-          name: workflow.trigger.type.name,
+          metadata: workflow.workflow.trigger.metadata,
+          name: workflow.workflow.trigger.type.name,
         },
       },
     },
   ];
 
-  workflow.actions.forEach((action, index) => {
+  workflow.workflow.actions.forEach((action, index) => {
     nodes.push({
       id: `action${index + 1}`,
       type: "action",
@@ -47,7 +47,7 @@ export const createInitialNodes = (workflow?: Workflow | null): Node[] => {
           icon: action.type.name === "Email" ? <Mail /> : <FileSpreadsheet />,
           metadata: action.metadata || {},
           name: action.type.name || "",
-          triggerMetadata: workflow.trigger.metadata,
+          triggerMetadata: workflow.workflow.trigger.metadata,
         },
       },
     });
@@ -71,7 +71,7 @@ export const createInitialEdges = (workflow?: Workflow | null): Edge[] => {
   const edges: Edge[] = [];
   let previousNodeId = "trigger";
 
-  workflow.actions.forEach((_, index) => {
+  workflow.workflow.actions.forEach((_, index) => {
     const currentNodeId = `action${index + 1}`;
     edges.push({
       id: `e-${previousNodeId}-${currentNodeId}`,

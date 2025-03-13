@@ -24,11 +24,11 @@ const WorkflowPage = () => {
 
   const filteredWorkflows = workflows.filter(
     (workflow) =>
-      workflow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workflow.trigger.type.name
+      workflow.workflow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workflow.workflow.trigger.type.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      workflow.actions.some((action) =>
+      workflow.workflow.actions.some((action) =>
         action.type.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
   );

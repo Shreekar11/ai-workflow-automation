@@ -53,7 +53,7 @@ export function DeleteDialog({
         throw new Error(response.message || "Error deleting workflow");
       }
       const currentWorkflows = workflows.filter(
-        (item) => item.id !== workflowId
+        (item) => item.workflow.id !== workflowId
       );
       setWorkflows(currentWorkflows);
       setOpenDialog(false);

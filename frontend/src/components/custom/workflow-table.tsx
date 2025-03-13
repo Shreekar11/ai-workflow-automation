@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteDialog } from "./delete-dialog";
 import { Button } from "@/components/ui/button";
 import WorkflowRunDialog from "./workflow-run-dialog";
+import { toast, useToast } from "@/lib/hooks/useToast";
 
 interface WorkflowTableProps {
   workflows: Workflow[];
@@ -36,6 +37,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useUser();
+  const { toast } = useToast();
   const [workflowId, setWorkflowId] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(
@@ -63,6 +65,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             <TableHead>Trigger</TableHead>
             <TableHead>Actions</TableHead>
             <TableHead>Webhook</TableHead>
+            <TableHead>Webhook Secret</TableHead>
             <TableHead>Workflow Runs</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead className="text-right">View</TableHead>
@@ -86,6 +89,9 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                   <Skeleton className="h-6 w-36" />
                 </TableCell>
                 <TableCell>
+                  <Skeleton className="h-6 w-36" />
+                </TableCell>{" "}
+                <TableCell>
                   <Skeleton className="h-6 w-28" />
                 </TableCell>
                 <TableCell>
@@ -100,20 +106,22 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
               </TableRow>
             ))
           ) : workflows.length > 0 ? (
-            workflows.map((workflow) => (
-              <TableRow key={workflow.id}>
-                <TableCell className="font-medium">{workflow.name}</TableCell>
+            workflows.map((wf) => (
+              <TableRow key={wf.workflow.id}>
+                <TableCell className="font-medium">
+                  {wf.workflow.name}
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
                     className="bg-blue-50 text-blue-700 hover:bg-blue-100"
                   >
-                    {workflow.trigger.type.name}
+                    {wf.workflow.trigger.type.name}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {workflow.actions.map((action, index) => (
+                    {wf.workflow.actions.map((action, index) => (
                       <Badge
                         key={index}
                         variant="secondary"
@@ -125,32 +133,51 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-sm">
-                  {`${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow.id}`}
+                  {`${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${wf.workflow.id}`}
                 </TableCell>
+                <TableCell className="text-sm">
+                  {wf.workflow.trigger.type.name === "Webhook" &&
+                  wf.webhookKey?.secretKey ? (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(wf.webhookKey.secretKey);
+                        toast({
+                          variant: "success",
+                          description: "Secret key copied to clipboard!",
+                        });
+                      }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Copy Secret
+                    </button>
+                  ) : (
+                    <span className="text-gray-400">N/A</span>
+                  )}
+                </TableCell>
+
                 <TableCell
                   className="cursor-pointer"
-                  onClick={() => setSelectedWorkflow(workflow)}
+                  onClick={() => setSelectedWorkflow(wf)}
                 >
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-full justify-between"
                   >
-                    <span>{workflow.workflowRuns.length}</span>
+                    <span>{wf.workflow.workflowRuns.length}</span>
                     <span className="sr-only">View workflow runs</span>
                     <ChevronRight className="h-4 w-4 opacity-50" />
                   </Button>
                 </TableCell>
-                <TableCell>{formatDate(workflow.timestamp)}</TableCell>
+                <TableCell>{formatDate(wf.workflow.timestamp)}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onViewWorkflow(workflow.id)}
+                    onClick={() => onViewWorkflow(wf.workflow.id)}
                     className="hover:bg-blue-50"
                   >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
+                    <Eye className="h-4 w-4 mr-1" /> View
                   </Button>
                 </TableCell>
                 <TableCell>
@@ -158,7 +185,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setWorkflowId(workflow.id);
+                      setWorkflowId(wf.workflow.id);
                       setOpenDialog(true);
                     }}
                     className="hover:bg-red-100"
@@ -170,7 +197,7 @@ export const WorkflowTable: React.FC<WorkflowTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 py-10 text-center">
+              <TableCell colSpan={8} className="h-24 py-10 text-center">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="text-gray-500">
                     No workflows yet. Create your first workflow to get started!
