@@ -14,7 +14,6 @@ dotenv.config();
 
 const corsOptions = {
   origin: [
-    "*",
     "https://workflows-flax.vercel.app",
     "https://clerk.com",
     "http://localhost:3000",
@@ -26,14 +25,17 @@ const corsOptions = {
     "Authorization",
     "clerk-session-id",
     "x-csrf-token",
+    "x-webhook-secret", // Added missing webhook secret header
   ],
   credentials: true,
   maxAge: 600,
 };
 
+// Apply CORS middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Security headers
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
