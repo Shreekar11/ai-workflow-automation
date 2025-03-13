@@ -8,7 +8,7 @@ const WorkflowPlayPage = () => {
   const params = useParams();
   const id = params.id;
 
-  const { loading, workflow } = useWorkflow(id);
+  const { loading, workflow, webhookSecret } = useWorkflow(id);
 
   if (loading) {
     return (
@@ -24,7 +24,10 @@ const WorkflowPlayPage = () => {
   return (
     <main className="w-full h-screen flex flex-col">
       <div className="flex-grow">
-        <WorkflowBuilder workflow={workflow || null} />
+        <WorkflowBuilder
+          workflow={workflow || null}
+          webhookSecret={webhookSecret || null}
+        />
       </div>
     </main>
   );

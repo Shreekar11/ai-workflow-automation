@@ -164,10 +164,18 @@ class WorkflowController {
                             message: "Access denied, You do not have permission to access this workflow",
                         });
                     }
+                    const webhookSecret = yield this.prisma.webhookKey.findFirst({
+                        where: {
+                            triggerId: workFlowData.triggerId,
+                        },
+                    });
                     return res.status(constants_1.HTTPStatus.OK).json({
                         status: true,
                         message: "Workflow retrieved successfully",
-                        data: workFlowData,
+                        data: {
+                            workflow: workFlowData,
+                            webhookSecret: (webhookSecret === null || webhookSecret === void 0 ? void 0 : webhookSecret.secretKey) || "",
+                        },
                     });
                 }
                 catch (error) {

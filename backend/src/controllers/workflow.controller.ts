@@ -187,10 +187,19 @@ export default class WorkflowController {
           });
         }
 
+        const webhookSecret = await this.prisma.webhookKey.findFirst({
+          where: {
+            triggerId: workFlowData.triggerId,
+          },
+        });
+
         return res.status(HTTPStatus.OK).json({
           status: true,
           message: "Workflow retrieved successfully",
-          data: workFlowData,
+          data: {
+            workflow: workFlowData,
+            webhookSecret: webhookSecret?.secretKey || "",
+          },
         });
       } catch (error) {
         if (error instanceof WorkflowError) {
@@ -259,7 +268,6 @@ export default class WorkflowController {
 
   @DELETE("/api/v1/workflow/:id")
   public async deleteWorkflow(req: Request, res: Response<APIResponse>) {
-    
     await AuthMiddleware.verifyToken(req, res, () => {});
 
     try {

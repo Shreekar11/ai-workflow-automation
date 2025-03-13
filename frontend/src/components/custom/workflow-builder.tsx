@@ -35,6 +35,7 @@ import AddActionButton from "./add-action-button";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
+  webhookSecret?: string | null;
 }
 
 const nodeTypes = {
@@ -42,7 +43,10 @@ const nodeTypes = {
   action: ActionNode,
 };
 
-export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
+export default function WorkflowBuilder({
+  workflow,
+  webhookSecret,
+}: WorkflowBuilderProps) {
   const router = useRouter();
   const { user } = useUser();
   const { token, sessionId } = useToken();
@@ -325,7 +329,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
         description:
-          err.message || workflow
+          err.message || workflow?.id
             ? "Error updating workflow"
             : "Error creating workflow",
       });
@@ -374,6 +378,11 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
         {
           data: actionMetadata,
+        },
+        {
+          headers: {
+            "x-webhook-secret": webhookSecret,
+          },
         }
       );
 
