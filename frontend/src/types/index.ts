@@ -15,30 +15,38 @@ export interface ApiResponse<T> {
 }
 
 export interface Workflow {
-  id: string;
-  triggerId: string;
-  userId: number;
-  name: string;
-  timestamp: string;
-  actions: {
+  workflow: {
     id: string;
-    metadata: any;
-    type: {
+    triggerId: string;
+    userId: number;
+    name: string;
+    timestamp: string;
+    actions: {
       id: string;
-      name: string;
+      metadata: any;
+      type: {
+        id: string;
+        name: string;
+      };
+    }[];
+    trigger: {
+      metadata: any;
+      type: {
+        id: string;
+        name: string;
+      };
     };
-  }[];
-  trigger: {
-    metadata: any;
-    type: {
-      id: string;
-      name: string;
-    };
+    workflowRuns: {
+      metadata: any;
+      status: string;
+    }[];
   };
-  workflowRuns: {
-    metadata: any;
-    status: string;
-  }[];
+  webhookKey: {
+    id: string;
+    timestamp: Date;
+    triggerId: string;
+    secretKey: string;
+  };
 }
 
 export interface OptionType {

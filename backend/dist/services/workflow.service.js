@@ -107,7 +107,23 @@ class WorkflowService {
                 if (!workflows || workflows.length === 0) {
                     throw new error_1.WorkflowNotFoundError();
                 }
-                return workflows;
+                const workflowData = yield Promise.all(workflows.map((workflow) => __awaiter(this, void 0, void 0, function* () {
+                    const triggerData = yield this.prisma.trigger.findFirst({
+                        where: {
+                            workflowId: workflow.id,
+                        },
+                    });
+                    const webhookKey = yield this.prisma.webhookKey.findFirst({
+                        where: {
+                            triggerId: triggerData === null || triggerData === void 0 ? void 0 : triggerData.id,
+                        },
+                    });
+                    return {
+                        workflow,
+                        webhookKey,
+                    };
+                })));
+                return workflowData;
             }
             catch (error) {
                 if (error instanceof error_1.WorkflowError) {
@@ -125,7 +141,17 @@ class WorkflowService {
                 if (!workflow) {
                     throw new error_1.WorkflowNotFoundError();
                 }
-                return workflow;
+                const triggerData = yield this.prisma.trigger.findFirst({
+                    where: {
+                        workflowId: workflow.id,
+                    },
+                });
+                const webhookKey = yield this.prisma.webhookKey.findFirst({
+                    where: {
+                        triggerId: triggerData === null || triggerData === void 0 ? void 0 : triggerData.id,
+                    },
+                });
+                return { workflow, webhookKey };
             }
             catch (error) {
                 if (error instanceof error_1.WorkflowError) {

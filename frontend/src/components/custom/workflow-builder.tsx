@@ -35,7 +35,6 @@ import AddActionButton from "./add-action-button";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
-  webhookSecret?: string | null;
 }
 
 const nodeTypes = {
@@ -43,10 +42,7 @@ const nodeTypes = {
   action: ActionNode,
 };
 
-export default function WorkflowBuilder({
-  workflow,
-  webhookSecret,
-}: WorkflowBuilderProps) {
+export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const router = useRouter();
   const { user } = useUser();
   const { token, sessionId } = useToken();
@@ -60,12 +56,12 @@ export default function WorkflowBuilder({
   );
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [workflowName, setWorkflowName] = useState(
-    workflow?.name || "Untitled Workflow"
+    workflow?.workflow?.name || "Untitled Workflow"
   );
 
   const [selectTrigger, setSelectTrigger] = useState<TriggerType>({
-    id: workflow?.triggerId || "",
-    name: workflow?.trigger?.type?.name || "",
+    id: workflow?.workflow?.triggerId || "",
+    name: workflow?.workflow?.trigger?.type?.name || "",
     metadata: {},
   });
 
@@ -75,8 +71,8 @@ export default function WorkflowBuilder({
   );
 
   const [finalTrigger, setFinalTrigger] = useState<TriggerType>({
-    id: workflow?.triggerId || "",
-    name: workflow?.trigger?.type?.name || "",
+    id: workflow?.workflow?.triggerId || "",
+    name: workflow?.workflow?.trigger?.type?.name || "",
     metadata: {},
   });
 
@@ -84,20 +80,20 @@ export default function WorkflowBuilder({
     if (workflow) {
       setNodes(createInitialNodes(workflow));
       setEdges(createInitialEdges(workflow));
-      setWorkflowName(workflow.name);
+      setWorkflowName(workflow.workflow.name);
       const trigger_data = {
-        id: workflow.trigger.type.id,
-        name: workflow.trigger.type.name,
-        metadata: workflow.trigger.metadata,
+        id: workflow.workflow.trigger.type.id,
+        name: workflow.workflow.trigger.type.name,
+        metadata: workflow.workflow.trigger.metadata,
       };
       setSelectTrigger(trigger_data);
       setFinalTrigger(trigger_data);
-      const action_data = workflow.actions.map((ax) => {
+      const action_data = workflow.workflow.actions.map((ax) => {
         return {
           id: ax.type.id,
           name: ax.type.name,
           metadata: ax.metadata,
-          triggerMetadata: workflow.trigger.metadata,
+          triggerMetadata: workflow.workflow.trigger.metadata,
         };
       });
       setActionData(action_data);
@@ -218,7 +214,8 @@ export default function WorkflowBuilder({
                       ),
                     name: option.name,
                     metadata: option.metadata,
-                    triggerMetadata: option.data || workflow?.trigger.metadata,
+                    triggerMetadata:
+                      option.data || workflow?.workflow?.trigger.metadata,
                   },
                 },
               }
@@ -288,7 +285,7 @@ export default function WorkflowBuilder({
 
       response = workflow
         ? await updateWorkflow(
-            workflow.id,
+            workflow.workflow.id,
             filteredActions,
             finalTrigger,
             workflowName,
@@ -329,7 +326,7 @@ export default function WorkflowBuilder({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
         description:
-          err.message || workflow?.id
+          err.message || workflow?.workflow?.id
             ? "Error updating workflow"
             : "Error creating workflow",
       });
@@ -375,13 +372,13 @@ export default function WorkflowBuilder({
 
     try {
       const response = await api.post(
-        `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.id}`,
+        `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${workflow?.workflow?.id}`,
         {
           data: actionMetadata,
         },
         {
           headers: {
-            "x-webhook-secret": webhookSecret,
+            "x-webhook-secret": workflow?.webhookKey.secretKey || "",
           },
         }
       );

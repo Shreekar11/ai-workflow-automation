@@ -27,7 +27,7 @@ const WorkflowRunDialog = ({
     >
       <DialogContent className="max-h-[85vh] max-w-[50%] w-full overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{selectedWorkflow?.name} Metadata</DialogTitle>
+          <DialogTitle>{selectedWorkflow?.workflow?.name} Metadata</DialogTitle>
           <DialogDescription>
             Workflow details and run history
           </DialogDescription>
@@ -39,37 +39,42 @@ const WorkflowRunDialog = ({
           <div>
             <h3 className="font-semibold mb-2">Recent Run Metadata</h3>
             <div className="">
-              {selectedWorkflow && selectedWorkflow?.workflowRuns.length > 0 ? (
+              {selectedWorkflow &&
+              selectedWorkflow?.workflow?.workflowRuns.length > 0 ? (
                 <div className="space-y-4">
-                  {selectedWorkflow?.workflowRuns.map((workflowRun, index) => (
-                    <div key={index} className="bg-muted p-4 rounded-md ">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Status:</span>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            workflowRun.status.toLowerCase() === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : workflowRun.status.toLowerCase() === "failed"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {workflowRun.status.toLowerCase() === "completed" && (
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
-                          )}
-                          {workflowRun.status.toLowerCase() === "failed" && (
-                            <XCircle className="w-4 h-4 mr-1" />
-                          )}
-                          {capitalizeFirstLetter(
-                            selectedWorkflow?.workflowRuns[0]?.status
-                          )}
-                        </span>
+                  {selectedWorkflow?.workflow?.workflowRuns.map(
+                    (workflowRun, index) => (
+                      <div key={index} className="bg-muted p-4 rounded-md ">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">Status:</span>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              workflowRun.status.toLowerCase() === "completed"
+                                ? "bg-green-100 text-green-800"
+                                : workflowRun.status.toLowerCase() === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {workflowRun.status.toLowerCase() ===
+                              "completed" && (
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                            )}
+                            {workflowRun.status.toLowerCase() === "failed" && (
+                              <XCircle className="w-4 h-4 mr-1" />
+                            )}
+                            {capitalizeFirstLetter(
+                              selectedWorkflow?.workflow?.workflowRuns[0]
+                                ?.status
+                            )}
+                          </span>
+                        </div>
+                        <pre className="overflow-x-auto whitespace-pre-wrap break-all">
+                          {JSON.stringify(workflowRun?.metadata, null, 2)}
+                        </pre>
                       </div>
-                      <pre className="overflow-x-auto whitespace-pre-wrap break-all">
-                        {JSON.stringify(workflowRun?.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">

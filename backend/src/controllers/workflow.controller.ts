@@ -111,7 +111,7 @@ export default class WorkflowController {
         const userWorkFlowData = await this.workflowService.fetchAllWorkflows(
           userData
         );
-
+        
         return res.status(HTTPStatus.OK).json({
           status: true,
           message: "Workflows retrieved successfully",
@@ -167,19 +167,19 @@ export default class WorkflowController {
       }
 
       try {
-        const workFlowData = await this.workflowService.fetchWorkFlowById(
+        const workflowData = await this.workflowService.fetchWorkFlowById(
           id,
           userData.id
         );
 
-        if (!workFlowData) {
+        if (!workflowData) {
           return res.status(HTTPStatus.NOT_FOUND).json({
             status: false,
             message: "Workflow not found",
           });
         }
 
-        if (workFlowData.userId !== userData.id) {
+        if (workflowData.workflow.userId !== userData.id) {
           return res.status(HTTPStatus.CONFLICT).json({
             status: false,
             message:
@@ -187,19 +187,10 @@ export default class WorkflowController {
           });
         }
 
-        const webhookSecret = await this.prisma.webhookKey.findFirst({
-          where: {
-            triggerId: workFlowData.triggerId,
-          },
-        });
-
         return res.status(HTTPStatus.OK).json({
           status: true,
           message: "Workflow retrieved successfully",
-          data: {
-            workflow: workFlowData,
-            webhookSecret: webhookSecret?.secretKey || "",
-          },
+          data: workflowData,
         });
       } catch (error) {
         if (error instanceof WorkflowError) {
