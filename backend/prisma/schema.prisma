@@ -93,6 +93,16 @@ model WebhookKey {
   timestamp DateTime @default(now())
 }
 
+model Template {
+  id            String           @id @default(uuid())
+  userId        Int
+  user          User             @relation(fields: [userId], references: [id])
+  preTemplateId String           @unique
+  preTemplate   PreTemplate      @relation(fields: [preTemplateId], references: [id])
+  name          String           @default("Untitled template")
+  actions       TemplateAction[]
+}
+
 model PreTemplate {
   id                       String                    @id @default(uuid())
   name                     String
@@ -119,14 +129,4 @@ model TemplateAction {
   metadata     Json                    @default("{}")
   sortingOrder Int                     @default(0)
   timestamp    DateTime                @default(now())
-}
-
-model Template {
-  id            String           @id @default(uuid())
-  userId        Int
-  user          User             @relation(fields: [userId], references: [id])
-  preTemplateId String           @unique
-  preTemplate   PreTemplate      @relation(fields: [preTemplateId], references: [id])
-  name          String           @default("Untitled template")
-  actions       TemplateAction[]
 }
