@@ -94,13 +94,23 @@ model WebhookKey {
 }
 
 model Template {
-  id            String           @id @default(uuid())
-  userId        Int
-  user          User             @relation(fields: [userId], references: [id])
-  preTemplateId String           @unique
-  preTemplate   PreTemplate      @relation(fields: [preTemplateId], references: [id])
-  name          String           @default("Untitled template")
-  actions       TemplateAction[]
+  id              String           @id @default(uuid())
+  userId          Int
+  user            User             @relation(fields: [userId], references: [id])
+  preTemplateId   String           @unique
+  preTemplate     PreTemplate      @relation(fields: [preTemplateId], references: [id])
+  name            String           @default("Untitled template")
+  actions         TemplateAction[]
+  templateResults TemplateResult[]
+}
+
+model TemplateResult {
+  id         String   @id @default(uuid())
+  templateId String   @unique
+  template   Template @relation(fields: [templateId], references: [id])
+  status     String   @default("pending")
+  metadata   Json
+  timestamp  DateTime @default(now())
 }
 
 model PreTemplate {
@@ -130,3 +140,9 @@ model TemplateAction {
   sortingOrder Int                     @default(0)
   timestamp    DateTime                @default(now())
 }
+
+/**
+ * blog scraper - url of the blog
+ * llm model - system prompt and model name
+ * google doc - google credentials or the google doc ID
+ */
