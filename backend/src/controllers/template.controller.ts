@@ -10,14 +10,12 @@ import { UserNotFoundError } from "../modules/error";
 import TemplateService from "../services/template.service";
 
 export default class TemplateController {
-  private prisma: PrismaClient;
-  private templateService: TemplateService;
   private userService: UserService;
+  private templateService: TemplateService;
 
   constructor() {
-    this.prisma = new PrismaClient();
-    this.templateService = new TemplateService();
     this.userService = new UserService();
+    this.templateService = new TemplateService();
   }
 
   @POST("/api/v1/template")

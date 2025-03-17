@@ -21,7 +21,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
 const router_1 = require("../decorators/router");
 const middlewares_1 = require("../middlewares");
 const constants_1 = require("../constants");
@@ -31,9 +30,8 @@ const error_1 = require("../modules/error");
 const template_service_1 = __importDefault(require("../services/template.service"));
 class TemplateController {
     constructor() {
-        this.prisma = new client_1.PrismaClient();
-        this.templateService = new template_service_1.default();
         this.userService = new user_service_1.UserService();
+        this.templateService = new template_service_1.default();
     }
     createTemplate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
