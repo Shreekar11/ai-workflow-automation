@@ -140,9 +140,3 @@ model TemplateAction {
   sortingOrder Int                     @default(0)
   timestamp    DateTime                @default(now())
 }
-
-/**
- * blog scraper - url of the blog
- * llm model - system prompt and model name
- * google doc - google credentials or the google doc ID
- */

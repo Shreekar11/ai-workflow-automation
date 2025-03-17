@@ -19,3 +19,15 @@ export const WorkflowSchema = z.object({
     })
   ),
 });
+
+export const TemplateSchema = z.object({
+  id: z.string().optional(),
+  preTemplateId: z.string().optional(),
+  name: z.string(),
+  actions: z.array(
+    z.object({
+      availableActionId: z.string(),
+      actionMetadata: z.any().optional(),
+    })
+  )
+})
