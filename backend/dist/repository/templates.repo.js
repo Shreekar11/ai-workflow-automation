@@ -17,7 +17,7 @@ class TemplateRepository extends base_repo_1.default {
     constructor() {
         super("template");
     }
-    getUserTemplates(userId) {
+    getAllUserTemplates(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const templates = yield this.model.findMany({
                 where: {
@@ -32,6 +32,23 @@ class TemplateRepository extends base_repo_1.default {
             const template = yield this.model.findFirst({
                 where: {
                     templateId,
+                },
+                include: {
+                    actions: {
+                        include: {
+                            type: true,
+                            metadata: true,
+                        },
+                        orderBy: {
+                            sortingOrder: "asc",
+                        },
+                    },
+                    templateResults: {
+                        include: {
+                            status: true,
+                            metadata: true,
+                        },
+                    },
                 },
             });
             return template;

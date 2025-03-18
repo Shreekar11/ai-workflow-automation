@@ -75,6 +75,27 @@ class TemplateController {
             }
         });
     }
+    getAllUserTemplates(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = req.user;
+            try {
+                const userData = yield this.userService.fetchUserByClerkId(user.id);
+                const templates = yield this.templateService.fetchAllWorkflows(userData);
+                return res.status(200).json({
+                    status: true,
+                    message: "Templates retrieved successfully!",
+                    data: templates,
+                });
+            }
+            catch (err) {
+                console.log("Error: ", err);
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
+                    status: false,
+                    message: "Failed to fetch templates",
+                });
+            }
+        });
+    }
 }
 exports.default = TemplateController;
 __decorate([
@@ -83,3 +104,9 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], TemplateController.prototype, "createTemplate", null);
+__decorate([
+    (0, router_1.GET)("/api/v1/template"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], TemplateController.prototype, "getAllUserTemplates", null);
