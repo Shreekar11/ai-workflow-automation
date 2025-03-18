@@ -56,7 +56,7 @@ class PreTemplateController {
     }
     getAllPreTemplates(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // await AuthMiddleware.verifyToken(req, res, () => {});
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             try {
                 const preTemplates = yield this.preTemplateRepo.getAllPreTemplates();
                 return res.status(constants_1.HTTPStatus.OK).json({

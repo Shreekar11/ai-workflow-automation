@@ -43,7 +43,7 @@ export default class PreTemplateController {
 
   @GET("/api/v1/pre/template/all")
   public async getAllPreTemplates(req: Request, res: Response) {
-    // await AuthMiddleware.verifyToken(req, res, () => {});
+    await AuthMiddleware.verifyToken(req, res, () => {});
 
     try {
       const preTemplates = await this.preTemplateRepo.getAllPreTemplates();
