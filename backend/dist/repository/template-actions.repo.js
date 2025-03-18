@@ -29,7 +29,18 @@ class TemplateActionRepository extends base_repo_1.default {
     }
     getAllAvailableActions() {
         return __awaiter(this, void 0, void 0, function* () {
-            const actions = yield this.model.findMany({});
+            const actions = yield this.model.findMany({
+                include: {
+                    id: true,
+                    name: true,
+                    actions: {
+                        include: {
+                            type: true,
+                            metadata: true,
+                        },
+                    },
+                },
+            });
             return actions;
         });
     }

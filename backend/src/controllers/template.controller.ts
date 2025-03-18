@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { GET, POST } from "../decorators/router";
 import { APIResponse } from "../interface/api";
 import { AuthMiddleware } from "../middlewares";
@@ -54,7 +53,7 @@ export default class TemplateController {
         parsedData.data
       );
 
-      return res.status(200).json({
+      return res.status(HTTPStatus.CREATED).json({
         status: true,
         message: "Template saved successfully!",
         data: template,
@@ -70,11 +69,12 @@ export default class TemplateController {
 
   @GET("/api/v1/template")
   public async getAllUserTemplates(req: Request, res: Response) {
+    await AuthMiddleware.verifyToken(req, res, () => {});
     const user = req.user;
     try {
       const userData = await this.userService.fetchUserByClerkId(user.id);
       const templates = await this.templateService.fetchAllWorkflows(userData);
-      return res.status(200).json({
+      return res.status(HTTPStatus.OK).json({
         status: true,
         message: "Templates retrieved successfully!",
         data: templates,

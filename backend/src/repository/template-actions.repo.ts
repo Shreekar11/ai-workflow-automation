@@ -21,7 +21,19 @@ export default class TemplateActionRepository extends Repository<AvailableTempla
   public async getAllAvailableActions(): Promise<
     AvailableTemplateAction[] | null
   > {
-    const actions = await this.model.findMany({});
+    const actions = await this.model.findMany({
+      include: {
+        id: true,
+        name: true,
+        actions: {
+          include: {
+            type: true,
+            metadata: true,
+          },
+        },
+      },
+    });
+
     return actions;
   }
 }

@@ -21,31 +21,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
+const pre_template_repo_1 = __importDefault(require("../repository/pre-template.repo"));
 const router_1 = require("../decorators/router");
 const middlewares_1 = require("../middlewares");
-const constants_1 = require("../constants");
-const types_1 = require("../types");
 const user_service_1 = require("../services/user.service");
 const error_1 = require("../modules/error");
-const template_service_1 = __importDefault(require("../services/template.service"));
-class TemplateController {
+const constants_1 = require("../constants");
+class PreTemplateController {
     constructor() {
+        this.prisma = new client_1.PrismaClient();
+        this.preTemplateRepo = new pre_template_repo_1.default();
         this.userService = new user_service_1.UserService();
-        this.templateService = new template_service_1.default();
     }
-    createTemplate(req, res) {
+    getPreTemplate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
+            const { templateId } = req.body;
+            const user = req.user;
             try {
-                const user = req.user;
-                const { body } = req;
-                const parsedData = types_1.TemplateSchema.safeParse(body);
-                if (!parsedData.success) {
-                    return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
-                        status: false,
-                        message: "Invalid template data",
-                    });
-                }
                 let userData;
                 try {
                     userData = yield this.userService.fetchUserByClerkId(user.id);
@@ -59,55 +53,27 @@ class TemplateController {
                     }
                     throw error;
                 }
-                const template = yield this.templateService.createTemplate(userData, parsedData.data);
-                return res.status(constants_1.HTTPStatus.CREATED).json({
-                    status: true,
-                    message: "Template saved successfully!",
-                    data: template,
-                });
-            }
-            catch (err) {
-                console.error("Error creating template:", err);
-                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
-                    status: false,
-                    message: "Failed to create template",
-                });
-            }
-        });
-    }
-    getAllUserTemplates(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
-            const user = req.user;
-            try {
-                const userData = yield this.userService.fetchUserByClerkId(user.id);
-                const templates = yield this.templateService.fetchAllWorkflows(userData);
+                const preTemplateData = yield this.preTemplateRepo.getPreTemplatById(templateId);
                 return res.status(constants_1.HTTPStatus.OK).json({
                     status: true,
-                    message: "Templates retrieved successfully!",
-                    data: templates,
+                    message: "Pre-Template retrieved successfully!",
+                    data: preTemplateData,
                 });
             }
-            catch (err) {
-                console.log("Error: ", err);
+            catch (error) {
+                console.error("Error retrieving Pre-Template:", error);
                 return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
                     status: false,
-                    message: "Failed to fetch templates",
+                    message: "Failed to retrieve Pre-Template",
                 });
             }
         });
     }
 }
-exports.default = TemplateController;
+exports.default = PreTemplateController;
 __decorate([
-    (0, router_1.POST)("/api/v1/template"),
+    (0, router_1.GET)("/api/v1/pre/template"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], TemplateController.prototype, "createTemplate", null);
-__decorate([
-    (0, router_1.GET)("/api/v1/template"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], TemplateController.prototype, "getAllUserTemplates", null);
+], PreTemplateController.prototype, "getPreTemplate", null);
