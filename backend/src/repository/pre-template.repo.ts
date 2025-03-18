@@ -50,14 +50,7 @@ export default class PreTemplateRepository extends Repository<PreTemplate> {
           availableTemplateActions: {
             select: {
               name: true,
-              actions: {
-                select: {
-                  type: true,
-                },
-                orderBy: {
-                  sortingOrder: "asc",
-                },
-              },
+              image: true,
             },
           },
         },

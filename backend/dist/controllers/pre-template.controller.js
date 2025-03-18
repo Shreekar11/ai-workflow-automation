@@ -26,7 +26,6 @@ const pre_template_repo_1 = __importDefault(require("../repository/pre-template.
 const router_1 = require("../decorators/router");
 const middlewares_1 = require("../middlewares");
 const user_service_1 = require("../services/user.service");
-const error_1 = require("../modules/error");
 const constants_1 = require("../constants");
 class PreTemplateController {
     constructor() {
@@ -38,26 +37,32 @@ class PreTemplateController {
         return __awaiter(this, void 0, void 0, function* () {
             yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
             const { templateId } = req.body;
-            const user = req.user;
             try {
-                let userData;
-                try {
-                    userData = yield this.userService.fetchUserByClerkId(user.id);
-                }
-                catch (error) {
-                    if (error instanceof error_1.UserNotFoundError) {
-                        return res.status(constants_1.HTTPStatus.NOT_FOUND).json({
-                            status: false,
-                            message: error.message,
-                        });
-                    }
-                    throw error;
-                }
                 const preTemplateData = yield this.preTemplateRepo.getPreTemplatById(templateId);
                 return res.status(constants_1.HTTPStatus.OK).json({
                     status: true,
                     message: "Pre-Template retrieved successfully!",
                     data: preTemplateData,
+                });
+            }
+            catch (error) {
+                console.error("Error retrieving Pre-Template:", error);
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
+                    status: false,
+                    message: "Failed to retrieve Pre-Template",
+                });
+            }
+        });
+    }
+    getAllPreTemplates(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // await AuthMiddleware.verifyToken(req, res, () => {});
+            try {
+                const preTemplates = yield this.preTemplateRepo.getAllPreTemplates();
+                return res.status(constants_1.HTTPStatus.OK).json({
+                    status: true,
+                    message: "Pre-Templates retrieved successfully!",
+                    data: preTemplates,
                 });
             }
             catch (error) {
@@ -77,3 +82,9 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], PreTemplateController.prototype, "getPreTemplate", null);
+__decorate([
+    (0, router_1.GET)("/api/v1/pre/template/all"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], PreTemplateController.prototype, "getAllPreTemplates", null);

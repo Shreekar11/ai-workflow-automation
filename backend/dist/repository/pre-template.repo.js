@@ -60,14 +60,7 @@ class PreTemplateRepository extends base_repo_1.default {
                         availableTemplateActions: {
                             select: {
                                 name: true,
-                                actions: {
-                                    select: {
-                                        type: true,
-                                    },
-                                    orderBy: {
-                                        sortingOrder: "asc",
-                                    },
-                                },
+                                image: true,
                             },
                         },
                     },
