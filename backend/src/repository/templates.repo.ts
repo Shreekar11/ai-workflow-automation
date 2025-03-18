@@ -6,7 +6,7 @@ export default class TemplateRepository extends Repository<Template> {
     super("template");
   }
 
-  public async getUserTemplates(userId: number): Promise<Template> {
+  public async getAllUserTemplates(userId: number): Promise<Template[]> {
     const templates = await this.model.findMany({
       where: {
         userId,
@@ -20,6 +20,23 @@ export default class TemplateRepository extends Repository<Template> {
     const template = await this.model.findFirst({
       where: {
         templateId,
+      },
+      include: {
+        actions: {
+          include: {
+            type: true,
+            metadata: true,
+          },
+          orderBy: {
+            sortingOrder: "asc",
+          },
+        },
+        templateResults: {
+          include: {
+            status: true,
+            metadata: true,
+          },
+        },
       },
     });
 

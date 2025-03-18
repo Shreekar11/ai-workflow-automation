@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { POST } from "../decorators/router";
+import { GET, POST } from "../decorators/router";
 import { APIResponse } from "../interface/api";
 import { AuthMiddleware } from "../middlewares";
 import { HTTPStatus } from "../constants";
@@ -64,6 +64,26 @@ export default class TemplateController {
       return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
         status: false,
         message: "Failed to create template",
+      });
+    }
+  }
+
+  @GET("/api/v1/template")
+  public async getAllUserTemplates(req: Request, res: Response) {
+    const user = req.user;
+    try {
+      const userData = await this.userService.fetchUserByClerkId(user.id);
+      const templates = await this.templateService.fetchAllWorkflows(userData);
+      return res.status(200).json({
+        status: true,
+        message: "Templates retrieved successfully!",
+        data: templates,
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to fetch templates",
       });
     }
   }
