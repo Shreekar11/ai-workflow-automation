@@ -21,17 +21,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const pre_template_repo_1 = __importDefault(require("../repository/pre-template.repo"));
+const constants_1 = require("../constants");
 const router_1 = require("../decorators/router");
 const middlewares_1 = require("../middlewares");
-const user_service_1 = require("../services/user.service");
-const constants_1 = require("../constants");
+const pre_template_repo_1 = __importDefault(require("../repository/pre-template.repo"));
 class PreTemplateController {
     constructor() {
-        this.prisma = new client_1.PrismaClient();
         this.preTemplateRepo = new pre_template_repo_1.default();
-        this.userService = new user_service_1.UserService();
     }
     getPreTemplate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {

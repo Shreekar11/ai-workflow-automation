@@ -1,21 +1,14 @@
-import { PrismaClient } from "@prisma/client";
-import PreTemplateRepository from "../repository/pre-template.repo";
+import { HTTPStatus } from "../constants";
 import { GET } from "../decorators/router";
 import { Request, Response } from "express";
 import { AuthMiddleware } from "../middlewares";
-import { UserService } from "../services/user.service";
-import { UserNotFoundError } from "../modules/error";
-import { HTTPStatus } from "../constants";
+import PreTemplateRepository from "../repository/pre-template.repo";
 
 export default class PreTemplateController {
-  private prisma: PrismaClient;
   private preTemplateRepo: PreTemplateRepository;
-  private userService: UserService;
 
   constructor() {
-    this.prisma = new PrismaClient();
     this.preTemplateRepo = new PreTemplateRepository();
-    this.userService = new UserService();
   }
 
   @GET("/api/v1/pre/template")
