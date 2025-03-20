@@ -7,12 +7,18 @@ import { TemplateSchema } from "../types";
 import { UserService } from "../services/user.service";
 import { UserNotFoundError } from "../modules/error";
 import TemplateService from "../services/template.service";
+import { PrismaClient } from "@prisma/client";
+import { createClient } from "redis";
+
+const QUEUE_NAME = "workflow-events";
 
 export default class TemplateController {
+  private prisma: PrismaClient;
   private userService: UserService;
   private templateService: TemplateService;
 
   constructor() {
+    this.prisma = new PrismaClient();
     this.userService = new UserService();
     this.templateService = new TemplateService();
   }
@@ -85,6 +91,65 @@ export default class TemplateController {
         status: false,
         message: "Failed to fetch templates",
       });
+    }
+  }
+
+  @POST("/api/v1/template/:id")
+  public async templateRunFunction(req: Request, res: Response) {
+    await AuthMiddleware.verifyToken(req, res, () => {});
+    const { body } = req;
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(HTTPStatus.BAD_REQUEST).json({
+        status: false,
+        message: "Template ID is required",
+      });
+    }
+
+    const redisClient = createClient({
+      url: process.env.REDIS_URL || "redis://localhost:6379",
+    });
+
+    redisClient.on("error", (err: any) =>
+      console.error("Redis Client Error:", err)
+    );
+
+    try {
+      await redisClient.connect();
+
+      const templateResult = await this.prisma.templateResult.create({
+        data: {
+          templateId: id,
+          metadata: body.metadata,
+          status: "running",
+        },
+      });
+
+      const message = JSON.stringify({
+        templateResultId: templateResult.id,
+        stage: 0,
+      });
+
+      const pipeline = redisClient.multi();
+      pipeline.lPush(QUEUE_NAME, message);
+      await pipeline.exec();
+
+      console.log("Message pushed to Redis queue successfully");
+
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Template processed successfully",
+        workflowId: id,
+      });
+    } catch (err) {
+      console.error("Error processing template:", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to process template",
+      });
+    } finally {
+      await redisClient.disconnect();
     }
   }
 }

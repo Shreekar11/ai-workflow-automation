@@ -28,8 +28,12 @@ const types_1 = require("../types");
 const user_service_1 = require("../services/user.service");
 const error_1 = require("../modules/error");
 const template_service_1 = __importDefault(require("../services/template.service"));
+const client_1 = require("@prisma/client");
+const redis_1 = require("redis");
+const QUEUE_NAME = "workflow-events";
 class TemplateController {
     constructor() {
+        this.prisma = new client_1.PrismaClient();
         this.userService = new user_service_1.UserService();
         this.templateService = new template_service_1.default();
     }
@@ -97,6 +101,56 @@ class TemplateController {
             }
         });
     }
+    templateRunFunction(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield middlewares_1.AuthMiddleware.verifyToken(req, res, () => { });
+            const { body } = req;
+            const { id } = req.params;
+            if (!id) {
+                return res.status(constants_1.HTTPStatus.BAD_REQUEST).json({
+                    status: false,
+                    message: "Template ID is required",
+                });
+            }
+            const redisClient = (0, redis_1.createClient)({
+                url: process.env.REDIS_URL || "redis://localhost:6379",
+            });
+            redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+            try {
+                yield redisClient.connect();
+                const templateResult = yield this.prisma.templateResult.create({
+                    data: {
+                        templateId: id,
+                        metadata: body.metadata,
+                        status: "running",
+                    },
+                });
+                const message = JSON.stringify({
+                    templateResultId: templateResult.id,
+                    stage: 0,
+                });
+                const pipeline = redisClient.multi();
+                pipeline.lPush(QUEUE_NAME, message);
+                yield pipeline.exec();
+                console.log("Message pushed to Redis queue successfully");
+                return res.status(constants_1.HTTPStatus.OK).json({
+                    status: true,
+                    message: "Template processed successfully",
+                    workflowId: id,
+                });
+            }
+            catch (err) {
+                console.error("Error processing template:", err);
+                return res.status(constants_1.HTTPStatus.INTERNAL_SERVER_ERROR).json({
+                    status: false,
+                    message: "Failed to process template",
+                });
+            }
+            finally {
+                yield redisClient.disconnect();
+            }
+        });
+    }
 }
 exports.default = TemplateController;
 __decorate([
@@ -111,3 +165,9 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], TemplateController.prototype, "getAllUserTemplates", null);
+__decorate([
+    (0, router_1.POST)("/api/v1/template/:id"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], TemplateController.prototype, "templateRunFunction", null);
