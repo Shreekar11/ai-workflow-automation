@@ -1,33 +1,17 @@
-import http from "http";
-import { createClient } from "redis";
-import {
-  availableEmailId,
-  availableGoogleDocsId,
-  availableGoogleSheetsId,
-  availableModelId,
-  availableScraperId,
-  QUEUE_NAME,
-} from "./config";
 import { PrismaClient } from "@prisma/client";
-import { JsonObject } from "@prisma/client/runtime/library";
-import { parser } from "./utils/parser";
 import dotenv from "dotenv";
-import { EmailService } from "./services/mail.service";
-import { GoogleSheetsService } from "./services/sheets.service";
 import cron from "node-cron";
 import axios from "axios";
-import ScraperService from "./services/scraper.service";
-import ModelService from "./services/model.service";
-import GoogleDocsService from "./services/docs.service";
+import { processWorkflowMessage } from "./processors/workflow.processor";
+import { RedisQueue } from "./queue/redis.queue";
+import { Server } from "./server";
+import { processTemplateMessage } from "./processors/template.processor";
 
 dotenv.config();
 
 const client = new PrismaClient();
-const redisClient = createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6379",
-});
-
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+const redisQueue = new RedisQueue();
+const server = new Server(8000);
 
 // cron job
 function initHealthCheck() {
@@ -56,326 +40,21 @@ async function processMessage(message: string) {
     const stage = parsedValue.stage;
 
     if (workflowRunId) {
-      const workflowRunDetails = await client.workflowRun.findFirst({
-        where: {
-          id: workflowRunId,
-        },
-        include: {
-          workflow: {
-            include: {
-              actions: {
-                include: {
-                  type: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      const currentAction = workflowRunDetails?.workflow.actions.find(
-        (action) => action.sortingOrder === stage
+      await processWorkflowMessage(
+        client,
+        redisQueue.getClient(),
+        workflowRunId,
+        stage
       );
-
-      if (!currentAction) {
-        console.log("Current action not found");
-        return;
-      }
-
-      try {
-        // email action
-        if (currentAction.type.id === availableEmailId) {
-          const workflowRunMetadata = workflowRunDetails?.metadata;
-          const to = parser(
-            (currentAction.metadata as JsonObject)?.to as string,
-            workflowRunMetadata
-          );
-          const from = parser(
-            (currentAction.metadata as JsonObject)?.from as string,
-            workflowRunMetadata
-          );
-          const subject = parser(
-            (currentAction.metadata as JsonObject)?.subject as string,
-            workflowRunMetadata
-          );
-          const body = parser(
-            (currentAction.metadata as JsonObject)?.body as string,
-            workflowRunMetadata
-          );
-
-          const emailService = new EmailService(to, from, subject, body);
-          await emailService.sendEmailFunction();
-          console.log(`Sending out Email to ${to}, body is ${body}`);
-
-          await client.workflowRun.update({
-            where: { id: workflowRunDetails?.id },
-            data: { status: "completed" },
-          });
-        }
-
-        // google sheets action
-        if (currentAction.type.id === availableGoogleSheetsId) {
-          const workflowRunMetadata = workflowRunDetails?.metadata;
-          const sheetId = parser(
-            (currentAction.metadata as JsonObject)?.sheetId as string,
-            workflowRunMetadata
-          );
-
-          let range = parser(
-            (currentAction.metadata as JsonObject)?.range as string,
-            workflowRunMetadata
-          );
-
-          if (range.startsWith("Sheet!")) {
-            range = range.replace("Sheet!", "Sheet1!");
-          } else {
-            range = `Sheet1!${range}`;
-          }
-
-          const valuesStr = parser(
-            (currentAction.metadata as JsonObject)?.values as string,
-            workflowRunMetadata
-          );
-
-          const values = valuesStr.split(",");
-
-          const sheetsService = new GoogleSheetsService(sheetId, range, values);
-
-          await sheetsService.appendToSheet();
-          console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
-
-          await client.workflowRun.update({
-            where: { id: workflowRunDetails?.id },
-            data: { status: "completed" },
-          });
-        }
-      } catch (error: any) {
-        await client.workflowRun.update({
-          where: { id: workflowRunDetails?.id },
-          data: {
-            status: "failed",
-          },
-        });
-
-        throw error;
-      }
-
-      const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
-      if (lastStage !== stage) {
-        const nextMessage = JSON.stringify({
-          stage: stage + 1,
-          workflowRunId,
-        });
-        await redisClient.lPush(QUEUE_NAME, nextMessage);
-      }
     }
 
     if (templateId) {
-      const templateResultData = await client.templateResult.findFirst({
-        where: {
-          templateId,
-        },
-        include: {
-          template: {
-            include: {
-              actions: {
-                include: {
-                  type: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      const currentAction = templateResultData?.template.actions.find(
-        (action) => {
-          action.sortingOrder === stage;
-        }
+      await processTemplateMessage(
+        client,
+        redisQueue.getClient(),
+        templateId,
+        stage
       );
-
-      const metadata = templateResultData?.metadata || {};
-
-      // actions implementation :- (scraper, llm model, google doc)
-      try {
-        // scraper action
-        if (currentAction?.type.id === availableScraperId) {
-          const templateMetadata = templateResultData?.metadata;
-          const url = parser(
-            (currentAction.metadata as JsonObject)?.url as string,
-            templateMetadata
-          );
-          const scraperService = new ScraperService(url);
-          const actionResult = await scraperService.scraperAction();
-          if (actionResult) {
-            await client.$transaction(async (tx) => {
-              await tx.templateResult.update({
-                where: {
-                  id: templateResultData?.id,
-                },
-                data: {
-                  metadata: {
-                    ...(metadata as object),
-                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                      actionResult,
-                  },
-                  status:
-                    stage ===
-                    (templateResultData?.template.actions.length || 1) - 1
-                      ? "completed"
-                      : "running",
-                },
-              });
-
-              // here the metadata of the next step i.e ai-model is updated and scraper_result is added
-              await tx.templateAction.update({
-                where: {
-                  actionId: availableModelId,
-                },
-                data: {
-                  metadata: {
-                    ...(metadata as object),
-                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                      actionResult,
-                  },
-                },
-              });
-            });
-          }
-        }
-
-        // llm model action
-        if (currentAction?.type.id === availableModelId) {
-          const templateMetadata = templateResultData?.metadata;
-          const scraperResult = (currentAction.metadata as JsonObject)
-            ?.scraper_result as JsonObject;
-          const url = parser(scraperResult?.url as string, templateMetadata);
-          const title = parser(
-            scraperResult?.title as string,
-            templateMetadata
-          );
-          const content = parser(
-            scraperResult?.content as string,
-            templateMetadata
-          );
-          const system = parser(
-            (currentAction.metadata as JsonObject).system as string,
-            templateMetadata
-          );
-          const model = parser(
-            (currentAction.metadata as JsonObject).model as string,
-            templateMetadata
-          );
-          const modelService = new ModelService(
-            url,
-            title,
-            content,
-            system,
-            model
-          );
-
-          const actionResult = await modelService.llmAction();
-          if (actionResult) {
-            await client.$transaction(async (tx) => {
-              await tx.templateResult.update({
-                where: {
-                  id: templateResultData?.id,
-                },
-                data: {
-                  metadata: {
-                    ...(metadata as object),
-                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                      actionResult,
-                  },
-                  status:
-                    stage ===
-                    (templateResultData?.template.actions.length || 1) - 1
-                      ? "completed"
-                      : "running",
-                },
-              });
-
-              // here the metadata of the next step i.e google docs is updated and llm_result is added
-              await tx.templateAction.update({
-                where: {
-                  actionId: availableGoogleDocsId,
-                },
-                data: {
-                  metadata: {
-                    ...(metadata as object),
-                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                      actionResult,
-                    ["scraper_result"]: scraperResult,
-                  },
-                },
-              });
-            });
-          }
-        }
-
-        // google docs action
-        if (currentAction?.type.id === availableGoogleDocsId) {
-          const templateMetadata = templateResultData?.metadata;
-          const scraperResult = (currentAction.metadata as JsonObject)
-            ?.scraper_result as JsonObject;
-          const url = parser(scraperResult.url as string, templateMetadata);
-          const title = parser(scraperResult.title as string, templateMetadata);
-          const modelResult = (currentAction.metadata as JsonObject)
-            ?.llmmodel_result as JsonObject;
-          const result = parser(modelResult.result as string, templateMetadata);
-          const model = parser(modelResult.model as string, templateMetadata);
-          const googleDocsId = parser(
-            (currentAction?.metadata as JsonObject)?.googleDocsId as string,
-            templateMetadata
-          );
-
-          const createNewDoc = parser(
-            (currentAction?.metadata as JsonObject)?.createNewDoc as string,
-            templateMetadata
-          );
-
-          const docsService = new GoogleDocsService(
-            url,
-            title,
-            result,
-            model,
-            googleDocsId,
-            createNewDoc
-          );
-
-          const actionResult = await docsService.googleDocsAction();
-          if (actionResult) {
-            await client.templateResult.update({
-              where: {
-                id: templateResultData?.id,
-              },
-              data: {
-                metadata: {
-                  ...(metadata as object),
-                  [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                    actionResult,
-                },
-                status:
-                  stage ===
-                  (templateResultData?.template.actions.length || 1) - 1
-                    ? "completed"
-                    : "running",
-              },
-            });
-          }
-        }
-      } catch (error) {}
-
-      const lastStage = (templateResultData?.template.actions.length || 1) - 1;
-      if (lastStage !== stage) {
-        const nextMessage = JSON.stringify({
-          stage: stage + 1,
-          templateId,
-        });
-        await redisClient.lPush(QUEUE_NAME, nextMessage);
-      }
-
-      console.log("Template actions processing completed");
     }
 
     console.log("Processing completed");
@@ -386,17 +65,15 @@ async function processMessage(message: string) {
 
 async function main() {
   try {
-    await redisClient.connect();
-    console.log("Connected to Redis");
-
+    await redisQueue.connect();
+    server.start();
     initHealthCheck();
 
     // start processing messages
     while (true) {
       try {
-        const result = await redisClient.brPop(QUEUE_NAME, 0);
-        if (result) {
-          const message = result.element;
+        const message = await redisQueue.popMessage();
+        if (message) {
           await processMessage(message);
         }
       } catch (error) {
@@ -410,29 +87,13 @@ async function main() {
   }
 }
 
-const server = http.createServer((req, res) => {
-  if (req.url === "/" && req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Worker is running" }));
-  } else {
-    res.writeHead(404, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Not Found" }));
-  }
-});
-
-server.listen(8000, () => {
-  console.log("Worker HTTP server listening on port 8000");
-});
-
 // force shutdown
 process.on("SIGTERM", async () => {
   console.log("Shutting down worker...");
-  await redisClient.quit();
+  await redisQueue.disconnect();
   await client.$disconnect();
-  server.close(() => {
-    console.log("HTTP server closed");
-    process.exit(0);
-  });
+  await server.shutdown();
+  process.exit(0);
 });
 
 process.on("unhandledRejection", (error) => {

@@ -12,25 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const http_1 = __importDefault(require("http"));
-const redis_1 = require("redis");
-const config_1 = require("./config");
 const client_1 = require("@prisma/client");
-const parser_1 = require("./utils/parser");
 const dotenv_1 = __importDefault(require("dotenv"));
-const mail_service_1 = require("./services/mail.service");
-const sheets_service_1 = require("./services/sheets.service");
 const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
-const scraper_service_1 = __importDefault(require("./services/scraper.service"));
-const model_service_1 = __importDefault(require("./services/model.service"));
-const docs_service_1 = __importDefault(require("./services/docs.service"));
+const workflow_processor_1 = require("./processors/workflow.processor");
+const redis_queue_1 = require("./queue/redis.queue");
+const server_1 = require("./server");
+const template_processor_1 = require("./processors/template.processor");
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
-const redisClient = (0, redis_1.createClient)({
-    url: process.env.REDIS_URL || "redis://localhost:6379",
-});
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+const redisQueue = new redis_queue_1.RedisQueue();
+const server = new server_1.Server(8000);
 // cron job
 function initHealthCheck() {
     const healthCheckUrl = process.env.WORKER_URL;
@@ -51,221 +44,16 @@ function initHealthCheck() {
 }
 function processMessage(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         try {
             const parsedValue = JSON.parse(message);
             const workflowRunId = parsedValue.workflowRunId;
             const templateId = parsedValue.templateId;
             const stage = parsedValue.stage;
             if (workflowRunId) {
-                const workflowRunDetails = yield client.workflowRun.findFirst({
-                    where: {
-                        id: workflowRunId,
-                    },
-                    include: {
-                        workflow: {
-                            include: {
-                                actions: {
-                                    include: {
-                                        type: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                });
-                const currentAction = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.find((action) => action.sortingOrder === stage);
-                if (!currentAction) {
-                    console.log("Current action not found");
-                    return;
-                }
-                try {
-                    // email action
-                    if (currentAction.type.id === config_1.availableEmailId) {
-                        const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
-                        const to = (0, parser_1.parser)((_a = currentAction.metadata) === null || _a === void 0 ? void 0 : _a.to, workflowRunMetadata);
-                        const from = (0, parser_1.parser)((_b = currentAction.metadata) === null || _b === void 0 ? void 0 : _b.from, workflowRunMetadata);
-                        const subject = (0, parser_1.parser)((_c = currentAction.metadata) === null || _c === void 0 ? void 0 : _c.subject, workflowRunMetadata);
-                        const body = (0, parser_1.parser)((_d = currentAction.metadata) === null || _d === void 0 ? void 0 : _d.body, workflowRunMetadata);
-                        const emailService = new mail_service_1.EmailService(to, from, subject, body);
-                        yield emailService.sendEmailFunction();
-                        console.log(`Sending out Email to ${to}, body is ${body}`);
-                        yield client.workflowRun.update({
-                            where: { id: workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.id },
-                            data: { status: "completed" },
-                        });
-                    }
-                    // google sheets action
-                    if (currentAction.type.id === config_1.availableGoogleSheetsId) {
-                        const workflowRunMetadata = workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.metadata;
-                        const sheetId = (0, parser_1.parser)((_e = currentAction.metadata) === null || _e === void 0 ? void 0 : _e.sheetId, workflowRunMetadata);
-                        let range = (0, parser_1.parser)((_f = currentAction.metadata) === null || _f === void 0 ? void 0 : _f.range, workflowRunMetadata);
-                        if (range.startsWith("Sheet!")) {
-                            range = range.replace("Sheet!", "Sheet1!");
-                        }
-                        else {
-                            range = `Sheet1!${range}`;
-                        }
-                        const valuesStr = (0, parser_1.parser)((_g = currentAction.metadata) === null || _g === void 0 ? void 0 : _g.values, workflowRunMetadata);
-                        const values = valuesStr.split(",");
-                        const sheetsService = new sheets_service_1.GoogleSheetsService(sheetId, range, values);
-                        yield sheetsService.appendToSheet();
-                        console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
-                        yield client.workflowRun.update({
-                            where: { id: workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.id },
-                            data: { status: "completed" },
-                        });
-                    }
-                }
-                catch (error) {
-                    yield client.workflowRun.update({
-                        where: { id: workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.id },
-                        data: {
-                            status: "failed",
-                        },
-                    });
-                    throw error;
-                }
-                const lastStage = ((workflowRunDetails === null || workflowRunDetails === void 0 ? void 0 : workflowRunDetails.workflow.actions.length) || 1) - 1;
-                if (lastStage !== stage) {
-                    const nextMessage = JSON.stringify({
-                        stage: stage + 1,
-                        workflowRunId,
-                    });
-                    yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
-                }
+                yield (0, workflow_processor_1.processWorkflowMessage)(client, redisQueue.getClient(), workflowRunId, stage);
             }
             if (templateId) {
-                const templateResultData = yield client.templateResult.findFirst({
-                    where: {
-                        templateId,
-                    },
-                    include: {
-                        template: {
-                            include: {
-                                actions: {
-                                    include: {
-                                        type: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                });
-                const currentAction = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.find((action) => {
-                    action.sortingOrder === stage;
-                });
-                const metadata = (templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata) || {};
-                // actions implementation :- (scraper, llm model, google doc)
-                try {
-                    // scraper action
-                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableScraperId) {
-                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
-                        const url = (0, parser_1.parser)((_h = currentAction.metadata) === null || _h === void 0 ? void 0 : _h.url, templateMetadata);
-                        const scraperService = new scraper_service_1.default(url);
-                        const actionResult = yield scraperService.scraperAction();
-                        if (actionResult) {
-                            yield client.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                                yield tx.templateResult.update({
-                                    where: {
-                                        id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
-                                    },
-                                    data: {
-                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
-                                        status: stage ===
-                                            ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
-                                            ? "completed"
-                                            : "running",
-                                    },
-                                });
-                                // here the metadata of the next step i.e ai-model is updated and scraper_result is added
-                                yield tx.templateAction.update({
-                                    where: {
-                                        actionId: config_1.availableModelId,
-                                    },
-                                    data: {
-                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
-                                    },
-                                });
-                            }));
-                        }
-                    }
-                    // llm model action
-                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableModelId) {
-                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
-                        const scraperResult = (_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.scraper_result;
-                        const url = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.url, templateMetadata);
-                        const title = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.title, templateMetadata);
-                        const content = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.content, templateMetadata);
-                        const system = (0, parser_1.parser)(currentAction.metadata.system, templateMetadata);
-                        const model = (0, parser_1.parser)(currentAction.metadata.model, templateMetadata);
-                        const modelService = new model_service_1.default(url, title, content, system, model);
-                        const actionResult = yield modelService.llmAction();
-                        if (actionResult) {
-                            yield client.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                                yield tx.templateResult.update({
-                                    where: {
-                                        id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
-                                    },
-                                    data: {
-                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
-                                        status: stage ===
-                                            ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
-                                            ? "completed"
-                                            : "running",
-                                    },
-                                });
-                                // here the metadata of the next step i.e google docs is updated and llm_result is added
-                                yield tx.templateAction.update({
-                                    where: {
-                                        actionId: config_1.availableGoogleDocsId,
-                                    },
-                                    data: {
-                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult, ["scraper_result"]: scraperResult }),
-                                    },
-                                });
-                            }));
-                        }
-                    }
-                    // google docs action
-                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableGoogleDocsId) {
-                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
-                        const scraperResult = (_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.scraper_result;
-                        const url = (0, parser_1.parser)(scraperResult.url, templateMetadata);
-                        const title = (0, parser_1.parser)(scraperResult.title, templateMetadata);
-                        const modelResult = (_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.llmmodel_result;
-                        const result = (0, parser_1.parser)(modelResult.result, templateMetadata);
-                        const model = (0, parser_1.parser)(modelResult.model, templateMetadata);
-                        const googleDocsId = (0, parser_1.parser)((_m = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _m === void 0 ? void 0 : _m.googleDocsId, templateMetadata);
-                        const createNewDoc = (0, parser_1.parser)((_o = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _o === void 0 ? void 0 : _o.createNewDoc, templateMetadata);
-                        const docsService = new docs_service_1.default(url, title, result, model, googleDocsId, createNewDoc);
-                        const actionResult = yield docsService.googleDocsAction();
-                        if (actionResult) {
-                            yield client.templateResult.update({
-                                where: {
-                                    id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
-                                },
-                                data: {
-                                    metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
-                                    status: stage ===
-                                        ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
-                                        ? "completed"
-                                        : "running",
-                                },
-                            });
-                        }
-                    }
-                }
-                catch (error) { }
-                const lastStage = ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1;
-                if (lastStage !== stage) {
-                    const nextMessage = JSON.stringify({
-                        stage: stage + 1,
-                        templateId,
-                    });
-                    yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
-                }
-                console.log("Template actions processing completed");
+                yield (0, template_processor_1.processTemplateMessage)(client, redisQueue.getClient(), templateId, stage);
             }
             console.log("Processing completed");
         }
@@ -277,15 +65,14 @@ function processMessage(message) {
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield redisClient.connect();
-            console.log("Connected to Redis");
+            yield redisQueue.connect();
+            server.start();
             initHealthCheck();
             // start processing messages
             while (true) {
                 try {
-                    const result = yield redisClient.brPop(config_1.QUEUE_NAME, 0);
-                    if (result) {
-                        const message = result.element;
+                    const message = yield redisQueue.popMessage();
+                    if (message) {
                         yield processMessage(message);
                     }
                 }
@@ -301,28 +88,13 @@ function main() {
         }
     });
 }
-const server = http_1.default.createServer((req, res) => {
-    if (req.url === "/" && req.method === "GET") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ message: "Worker is running" }));
-    }
-    else {
-        res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Not Found" }));
-    }
-});
-server.listen(8000, () => {
-    console.log("Worker HTTP server listening on port 8000");
-});
 // force shutdown
 process.on("SIGTERM", () => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Shutting down worker...");
-    yield redisClient.quit();
+    yield redisQueue.disconnect();
     yield client.$disconnect();
-    server.close(() => {
-        console.log("HTTP server closed");
-        process.exit(0);
-    });
+    yield server.shutdown();
+    process.exit(0);
 }));
 process.on("unhandledRejection", (error) => {
     console.error("Unhandled promise rejection:", error);
