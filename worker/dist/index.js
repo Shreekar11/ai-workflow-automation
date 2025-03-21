@@ -133,7 +133,38 @@ function processMessage(message) {
                 }
             }
             if (templateId) {
-                console.log("Template processing block");
+                const templateResultData = yield client.templateResult.findFirst({
+                    where: {
+                        templateId,
+                    },
+                    include: {
+                        template: {
+                            include: {
+                                actions: {
+                                    include: {
+                                        type: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+                const currentAction = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.find((action) => {
+                    action.sortingOrder === stage;
+                });
+                // actions implementation :- (scraper, llm model, google doc)
+                try {
+                }
+                catch (error) { }
+                const lastStage = ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1;
+                if (lastStage !== stage) {
+                    const nextMessage = JSON.stringify({
+                        stage: stage + 1,
+                        workflowRunId,
+                    });
+                    yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
+                }
+                console.log("Template actions processing completed");
             }
             console.log("Processing completed");
         }
