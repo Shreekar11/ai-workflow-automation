@@ -2,7 +2,10 @@ import http from "http";
 import { createClient } from "redis";
 import {
   availableEmailId,
+  availableGoogleDocsId,
   availableGoogleSheetsId,
+  availableModelId,
+  availableScraperId,
   QUEUE_NAME,
 } from "./config";
 import { PrismaClient } from "@prisma/client";
@@ -13,6 +16,8 @@ import { EmailService } from "./services/mail.service";
 import { GoogleSheetsService } from "./services/sheets.service";
 import cron from "node-cron";
 import axios from "axios";
+import ScraperService from "./services/scraper.service";
+import ModelService from "./services/model.service";
 
 dotenv.config();
 
@@ -188,8 +193,95 @@ async function processMessage(message: string) {
         }
       );
 
+      const metadata = templateResultData?.metadata || {};
+
       // actions implementation :- (scraper, llm model, google doc)
       try {
+        // scraper action
+        if (currentAction?.type.id === availableScraperId) {
+          const templateMetadata = templateResultData?.metadata;
+          const url = parser(
+            (currentAction.metadata as JsonObject)?.url as string,
+            templateMetadata
+          );
+          const scraperService = new ScraperService(url);
+          const actionResult = await scraperService.scraperAction();
+          if (actionResult) {
+            await client.templateResult.update({
+              where: {
+                id: templateResultData?.id,
+              },
+              data: {
+                metadata: {
+                  ...(metadata as object),
+                  [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                    actionResult,
+                },
+                status:
+                  stage ===
+                  (templateResultData?.template.actions.length || 1) - 1
+                    ? "completed"
+                    : "running",
+              },
+            });
+          }
+        }
+
+        // llm model action
+        if (currentAction?.type.id === availableModelId) {
+          const templateMetadata = templateResultData?.metadata;
+          const scraperResult = (currentAction.metadata as JsonObject)
+            ?.scraper_result as JsonObject;
+          const url = parser(scraperResult?.url as string, templateMetadata);
+          const title = parser(
+            scraperResult?.title as string,
+            templateMetadata
+          );
+          const content = parser(
+            scraperResult?.content as string,
+            templateMetadata
+          );
+          const system = parser(
+            (currentAction.metadata as JsonObject).system as string,
+            templateMetadata
+          );
+          const model = parser(
+            (currentAction.metadata as JsonObject).model as string,
+            templateMetadata
+          );
+          const modelService = new ModelService(
+            url,
+            title,
+            content,
+            system,
+            model
+          );
+
+          const actionResult = await modelService.llmAction();
+          if (actionResult) {
+            await client.templateResult.update({
+              where: {
+                id: templateResultData?.id,
+              },
+              data: {
+                metadata: {
+                  ...(metadata as object),
+                  [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                    actionResult,
+                },
+                status:
+                  stage ===
+                  (templateResultData?.template.actions.length || 1) - 1
+                    ? "completed"
+                    : "running",
+              },
+            });
+          }
+        }
+
+        // google docs action
+        if (currentAction?.type.id === availableGoogleDocsId) {
+        }
       } catch (error) {}
 
       const lastStage = (templateResultData?.template.actions.length || 1) - 1;
