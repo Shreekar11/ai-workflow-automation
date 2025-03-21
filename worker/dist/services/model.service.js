@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const openai_1 = __importDefault(require("openai"));
 const sdk_1 = __importDefault(require("@anthropic-ai/sdk"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 class ModelService {
     constructor(url, title, content, system, model) {
         this.url = url;

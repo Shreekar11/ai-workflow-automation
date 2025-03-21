@@ -12,13 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
 const axios_1 = __importDefault(require("axios"));
 const cheerio_1 = __importDefault(require("cheerio"));
 class ScraperService {
     constructor(url) {
         this.url = url;
-        this.client = new client_1.PrismaClient();
     }
     scraperAction() {
         return __awaiter(this, void 0, void 0, function* () {

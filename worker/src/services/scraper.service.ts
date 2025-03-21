@@ -1,14 +1,11 @@
-import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import cheerio from "cheerio";
 
 export default class ScraperService {
   private url: string;
-  private client: PrismaClient;
 
   constructor(url: string) {
     this.url = url;
-    this.client = new PrismaClient();
   }
 
   public async scraperAction() {

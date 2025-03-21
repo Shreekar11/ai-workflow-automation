@@ -24,6 +24,7 @@ const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
 const scraper_service_1 = __importDefault(require("./services/scraper.service"));
 const model_service_1 = __importDefault(require("./services/model.service"));
+const docs_service_1 = __importDefault(require("./services/docs.service"));
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
 const redisClient = (0, redis_1.createClient)({
@@ -50,7 +51,7 @@ function initHealthCheck() {
 }
 function processMessage(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         try {
             const parsedValue = JSON.parse(message);
             const workflowRunId = parsedValue.workflowRunId;
@@ -164,18 +165,29 @@ function processMessage(message) {
                         const scraperService = new scraper_service_1.default(url);
                         const actionResult = yield scraperService.scraperAction();
                         if (actionResult) {
-                            yield client.templateResult.update({
-                                where: {
-                                    id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
-                                },
-                                data: {
-                                    metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
-                                    status: stage ===
-                                        ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
-                                        ? "completed"
-                                        : "running",
-                                },
-                            });
+                            yield client.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                                yield tx.templateResult.update({
+                                    where: {
+                                        id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
+                                    },
+                                    data: {
+                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                                        status: stage ===
+                                            ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
+                                            ? "completed"
+                                            : "running",
+                                    },
+                                });
+                                // here the metadata of the next step i.e ai-model is updated and scraper_result is added
+                                yield tx.templateAction.update({
+                                    where: {
+                                        actionId: config_1.availableModelId,
+                                    },
+                                    data: {
+                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                                    },
+                                });
+                            }));
                         }
                     }
                     // llm model action
@@ -189,6 +201,45 @@ function processMessage(message) {
                         const model = (0, parser_1.parser)(currentAction.metadata.model, templateMetadata);
                         const modelService = new model_service_1.default(url, title, content, system, model);
                         const actionResult = yield modelService.llmAction();
+                        if (actionResult) {
+                            yield client.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                                yield tx.templateResult.update({
+                                    where: {
+                                        id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
+                                    },
+                                    data: {
+                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                                        status: stage ===
+                                            ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
+                                            ? "completed"
+                                            : "running",
+                                    },
+                                });
+                                // here the metadata of the next step i.e google docs is updated and llm_result is added
+                                yield tx.templateAction.update({
+                                    where: {
+                                        actionId: config_1.availableGoogleDocsId,
+                                    },
+                                    data: {
+                                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult, ["scraper_result"]: scraperResult }),
+                                    },
+                                });
+                            }));
+                        }
+                    }
+                    // google docs action
+                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableGoogleDocsId) {
+                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
+                        const scraperResult = (_k = currentAction.metadata) === null || _k === void 0 ? void 0 : _k.scraper_result;
+                        const url = (0, parser_1.parser)(scraperResult.url, templateMetadata);
+                        const title = (0, parser_1.parser)(scraperResult.title, templateMetadata);
+                        const modelResult = (_l = currentAction.metadata) === null || _l === void 0 ? void 0 : _l.llmmodel_result;
+                        const result = (0, parser_1.parser)(modelResult.result, templateMetadata);
+                        const model = (0, parser_1.parser)(modelResult.model, templateMetadata);
+                        const googleDocsId = (0, parser_1.parser)((_m = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _m === void 0 ? void 0 : _m.googleDocsId, templateMetadata);
+                        const createNewDoc = (0, parser_1.parser)((_o = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _o === void 0 ? void 0 : _o.createNewDoc, templateMetadata);
+                        const docsService = new docs_service_1.default(url, title, result, model, googleDocsId, createNewDoc);
+                        const actionResult = yield docsService.googleDocsAction();
                         if (actionResult) {
                             yield client.templateResult.update({
                                 where: {
@@ -204,16 +255,13 @@ function processMessage(message) {
                             });
                         }
                     }
-                    // google docs action
-                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableGoogleDocsId) {
-                    }
                 }
                 catch (error) { }
                 const lastStage = ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1;
                 if (lastStage !== stage) {
                     const nextMessage = JSON.stringify({
                         stage: stage + 1,
-                        workflowRunId,
+                        templateId,
                     });
                     yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
                 }

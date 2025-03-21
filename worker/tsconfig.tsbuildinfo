@@ -2,6 +2,7 @@
   "root": [
     "./src/index.ts",
     "./src/config/index.ts",
+    "./src/services/docs.service.ts",
     "./src/services/mail.service.ts",
     "./src/services/model.service.ts",
     "./src/services/scraper.service.ts",

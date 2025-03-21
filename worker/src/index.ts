@@ -18,6 +18,7 @@ import cron from "node-cron";
 import axios from "axios";
 import ScraperService from "./services/scraper.service";
 import ModelService from "./services/model.service";
+import GoogleDocsService from "./services/docs.service";
 
 dotenv.config();
 
@@ -207,22 +208,38 @@ async function processMessage(message: string) {
           const scraperService = new ScraperService(url);
           const actionResult = await scraperService.scraperAction();
           if (actionResult) {
-            await client.templateResult.update({
-              where: {
-                id: templateResultData?.id,
-              },
-              data: {
-                metadata: {
-                  ...(metadata as object),
-                  [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-                    actionResult,
+            await client.$transaction(async (tx) => {
+              await tx.templateResult.update({
+                where: {
+                  id: templateResultData?.id,
                 },
-                status:
-                  stage ===
-                  (templateResultData?.template.actions.length || 1) - 1
-                    ? "completed"
-                    : "running",
-              },
+                data: {
+                  metadata: {
+                    ...(metadata as object),
+                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                      actionResult,
+                  },
+                  status:
+                    stage ===
+                    (templateResultData?.template.actions.length || 1) - 1
+                      ? "completed"
+                      : "running",
+                },
+              });
+
+              // here the metadata of the next step i.e ai-model is updated and scraper_result is added
+              await tx.templateAction.update({
+                where: {
+                  actionId: availableModelId,
+                },
+                data: {
+                  metadata: {
+                    ...(metadata as object),
+                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                      actionResult,
+                  },
+                },
+              });
             });
           }
         }
@@ -259,6 +276,75 @@ async function processMessage(message: string) {
 
           const actionResult = await modelService.llmAction();
           if (actionResult) {
+            await client.$transaction(async (tx) => {
+              await tx.templateResult.update({
+                where: {
+                  id: templateResultData?.id,
+                },
+                data: {
+                  metadata: {
+                    ...(metadata as object),
+                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                      actionResult,
+                  },
+                  status:
+                    stage ===
+                    (templateResultData?.template.actions.length || 1) - 1
+                      ? "completed"
+                      : "running",
+                },
+              });
+
+              // here the metadata of the next step i.e google docs is updated and llm_result is added
+              await tx.templateAction.update({
+                where: {
+                  actionId: availableGoogleDocsId,
+                },
+                data: {
+                  metadata: {
+                    ...(metadata as object),
+                    [`${currentAction.type.name.toLowerCase().trim()}_result`]:
+                      actionResult,
+                    ["scraper_result"]: scraperResult,
+                  },
+                },
+              });
+            });
+          }
+        }
+
+        // google docs action
+        if (currentAction?.type.id === availableGoogleDocsId) {
+          const templateMetadata = templateResultData?.metadata;
+          const scraperResult = (currentAction.metadata as JsonObject)
+            ?.scraper_result as JsonObject;
+          const url = parser(scraperResult.url as string, templateMetadata);
+          const title = parser(scraperResult.title as string, templateMetadata);
+          const modelResult = (currentAction.metadata as JsonObject)
+            ?.llmmodel_result as JsonObject;
+          const result = parser(modelResult.result as string, templateMetadata);
+          const model = parser(modelResult.model as string, templateMetadata);
+          const googleDocsId = parser(
+            (currentAction?.metadata as JsonObject)?.googleDocsId as string,
+            templateMetadata
+          );
+
+          const createNewDoc = parser(
+            (currentAction?.metadata as JsonObject)?.createNewDoc as string,
+            templateMetadata
+          );
+
+          const docsService = new GoogleDocsService(
+            url,
+            title,
+            result,
+            model,
+            googleDocsId,
+            createNewDoc
+          );
+
+          const actionResult = await docsService.googleDocsAction();
+          if (actionResult) {
             await client.templateResult.update({
               where: {
                 id: templateResultData?.id,
@@ -278,17 +364,13 @@ async function processMessage(message: string) {
             });
           }
         }
-
-        // google docs action
-        if (currentAction?.type.id === availableGoogleDocsId) {
-        }
       } catch (error) {}
 
       const lastStage = (templateResultData?.template.actions.length || 1) - 1;
       if (lastStage !== stage) {
         const nextMessage = JSON.stringify({
           stage: stage + 1,
-          workflowRunId,
+          templateId,
         });
         await redisClient.lPush(QUEUE_NAME, nextMessage);
       }
