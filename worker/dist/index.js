@@ -22,6 +22,8 @@ const mail_service_1 = require("./services/mail.service");
 const sheets_service_1 = require("./services/sheets.service");
 const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
+const scraper_service_1 = __importDefault(require("./services/scraper.service"));
+const model_service_1 = __importDefault(require("./services/model.service"));
 dotenv_1.default.config();
 const client = new client_1.PrismaClient();
 const redisClient = (0, redis_1.createClient)({
@@ -48,7 +50,7 @@ function initHealthCheck() {
 }
 function processMessage(message) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         try {
             const parsedValue = JSON.parse(message);
             const workflowRunId = parsedValue.workflowRunId;
@@ -152,8 +154,59 @@ function processMessage(message) {
                 const currentAction = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.find((action) => {
                     action.sortingOrder === stage;
                 });
+                const metadata = (templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata) || {};
                 // actions implementation :- (scraper, llm model, google doc)
                 try {
+                    // scraper action
+                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableScraperId) {
+                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
+                        const url = (0, parser_1.parser)((_h = currentAction.metadata) === null || _h === void 0 ? void 0 : _h.url, templateMetadata);
+                        const scraperService = new scraper_service_1.default(url);
+                        const actionResult = yield scraperService.scraperAction();
+                        if (actionResult) {
+                            yield client.templateResult.update({
+                                where: {
+                                    id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
+                                },
+                                data: {
+                                    metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                                    status: stage ===
+                                        ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
+                                        ? "completed"
+                                        : "running",
+                                },
+                            });
+                        }
+                    }
+                    // llm model action
+                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableModelId) {
+                        const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
+                        const scraperResult = (_j = currentAction.metadata) === null || _j === void 0 ? void 0 : _j.scraper_result;
+                        const url = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.url, templateMetadata);
+                        const title = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.title, templateMetadata);
+                        const content = (0, parser_1.parser)(scraperResult === null || scraperResult === void 0 ? void 0 : scraperResult.content, templateMetadata);
+                        const system = (0, parser_1.parser)(currentAction.metadata.system, templateMetadata);
+                        const model = (0, parser_1.parser)(currentAction.metadata.model, templateMetadata);
+                        const modelService = new model_service_1.default(url, title, content, system, model);
+                        const actionResult = yield modelService.llmAction();
+                        if (actionResult) {
+                            yield client.templateResult.update({
+                                where: {
+                                    id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
+                                },
+                                data: {
+                                    metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                                    status: stage ===
+                                        ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
+                                        ? "completed"
+                                        : "running",
+                                },
+                            });
+                        }
+                    }
+                    // google docs action
+                    if ((currentAction === null || currentAction === void 0 ? void 0 : currentAction.type.id) === config_1.availableGoogleDocsId) {
+                    }
                 }
                 catch (error) { }
                 const lastStage = ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1;

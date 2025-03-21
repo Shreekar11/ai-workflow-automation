@@ -1,1 +1,12 @@
-{"root":["./src/index.ts","./src/config/index.ts","./src/services/mail.service.ts","./src/services/sheets.service.ts","./src/utils/parser.ts"],"version":"5.7.3"}
+{
+  "root": [
+    "./src/index.ts",
+    "./src/config/index.ts",
+    "./src/services/mail.service.ts",
+    "./src/services/model.service.ts",
+    "./src/services/scraper.service.ts",
+    "./src/services/sheets.service.ts",
+    "./src/utils/parser.ts"
+  ],
+  "version": "5.7.3"
+}
