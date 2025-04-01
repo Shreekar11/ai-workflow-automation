@@ -49,12 +49,12 @@ class TemplateService {
                 if (error instanceof error_1.TemplateError) {
                     throw error;
                 }
-                console.error("Error fetching workflows:", error);
-                throw new error_1.AppError("Failed to fetch workflows", 500, "WORKFLOW_FETCH_ERROR");
+                console.error("Error fetching templates:", error);
+                throw new error_1.AppError("Failed to fetch templates", 500, "TEMPLATES_FETCH_ERROR");
             }
         });
     }
-    fetchAllWorkflows(user) {
+    fetchAllTemplates(user) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const templates = yield this.templateRepo.getAllUserTemplates(user.id);
@@ -67,8 +67,8 @@ class TemplateService {
                 if (error instanceof error_1.TemplateError) {
                     throw error;
                 }
-                console.error("Error fetching workflows:", error);
-                throw new error_1.AppError("Failed to fetch workflows", 500, "WORKFLOW_FETCH_ERROR");
+                console.error("Error fetching templates:", error);
+                throw new error_1.AppError("Failed to fetch templates", 500, "TEMPLATES_FETCH_ERROR");
             }
         });
     }

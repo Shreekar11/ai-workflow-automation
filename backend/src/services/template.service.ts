@@ -54,16 +54,16 @@ export default class TemplateService {
         throw error;
       }
 
-      console.error("Error fetching workflows:", error);
+      console.error("Error fetching templates:", error);
       throw new AppError(
-        "Failed to fetch workflows",
+        "Failed to fetch templates",
         500,
-        "WORKFLOW_FETCH_ERROR"
+        "TEMPLATES_FETCH_ERROR"
       );
     }
   }
 
-  public async fetchAllWorkflows(user: User) {
+  public async fetchAllTemplates(user: User) {
     try {
       const templates = await this.templateRepo.getAllUserTemplates(user.id);
 
@@ -77,11 +77,11 @@ export default class TemplateService {
         throw error;
       }
 
-      console.error("Error fetching workflows:", error);
+      console.error("Error fetching templates:", error);
       throw new AppError(
-        "Failed to fetch workflows",
+        "Failed to fetch templates",
         500,
-        "WORKFLOW_FETCH_ERROR"
+        "TEMPLATES_FETCH_ERROR"
       );
     }
   }

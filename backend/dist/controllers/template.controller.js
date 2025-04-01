@@ -63,7 +63,7 @@ class TemplateController {
                     }
                     throw error;
                 }
-                const template = yield this.templateService.createTemplate(userData, parsedData.data);
+                const template = yield this.templateService.createTemplate(userData, parsedData);
                 return res.status(constants_1.HTTPStatus.CREATED).json({
                     status: true,
                     message: "Template saved successfully!",
@@ -85,7 +85,7 @@ class TemplateController {
             const user = req.user;
             try {
                 const userData = yield this.userService.fetchUserByClerkId(user.id);
-                const templates = yield this.templateService.fetchAllWorkflows(userData);
+                const templates = yield this.templateService.fetchAllTemplates(userData);
                 return res.status(constants_1.HTTPStatus.OK).json({
                     status: true,
                     message: "Templates retrieved successfully!",
