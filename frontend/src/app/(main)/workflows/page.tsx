@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkflows } from "@/lib/hooks/useWorkflows";
@@ -22,16 +22,18 @@ const WorkflowPage = () => {
     router.push(`/workflows/${id}`);
   };
 
-  const filteredWorkflows = workflows.filter(
-    (workflow) =>
-      workflow.workflow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workflow.workflow.trigger.type.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      workflow.workflow.actions.some((action) =>
-        action.type.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+  const filteredWorkflows = useMemo(() => {
+    return workflows.filter(
+      (workflow) =>
+        workflow.workflow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        workflow.workflow.trigger.type.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        workflow.workflow.actions.some((action) =>
+          action.type.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
+  }, [workflows, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
