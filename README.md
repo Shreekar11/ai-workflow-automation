@@ -51,7 +51,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Flow** - React library to built user friendly workflows
 
-### Deployment
+## Deployment
 - **Vercel** - Deployment platform for frontend
 - **Render** - Deployment platform for backend services
 
