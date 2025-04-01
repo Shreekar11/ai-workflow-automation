@@ -47,3 +47,19 @@ export class WorkflowNotFoundError extends WorkflowError {
     );
   }
 }
+
+export class TemplateError extends AppError {
+  constructor(message: string, statusCode: number, code: string) {
+    super(message, statusCode, code);
+  }
+}
+
+export class TemplateNotFoundError extends TemplateError {
+  constructor(templateId?: string) {
+    super(
+      `Template${templateId ? ` with ID ${templateId}` : "s"} not found`,
+      404,
+      "TEMPLATE_NOT_FOUND"
+    );
+  }
+}

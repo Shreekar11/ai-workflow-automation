@@ -1,27 +1,17 @@
-import http from "http";
-import { createClient } from "redis";
-import {
-  availableEmailId,
-  availableGoogleSheetsId,
-  QUEUE_NAME,
-} from "./config";
 import { PrismaClient } from "@prisma/client";
-import { JsonObject } from "@prisma/client/runtime/library";
-import { parser } from "./utils/parser";
 import dotenv from "dotenv";
-import { EmailService } from "./services/mail.service";
-import { GoogleSheetsService } from "./services/sheets.service";
 import cron from "node-cron";
 import axios from "axios";
+import { processWorkflowMessage } from "./processors/workflow.processor";
+import { RedisQueue } from "./queue/redis.queue";
+import { Server } from "./server";
+import { processTemplateMessage } from "./processors/template.processor";
 
 dotenv.config();
 
 const client = new PrismaClient();
-const redisClient = createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6379",
-});
-
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+const redisQueue = new RedisQueue();
+const server = new Server(8000);
 
 // cron job
 function initHealthCheck() {
@@ -46,119 +36,25 @@ async function processMessage(message: string) {
   try {
     const parsedValue = JSON.parse(message);
     const workflowRunId = parsedValue.workflowRunId;
+    const templateId = parsedValue.templateId;
     const stage = parsedValue.stage;
 
-    const workflowRunDetails = await client.workflowRun.findFirst({
-      where: {
-        id: workflowRunId,
-      },
-      include: {
-        workflow: {
-          include: {
-            actions: {
-              include: {
-                type: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const currentAction = workflowRunDetails?.workflow.actions.find(
-      (action) => action.sortingOrder === stage
-    );
-
-    if (!currentAction) {
-      console.log("Current action not found");
-      return;
-    }
-
-    try {
-      // email action
-      if (currentAction.type.id === availableEmailId) {
-        const workflowRunMetadata = workflowRunDetails?.metadata;
-        const to = parser(
-          (currentAction.metadata as JsonObject)?.to as string,
-          workflowRunMetadata
-        );
-        const from = parser(
-          (currentAction.metadata as JsonObject)?.from as string,
-          workflowRunMetadata
-        );
-        const subject = parser(
-          (currentAction.metadata as JsonObject)?.subject as string,
-          workflowRunMetadata
-        );
-        const body = parser(
-          (currentAction.metadata as JsonObject)?.body as string,
-          workflowRunMetadata
-        );
-
-        const emailService = new EmailService(to, from, subject, body);
-        await emailService.sendEmailFunction();
-        console.log(`Sending out Email to ${to}, body is ${body}`);
-
-        await client.workflowRun.update({
-          where: { id: workflowRunDetails?.id },
-          data: { status: "completed" },
-        });
-      }
-
-      // google sheets action
-      if (currentAction.type.id === availableGoogleSheetsId) {
-        const workflowRunMetadata = workflowRunDetails?.metadata;
-        const sheetId = parser(
-          (currentAction.metadata as JsonObject)?.sheetId as string,
-          workflowRunMetadata
-        );
-
-        let range = parser(
-          (currentAction.metadata as JsonObject)?.range as string,
-          workflowRunMetadata
-        );
-
-        if (range.startsWith("Sheet!")) {
-          range = range.replace("Sheet!", "Sheet1!");
-        } else {
-          range = `Sheet1!${range}`;
-        }
-
-        const valuesStr = parser(
-          (currentAction.metadata as JsonObject)?.values as string,
-          workflowRunMetadata
-        );
-
-        const values = valuesStr.split(",");
-
-        const sheetsService = new GoogleSheetsService(sheetId, range, values);
-
-        await sheetsService.appendToSheet();
-        console.log(`Added row to Google Sheet ${sheetId} in range ${range}`);
-
-        await client.workflowRun.update({
-          where: { id: workflowRunDetails?.id },
-          data: { status: "completed" },
-        });
-      }
-    } catch (error: any) {
-      await client.workflowRun.update({
-        where: { id: workflowRunDetails?.id },
-        data: {
-          status: "failed",
-        },
-      });
-
-      throw error;
-    }
-
-    const lastStage = (workflowRunDetails?.workflow.actions.length || 1) - 1;
-    if (lastStage !== stage) {
-      const nextMessage = JSON.stringify({
-        stage: stage + 1,
+    if (workflowRunId) {
+      await processWorkflowMessage(
+        client,
+        redisQueue.getClient(),
         workflowRunId,
-      });
-      await redisClient.lPush(QUEUE_NAME, nextMessage);
+        stage
+      );
+    }
+
+    if (templateId) {
+      await processTemplateMessage(
+        client,
+        redisQueue.getClient(),
+        templateId,
+        stage
+      );
     }
 
     console.log("Processing completed");
@@ -169,17 +65,15 @@ async function processMessage(message: string) {
 
 async function main() {
   try {
-    await redisClient.connect();
-    console.log("Connected to Redis");
-
+    await redisQueue.connect();
+    server.start();
     initHealthCheck();
 
     // start processing messages
     while (true) {
       try {
-        const result = await redisClient.brPop(QUEUE_NAME, 0);
-        if (result) {
-          const message = result.element;
+        const message = await redisQueue.popMessage();
+        if (message) {
           await processMessage(message);
         }
       } catch (error) {
@@ -193,29 +87,13 @@ async function main() {
   }
 }
 
-const server = http.createServer((req, res) => {
-  if (req.url === "/" && req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Worker is running" }));
-  } else {
-    res.writeHead(404, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Not Found" }));
-  }
-});
-
-server.listen(8000, () => {
-  console.log("Worker HTTP server listening on port 8000");
-});
-
 // force shutdown
 process.on("SIGTERM", async () => {
   console.log("Shutting down worker...");
-  await redisClient.quit();
+  await redisQueue.disconnect();
   await client.$disconnect();
-  server.close(() => {
-    console.log("HTTP server closed");
-    process.exit(0);
-  });
+  await server.shutdown();
+  process.exit(0);
 });
 
 process.on("unhandledRejection", (error) => {

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkflowNotFoundError = exports.WorkflowCreateError = exports.WorkflowError = exports.UserNotFoundError = exports.UserAlreadyExistsError = exports.AppError = void 0;
+exports.TemplateNotFoundError = exports.TemplateError = exports.WorkflowNotFoundError = exports.WorkflowCreateError = exports.WorkflowError = exports.UserNotFoundError = exports.UserAlreadyExistsError = exports.AppError = void 0;
 class AppError extends Error {
     constructor(message, statusCode, code) {
         super(message);
@@ -41,3 +41,15 @@ class WorkflowNotFoundError extends WorkflowError {
     }
 }
 exports.WorkflowNotFoundError = WorkflowNotFoundError;
+class TemplateError extends AppError {
+    constructor(message, statusCode, code) {
+        super(message, statusCode, code);
+    }
+}
+exports.TemplateError = TemplateError;
+class TemplateNotFoundError extends TemplateError {
+    constructor(templateId) {
+        super(`Template${templateId ? ` with ID ${templateId}` : "s"} not found`, 404, "TEMPLATE_NOT_FOUND");
+    }
+}
+exports.TemplateNotFoundError = TemplateNotFoundError;
