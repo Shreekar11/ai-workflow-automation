@@ -22,7 +22,7 @@ function processTemplateMessage(client, redisClient, templateId, stage) {
     return __awaiter(this, void 0, void 0, function* () {
         const templateResultData = yield client.templateResult.findFirst({
             where: {
-                templateId,
+                id: templateId,
             },
             include: {
                 template: {
@@ -65,9 +65,11 @@ function processTemplateMessage(client, redisClient, templateId, stage) {
         if (lastStage !== stage) {
             const nextMessage = JSON.stringify({
                 stage: stage + 1,
-                templateId,
+                templateResultId: templateId,
             });
-            yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
+            console.log("Redis data: ", config_1.QUEUE_NAME, nextMessage);
+            const res = yield redisClient.lPush(config_1.QUEUE_NAME, nextMessage);
+            console.log(res);
         }
         console.log("Template actions processing completed");
     });
@@ -124,7 +126,7 @@ function processModelAction(client, currentAction, templateResultData, metadata,
                         id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
                     },
                     data: {
-                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                        metadata: Object.assign(Object.assign({}, metadata), { [`llmmodel_result`]: actionResult }),
                         status: stage === ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
                             ? "completed"
                             : "running",
@@ -136,7 +138,7 @@ function processModelAction(client, currentAction, templateResultData, metadata,
                         actionId: config_1.availableGoogleDocsId,
                     },
                     data: {
-                        metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult, ["scraper_result"]: scraperResult }),
+                        metadata: Object.assign(Object.assign({}, metadata), { [`llmmodel_result`]: actionResult, ["scraper_result"]: scraperResult }),
                     },
                 });
             }));
@@ -145,17 +147,16 @@ function processModelAction(client, currentAction, templateResultData, metadata,
 }
 function processDocsAction(client, currentAction, templateResultData, metadata, stage) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         const templateMetadata = templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.metadata;
-        const scraperResult = (_a = currentAction.metadata) === null || _a === void 0 ? void 0 : _a.scraper_result;
+        const scraperResult = (_a = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _a === void 0 ? void 0 : _a.scraper_result;
         const url = (0, parser_1.parser)(scraperResult.url, templateMetadata);
         const title = (0, parser_1.parser)(scraperResult.title, templateMetadata);
-        const modelResult = (_b = currentAction.metadata) === null || _b === void 0 ? void 0 : _b.llmmodel_result;
+        const modelResult = (_b = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _b === void 0 ? void 0 : _b.llmmodel_result;
         const result = (0, parser_1.parser)(modelResult.result, templateMetadata);
         const model = (0, parser_1.parser)(modelResult.model, templateMetadata);
         const googleDocsId = (0, parser_1.parser)((_c = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _c === void 0 ? void 0 : _c.googleDocsId, templateMetadata);
-        const createNewDoc = (0, parser_1.parser)((_d = currentAction === null || currentAction === void 0 ? void 0 : currentAction.metadata) === null || _d === void 0 ? void 0 : _d.createNewDoc, templateMetadata);
-        const docsService = new docs_service_1.default(url, title, result, model, googleDocsId, createNewDoc);
+        const docsService = new docs_service_1.default(url, title, result, model, googleDocsId);
         const actionResult = yield docsService.googleDocsAction();
         if (actionResult) {
             yield client.templateResult.update({
@@ -163,7 +164,7 @@ function processDocsAction(client, currentAction, templateResultData, metadata, 
                     id: templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.id,
                 },
                 data: {
-                    metadata: Object.assign(Object.assign({}, metadata), { [`${currentAction.type.name.toLowerCase().trim()}_result`]: actionResult }),
+                    metadata: Object.assign(Object.assign({}, metadata), { [`google_docs_result`]: actionResult }),
                     status: stage === ((templateResultData === null || templateResultData === void 0 ? void 0 : templateResultData.template.actions.length) || 1) - 1
                         ? "completed"
                         : "running",

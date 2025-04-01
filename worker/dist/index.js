@@ -47,7 +47,7 @@ function processMessage(message) {
         try {
             const parsedValue = JSON.parse(message);
             const workflowRunId = parsedValue.workflowRunId;
-            const templateId = parsedValue.templateId;
+            const templateId = parsedValue.templateResultId;
             const stage = parsedValue.stage;
             if (workflowRunId) {
                 yield (0, workflow_processor_1.processWorkflowMessage)(client, redisQueue.getClient(), workflowRunId, stage);

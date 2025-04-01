@@ -36,7 +36,7 @@ async function processMessage(message: string) {
   try {
     const parsedValue = JSON.parse(message);
     const workflowRunId = parsedValue.workflowRunId;
-    const templateId = parsedValue.templateId;
+    const templateId = parsedValue.templateResultId;
     const stage = parsedValue.stage;
 
     if (workflowRunId) {
