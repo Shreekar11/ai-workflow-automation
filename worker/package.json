@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.24.0",
     "@prisma/client": "^6.2.0",
     "@types/dotenv": "^8.2.3",
     "@types/node-cron": "^3.0.11",

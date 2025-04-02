@@ -20,7 +20,7 @@ export async function processTemplateMessage(
 ) {
   const templateResultData = await client.templateResult.findFirst({
     where: {
-      templateId,
+      id: templateId,
     },
     include: {
       template: {
@@ -38,7 +38,6 @@ export async function processTemplateMessage(
   const currentAction = templateResultData?.template.actions.find(
     (action) => action.sortingOrder === stage
   );
-
   const metadata = templateResultData?.metadata || {};
 
   try {
@@ -86,12 +85,17 @@ export async function processTemplateMessage(
   }
 
   const lastStage = (templateResultData?.template.actions.length || 1) - 1;
+
   if (lastStage !== stage) {
     const nextMessage = JSON.stringify({
       stage: stage + 1,
-      templateId,
+      templateResultId: templateId,
     });
-    await redisClient.lPush(QUEUE_NAME, nextMessage);
+    console.log("Redis data: ", QUEUE_NAME, nextMessage);
+
+    const res = await redisClient.lPush(QUEUE_NAME, nextMessage);
+
+    console.log(res);
   }
 
   console.log("Template actions processing completed");
@@ -182,8 +186,7 @@ async function processModelAction(
         data: {
           metadata: {
             ...(metadata as object),
-            [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-              actionResult,
+            [`llmmodel_result`]: actionResult,
           },
           status:
             stage === (templateResultData?.template.actions.length || 1) - 1
@@ -200,8 +203,7 @@ async function processModelAction(
         data: {
           metadata: {
             ...(metadata as object),
-            [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-              actionResult,
+            [`llmmodel_result`]: actionResult,
             ["scraper_result"]: scraperResult,
           },
         },
@@ -218,11 +220,11 @@ async function processDocsAction(
   stage: number
 ) {
   const templateMetadata = templateResultData?.metadata;
-  const scraperResult = (currentAction.metadata as JsonObject)
+  const scraperResult = (currentAction?.metadata as JsonObject)
     ?.scraper_result as JsonObject;
   const url = parser(scraperResult.url as string, templateMetadata);
   const title = parser(scraperResult.title as string, templateMetadata);
-  const modelResult = (currentAction.metadata as JsonObject)
+  const modelResult = (currentAction?.metadata as JsonObject)
     ?.llmmodel_result as JsonObject;
   const result = parser(modelResult.result as string, templateMetadata);
   const model = parser(modelResult.model as string, templateMetadata);
@@ -231,18 +233,12 @@ async function processDocsAction(
     templateMetadata
   );
 
-  const createNewDoc = parser(
-    (currentAction?.metadata as JsonObject)?.createNewDoc as string,
-    templateMetadata
-  );
-
   const docsService = new GoogleDocsService(
     url,
     title,
     result,
     model,
-    googleDocsId,
-    createNewDoc
+    googleDocsId
   );
 
   const actionResult = await docsService.googleDocsAction();
@@ -254,8 +250,7 @@ async function processDocsAction(
       data: {
         metadata: {
           ...(metadata as object),
-          [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-            actionResult,
+          [`google_docs_result`]: actionResult,
         },
         status:
           stage === (templateResultData?.template.actions.length || 1) - 1

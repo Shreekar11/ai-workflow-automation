@@ -4,22 +4,19 @@ export default class GoogleDocsService {
   private result: string;
   private model: string;
   private googleDocsId: string;
-  private createNewDoc: string;
-  
+
   constructor(
     url: string,
     title: string,
     result: string,
     model: string,
-    googleDocsId: string,
-    createNewDoc: string
+    googleDocsId: string
   ) {
     this.url = url;
     this.title = title;
     this.result = result;
     this.model = model;
     this.googleDocsId = googleDocsId;
-    this.createNewDoc = createNewDoc;
   }
 
   public async googleDocsAction() {
@@ -33,28 +30,23 @@ export default class GoogleDocsService {
       );
     }
 
-    // for existing doc updates, we need the doc ID
-    if (!this.createNewDoc && !this.googleDocsId) {
-      throw new Error(
-        "Google Doc ID is required when updating an existing document"
-      );
+    if (!this.googleDocsId) {
+      throw new Error("Google Doc ID is required to update the document.");
     }
-
-    console.log(
-      `${this.createNewDoc ? "Creating" : "Updating"} Google Doc${
-        this.googleDocsId ? ": " + this.googleDocsId : ""
-      }`
-    );
 
     try {
       const { google } = require("googleapis");
 
-      // Load credentials from environment or secure storage
       const credentials = JSON.parse(
         process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "{}"
       );
 
-      // Set up authentication with service account
+      if (!credentials.private_key || !credentials.client_email) {
+        throw new Error(
+          "Invalid credentials: Missing private_key or client_email"
+        );
+      }
+
       const auth = new google.auth.GoogleAuth({
         credentials,
         scopes: [
@@ -65,37 +57,17 @@ export default class GoogleDocsService {
 
       const client = await auth.getClient();
       const docs = google.docs({ version: "v1", auth: client });
-      const drive = google.drive({ version: "v3", auth: client });
 
-      let documentId = this.googleDocsId;
+      const documentId = this.googleDocsId;
       let documentUrl = "";
 
-      // format content for the document
-      const formattedDate = new Date().toLocaleString();
-      const documentContent = `# Analysis of ${this.title}
-        
-        Source: ${this.url}
-        Generated: ${formattedDate}
-        
-        ## Summary
-        ${llm_result.result}
-        
-        ---
-        Generated using AI model: ${this.model}
-        `;
+      const documentContent = formatDocumentForGoogleDocs(
+        this.title,
+        this.url,
+        llm_result.result,
+        this.model
+      );
 
-      if (this.createNewDoc) {
-        // Create a new document
-        const createResponse = await docs.documents.create({
-          requestBody: {
-            title: `Analysis of ${this.title}`,
-          },
-        });
-
-        documentId = createResponse.data.documentId;
-      }
-
-      // Insert or update document content
       await docs.documents.batchUpdate({
         documentId,
         requestBody: {
@@ -126,4 +98,76 @@ export default class GoogleDocsService {
       throw new Error(`Failed to write to Google Docs: ${error.message}`);
     }
   }
+}
+
+const formatDocumentForGoogleDocs = function (
+  title: string,
+  url: string,
+  result: any,
+  model: string
+) {
+  const formattedDate = new Date().toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  const firstParagraph = result.split("\n\n")[0];
+
+  const cleanTitle = title.trim();
+
+  const documentContent = `# Content Analysis: ${cleanTitle}
+
+## Document Information
+* **Source URL:** ${url}
+* **Generated On:** ${formattedDate}
+* **Analysis Model:** ${model}
+
+## Executive Summary
+${firstParagraph}
+
+## Detailed Analysis
+${result}
+
+## Key Insights
+${extractKeyInsights(result)}
+
+---
+*This document was automatically generated using AI content analysis. The analysis is intended to provide an objective summary of the original content.*
+`;
+
+  return documentContent;
+};
+
+function extractKeyInsights(analysisText: any) {
+  const lines = analysisText.split("\n");
+  const keyPoints = [];
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (
+      (trimmedLine.startsWith("##") ||
+        trimmedLine.startsWith("*") ||
+        trimmedLine.startsWith("-") ||
+        /^\d+\./.test(trimmedLine)) &&
+      trimmedLine.length > 3
+    ) {
+      const cleanPoint = trimmedLine
+        .replace(/^##\s+/, "")
+        .replace(/^\*\s+/, "• ")
+        .replace(/^-\s+/, "• ")
+        .replace(/^\d+\.\s+/, "• ");
+
+      keyPoints.push(cleanPoint);
+    }
+  }
+
+  if (keyPoints.length < 2) {
+    return "The key insights from this content include the main topics covered, supporting evidence presented, and conclusions drawn. Review the detailed analysis section for comprehensive information.";
+  }
+
+  return keyPoints.slice(0, 5).join("\n");
 }

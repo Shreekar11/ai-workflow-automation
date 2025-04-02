@@ -56,7 +56,7 @@ export default class TemplateController {
 
       const template = await this.templateService.createTemplate(
         userData,
-        parsedData.data
+        parsedData
       );
 
       return res.status(HTTPStatus.CREATED).json({
@@ -79,7 +79,7 @@ export default class TemplateController {
     const user = req.user;
     try {
       const userData = await this.userService.fetchUserByClerkId(user.id);
-      const templates = await this.templateService.fetchAllWorkflows(userData);
+      const templates = await this.templateService.fetchAllTemplates(userData);
       return res.status(HTTPStatus.OK).json({
         status: true,
         message: "Templates retrieved successfully!",
