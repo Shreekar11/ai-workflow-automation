@@ -171,3 +171,15 @@ export interface ActionType {
   metadata: Record<string, string>;
   triggerMetadata?: Record<string, string>;
 }
+
+export interface PreTemplateType {
+  id?: string;
+  name: string;
+  description: string;
+  availableTemplateActions: TemplateAction[];
+}
+
+export interface TemplateAction {
+  name: string;
+  image: string;
+}

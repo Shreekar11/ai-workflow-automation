@@ -2,12 +2,13 @@ import { useToken } from "./useToken";
 import { useUser } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import { getAllTemplates } from "../actions/template.action";
+import { PreTemplateType } from "@/types";
 
 interface UseTemplatesReturn {
-  templates: any[];
+  templates: PreTemplateType[];
   isLoading: boolean;
   error: Error | null;
-  setTemplates: React.Dispatch<React.SetStateAction<any[]>>;
+  setTemplates: React.Dispatch<React.SetStateAction<PreTemplateType[]>>;
 }
 
 export function useTemplates(): UseTemplatesReturn {
@@ -15,7 +16,7 @@ export function useTemplates(): UseTemplatesReturn {
   const { isLoading: isTokenLoading, token, sessionId } = useToken();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<PreTemplateType[]>([]);
 
   const fetchTemplates = useCallback(async () => {
     setError(null);

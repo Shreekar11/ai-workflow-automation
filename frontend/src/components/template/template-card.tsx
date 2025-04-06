@@ -41,6 +41,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import WorkflowNode from "./workflow-node";
+import { PreTemplateType } from "@/types";
 
 const iconMap = {
   brain: Brain,
@@ -65,7 +66,11 @@ const iconMap = {
   users: Users,
 };
 
-export default function TemplateCard({ template }: any) {
+export default function TemplateCard({
+  template,
+}: {
+  template: PreTemplateType;
+}) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
