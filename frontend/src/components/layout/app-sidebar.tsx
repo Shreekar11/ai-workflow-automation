@@ -55,7 +55,7 @@ export function AppSidebar() {
                     asChild
                     className={`py-5 ${
                       pathName === item.url &&
-                      "bg-gray-200 text-gray-900 hover:bg-gray-200"
+                      "bg-[#FF7801]/10 text-gray-900"
                     }`}
                   >
                     <a href={item.url}>
