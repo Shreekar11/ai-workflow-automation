@@ -31,6 +31,7 @@ export default function ActionNode({
     label: string;
     selectedOption?: {
       name: string;
+      image: string;
       metadata: any;
     };
     onActionTypeChange?: (
@@ -43,6 +44,7 @@ export default function ActionNode({
       metadata: Record<string, any>
     ) => void;
     nodeId: string;
+    workflowId: string;
   };
 }) {
   // Fetch the available Triggers to show in the Select Component
@@ -291,31 +293,44 @@ export default function ActionNode({
       <CardContent className="pt-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Select onValueChange={handleActionChange} value={actionType}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    loading ? "Loading actions..." : "Select action type"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTriggerActions.map((action) => (
-                  <SelectItem key={action.id} value={action.id}>
-                    <div className="flex items-center gap-2">
-                      {action.image && (
-                        <img
-                          src={action.image}
-                          alt={action.name}
-                          className="h-4 w-4 object-contain"
-                        />
-                      )}
-                      {action.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {data.workflowId ? (
+              <div className="border rounded-lg px-2 py-1 shadow-sm flex items-center gap-2">
+                {data.selectedOption?.image && (
+                  <img
+                    src={data.selectedOption?.image}
+                    alt={data.selectedOption?.name}
+                    className="h-4 w-4 object-contain"
+                  />
+                )}
+                {data.selectedOption?.name}
+              </div>
+            ) : (
+              <Select onValueChange={handleActionChange} value={actionType}>
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      loading ? "Loading actions..." : "Select action type"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTriggerActions.map((action) => (
+                    <SelectItem key={action.id} value={action.id}>
+                      <div className="flex items-center gap-2">
+                        {action.image && (
+                          <img
+                            src={action.image}
+                            alt={action.name}
+                            className="h-4 w-4 object-contain"
+                          />
+                        )}
+                        {action.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {actionType && selectedAction && (

@@ -98,7 +98,7 @@ export const createInitialNodes = (
     {
       id: "trigger",
       type: "trigger",
-      position: { x: 600, y: 100 },
+      position: { x: 600, y: 50 },
       data: {
         label: "Trigger",
         selectedOption: {
@@ -123,6 +123,7 @@ export const createInitialNodes = (
             metadata: metadata,
           }));
         },
+        workflowId: workflow.workflow.id,
       },
     },
   ];
@@ -132,7 +133,7 @@ export const createInitialNodes = (
     nodes.push({
       id: nodeId,
       type: "action",
-      position: { x: 600, y: 350 + index * 250 },
+      position: { x: 600, y: 450 + index * 250 },
       data: {
         label: `Action ${index + 1}`,
         nodeId: nodeId,
@@ -140,6 +141,7 @@ export const createInitialNodes = (
           icon: action.type.name === "Email" ? <Mail /> : <FileSpreadsheet />,
           metadata: action.metadata || {},
           name: action.type.name || "",
+          image: action.type.image,
         },
         onActionTypeChange: (
           actionId: string,
@@ -182,6 +184,7 @@ export const createInitialNodes = (
             }
           });
         },
+        workflowId: workflow.workflow.id,
       },
     });
   });

@@ -27,6 +27,7 @@ export interface Workflow {
       type: {
         id: string;
         name: string;
+        image: string;
       };
     }[];
     trigger: {

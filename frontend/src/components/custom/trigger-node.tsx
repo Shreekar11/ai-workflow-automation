@@ -35,6 +35,7 @@ interface TriggerNodeProps {
       metadata: Record<string, any>
     ) => void;
     onMetadataChange?: (metadata: Record<string, any>) => void;
+    workflowId: string;
   };
 }
 
@@ -88,7 +89,9 @@ export default function TriggerNode({ data }: TriggerNodeProps) {
     if (trigger && trigger.name === "Webhook") {
       // Example webhook metadata
       newMetadata = {
-        URL: `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks`,
+        URL: `${process.env.NEXT_PUBLIC_WEBHOOK_URL}/hooks/${
+          data.workflowId ? data.workflowId : ""
+        }`,
         Method: "POST",
         Headers: "Content-Type: application/json",
       };
@@ -144,33 +147,40 @@ export default function TriggerNode({ data }: TriggerNodeProps) {
       <CardContent className="pt-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Select onValueChange={handleTriggerChange} value={triggerType}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    loading ? "Loading triggers..." : "Select trigger type"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTriggerActions.map((trigger) => (
-                  <SelectItem key={trigger.id} value={trigger.id}>
-                    <div className="flex items-center gap-2">
-                      {trigger.image && trigger.name !== "Webhook" ? (
-                        <img
-                          src={trigger.image}
-                          alt={trigger.name}
-                          className="h-4 w-4 object-contain"
-                        />
-                      ) : (
-                        <Webhook size={15} />
-                      )}
-                      {trigger.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {data.workflowId ? (
+              <div className="border rounded-lg px-2 py-1 shadow-sm flex items-center gap-2">
+                {data.selectedOption?.name === "Webhook" && <Webhook />}
+                {data.selectedOption?.name}
+              </div>
+            ) : (
+              <Select onValueChange={handleTriggerChange} value={triggerType}>
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      loading ? "Loading triggers..." : "Select trigger type"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTriggerActions.map((trigger) => (
+                    <SelectItem key={trigger.id} value={trigger.id}>
+                      <div className="flex items-center gap-2">
+                        {trigger.image && trigger.name !== "Webhook" ? (
+                          <img
+                            src={trigger.image}
+                            alt={trigger.name}
+                            className="h-4 w-4 object-contain"
+                          />
+                        ) : (
+                          <Webhook size={15} />
+                        )}
+                        {trigger.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {triggerType && selectedTrigger && (
