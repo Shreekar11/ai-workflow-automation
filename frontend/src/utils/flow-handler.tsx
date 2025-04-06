@@ -1,8 +1,8 @@
+import { Edge, Node } from "reactflow";
 import { ActionType, TriggerType, Workflow } from "@/types";
 import { FileSpreadsheet, Mail, Webhook } from "lucide-react";
-import { Edge, Node } from "reactflow";
 
-// Helper function to handle callback function for updating Nodes data betweeb components and creating Nodes
+// Helper function to handle callback function for updating Nodes data between components and creating Nodes
 export const createInitialNodes = (
   workflow: Workflow | null | undefined,
   setFinalTrigger: React.Dispatch<React.SetStateAction<TriggerType>>,
@@ -56,23 +56,44 @@ export const createInitialNodes = (
 
             setSelectActions([newAction]);
           },
-          onMetadataChange: (
-            actionId: string,
-            metadata: Record<string, any>
-          ) => {
-            setSelectActions([
-              {
-                id: actionId,
-                name: selectActions[0]?.name || "",
-                metadata: metadata,
-              },
-            ]);
+          onMetadataChange: (nodeId: string, metadata: Record<string, any>) => {
+            console.log(`Updating metadata for node ${nodeId}:`, metadata);
+
+            const actionIndex = parseInt(nodeId.replace("action", "")) - 1;
+
+            // Get the current actions array to avoid stale state
+            setSelectActions((currentActions) => {
+              if (currentActions.length === 0) {
+                return [
+                  {
+                    id: "",
+                    name: "",
+                    metadata: metadata,
+                  },
+                ];
+              }
+
+              if (actionIndex >= 0 && actionIndex < currentActions.length) {
+                const newActions = [...currentActions];
+                newActions[actionIndex] = {
+                  ...newActions[actionIndex],
+                  metadata: metadata,
+                };
+                return newActions;
+              } else {
+                console.error(
+                  `Invalid action index: ${actionIndex} for nodeId: ${nodeId}`
+                );
+                return currentActions;
+              }
+            });
           },
         },
       },
     ];
   }
 
+  // Initialize with workflow data
   const nodes: Node[] = [
     {
       id: "trigger",
@@ -82,7 +103,7 @@ export const createInitialNodes = (
         label: "Trigger",
         selectedOption: {
           icon: <Webhook />,
-          metadata: workflow.workflow.trigger.metadata,
+          metadata: workflow.workflow.trigger.metadata || {},
           name: workflow.workflow.trigger.type.name,
         },
         onTriggerTypeChange: (
@@ -125,33 +146,41 @@ export const createInitialNodes = (
           actionName: string,
           metadata: Record<string, any>
         ) => {
-          const newActions = [...selectActions];
-          const newAction = {
-            id: actionId,
-            name: actionName,
-            metadata: metadata || {},
-          };
-
-          const nodeIndex = index;
-          if (nodeIndex < newActions.length) {
-            newActions[nodeIndex] = newAction;
-          } else {
-            newActions.push(newAction);
-          }
-
-          setSelectActions(newActions);
-        },
-        onMetadataChange: (actionId: string, metadata: Record<string, any>) => {
-          const newActions = [...selectActions];
-          const nodeIndex = index;
-
-          if (nodeIndex < newActions.length) {
-            newActions[nodeIndex] = {
-              ...newActions[nodeIndex],
-              metadata: metadata,
+          setSelectActions((currentActions) => {
+            const newActions = [...currentActions];
+            const newAction = {
+              id: actionId,
+              name: actionName,
+              metadata: metadata || {},
             };
-            setSelectActions(newActions);
-          }
+
+            if (index < newActions.length) {
+              newActions[index] = newAction;
+            } else {
+              newActions.push(newAction);
+            }
+
+            return newActions;
+          });
+        },
+        onMetadataChange: (nodeId: string, metadata: Record<string, any>) => {
+          const actionIndex = parseInt(nodeId.replace("action", "")) - 1;
+
+          setSelectActions((currentActions) => {
+            if (actionIndex >= 0 && actionIndex < currentActions.length) {
+              const newActions = [...currentActions];
+              newActions[actionIndex] = {
+                ...newActions[actionIndex],
+                metadata: metadata,
+              };
+              return newActions;
+            } else {
+              console.error(
+                `Invalid action index: ${actionIndex} for nodeId: ${nodeId}`
+              );
+              return currentActions;
+            }
+          });
         },
       },
     });

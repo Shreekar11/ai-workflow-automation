@@ -69,17 +69,10 @@ export default function ActionNode({
       }
 
       if (data.selectedOption.metadata) {
-        const metadataObject = Object.fromEntries(
-          Object.entries(data.selectedOption.metadata).filter(
-            ([key, value]) => key && value
-          )
+        const metadataObject = JSON.parse(
+          JSON.stringify(data.selectedOption.metadata)
         );
         setMetadata(metadataObject);
-
-        // Update parent if callbacks exist
-        if (data.onMetadataChange && action) {
-          data.onMetadataChange(action.id, metadataObject);
-        }
       }
     }
   }, [data.selectedOption, availableTriggerActions]);
@@ -108,7 +101,7 @@ export default function ActionNode({
 
     // Send data back to parent component
     if (data.onMetadataChange) {
-      data.onMetadataChange(actionType, updatedMetadata);
+      data.onMetadataChange(data.nodeId, updatedMetadata);
     }
   };
 

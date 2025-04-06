@@ -73,14 +73,33 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
   // Initialize nodes and edges when component loads or workflow changes
   useEffect(() => {
-    setNodes(
-      createInitialNodes(
-        workflow,
-        setFinalTrigger,
-        selectActions,
-        setSelectActions
-      )
+    const initialName = workflow?.workflow.name;
+
+    const initialTrigger = {
+      id: workflow?.workflow.triggerId || "",
+      name: workflow?.workflow.trigger.type.name || "",
+      metadata: workflow?.workflow.trigger.metadata || {},
+    };
+
+    const initialActions =
+      workflow?.workflow.actions.map((ax) => ({
+        id: ax.type.id,
+        name: ax.type.name,
+        metadata: ax.metadata,
+      })) || [];
+
+    setWorkflowName(initialName || "Untitled Workflow");
+    setFinalTrigger(initialTrigger);
+    setSelectActions(initialActions);
+
+    const initialNodes = createInitialNodes(
+      workflow,
+      setFinalTrigger,
+      initialActions,
+      setSelectActions
     );
+
+    setNodes(initialNodes);
     setEdges(createInitialEdges(workflow));
   }, [workflow, setNodes, setEdges]);
 
