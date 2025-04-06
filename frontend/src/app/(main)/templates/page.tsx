@@ -80,7 +80,7 @@ export default function TemplatesPage() {
       <div className="mt-12 bg-muted rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-2">Need a custom workflow?</h2>
         <p className="text-muted-foreground mb-4">
-          Can't find what you're looking for? Create a custom workflow from
+          Can&apos;t find what you&apos;re looking for? Create a custom workflow from
           scratch or request a template.
         </p>
         <div className="flex flex-wrap gap-4">
