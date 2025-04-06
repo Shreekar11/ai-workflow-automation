@@ -7,6 +7,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -40,11 +41,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarContent>
+      <SidebarHeader className="text-2xl font-bold text-gray-900 py-4 border-b">
+        Dashboard
+      </SidebarHeader>
+      <SidebarContent className="mt-10">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-2xl font-bold text-gray-900 py-8">
-            Dashboard
-          </SidebarGroupLabel>
+        <div className="text-sm py-4">MAIN MENU</div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

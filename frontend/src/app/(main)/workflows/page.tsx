@@ -35,7 +35,7 @@ const WorkflowPage = () => {
   }, [workflows, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
+    <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
       <main className="container px-4 sm:pr-10 sm:px-6 lg:px-8 lg:pr-12 py-8">
         <div className="mb-8 flex justify-between items-center">
           <div>
