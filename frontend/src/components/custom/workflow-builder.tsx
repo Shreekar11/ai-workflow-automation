@@ -10,6 +10,7 @@ import { ActionType, TriggerType, Workflow } from "@/types";
 import { createInitialEdges, createInitialNodes } from "@/utils/flow-handler";
 import { publishWorkflow, updateWorkflow } from "@/lib/actions/workflow.action";
 
+// react-flow components
 import ReactFlow, {
   Node,
   Edge,
@@ -25,10 +26,9 @@ import "reactflow/dist/style.css";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { ArrowLeft } from "lucide-react";
 import { PulsatingButton } from "../ui/pulsating-button";
-import { ArrowLeft, FileSpreadsheet, Mail, Webhook } from "lucide-react";
 
-import NodeCard from "./node-card";
 import ActionNode from "./action-node";
 import TriggerNode from "./trigger-node";
 import AddActionButton from "./add-action-button";
@@ -48,57 +48,40 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
   const { token, sessionId } = useToken();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    createInitialNodes(workflow)
-  );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
-    createInitialEdges(workflow)
-  );
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [workflowName, setWorkflowName] = useState(
     workflow?.workflow?.name || "Untitled Workflow"
   );
 
-  const [selectTrigger, setSelectTrigger] = useState<TriggerType>({
-    id: workflow?.workflow?.triggerId || "",
-    name: workflow?.workflow?.trigger?.type?.name || "",
-    metadata: {},
-  });
-
-  const [actionData, setActionData] = useState<ActionType[]>([]);
-  const [selectActions, setSelectActions] = useState<ActionType[]>(
-    actionData || []
-  );
-
+  // State for trigger and actions
   const [finalTrigger, setFinalTrigger] = useState<TriggerType>({
     id: workflow?.workflow?.triggerId || "",
     name: workflow?.workflow?.trigger?.type?.name || "",
-    metadata: {},
+    metadata: workflow?.workflow?.trigger?.metadata || {},
   });
 
+  const [selectActions, setSelectActions] = useState<ActionType[]>(
+    workflow?.workflow?.actions.map((ax) => ({
+      id: ax.type.id,
+      name: ax.type.name,
+      metadata: ax.metadata,
+    })) || []
+  );
+
+  // Initialize nodes and edges with the state-updating callbacks
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // Initialize nodes and edges when component loads or workflow changes
   useEffect(() => {
-    if (workflow) {
-      setNodes(createInitialNodes(workflow));
-      setEdges(createInitialEdges(workflow));
-      setWorkflowName(workflow.workflow.name);
-      const trigger_data = {
-        id: workflow.workflow.trigger.type.id,
-        name: workflow.workflow.trigger.type.name,
-        metadata: workflow.workflow.trigger.metadata,
-      };
-      setSelectTrigger(trigger_data);
-      setFinalTrigger(trigger_data);
-      const action_data = workflow.workflow.actions.map((ax) => {
-        return {
-          id: ax.type.id,
-          name: ax.type.name,
-          metadata: ax.metadata,
-          triggerMetadata: workflow.workflow.trigger.metadata,
-        };
-      });
-      setActionData(action_data);
-      setSelectActions(action_data);
-    }
+    setNodes(
+      createInitialNodes(
+        workflow,
+        setFinalTrigger,
+        selectActions,
+        setSelectActions
+      )
+    );
+    setEdges(createInitialEdges(workflow));
   }, [workflow, setNodes, setEdges]);
 
   const onConnect = useCallback(
@@ -110,14 +93,55 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     const newActionId = `action${nodes.length}`;
     const lastActionNode = nodes[nodes.length - 1];
 
+    // Create new action node with callbacks
     const newActionNode: Node = {
       id: newActionId,
       type: "action",
       position: {
         x: lastActionNode.position.x,
-        y: lastActionNode.position.y + 250,
+        y: lastActionNode.position.y + 550,
       },
-      data: { label: `Action ${nodes.length}` },
+      data: {
+        label: `Action ${nodes.length}`,
+        nodeId: newActionId,
+        onActionTypeChange: (
+          actionId: string,
+          actionName: string,
+          metadata: Record<string, any>
+        ) => {
+          const newActions = [...selectActions];
+          const newAction = {
+            id: actionId,
+            name: actionName,
+            metadata: metadata || {},
+          };
+
+          // Add as a new action
+          newActions.push(newAction);
+          setSelectActions(newActions);
+        },
+        onMetadataChange: (actionId: string, metadata: Record<string, any>) => {
+          const newActions = [...selectActions];
+          // Find the index of this action by nodeId (can be different from the array index)
+          const actionIndex = newActions.findIndex((a) => a.id === actionId);
+
+          if (actionIndex >= 0) {
+            newActions[actionIndex] = {
+              ...newActions[actionIndex],
+              metadata: metadata,
+            };
+          } else {
+            // If not found, might be a new action
+            newActions.push({
+              id: actionId,
+              name: "", // We don't know the name yet
+              metadata: metadata,
+            });
+          }
+
+          setSelectActions(newActions);
+        },
+      },
     };
 
     setNodes((items) => [...items, newActionNode]);
@@ -130,108 +154,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         animated: true,
       },
     ]);
-  }, [nodes, setNodes, setEdges]);
+  }, [nodes, setNodes, setEdges, selectActions, finalTrigger]);
 
-  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
-
-  const handleCloseSheet = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
-  const handleSelectOption = useCallback(
-    (option: {
-      id: string;
-      type: string;
-      name: string;
-      metadata: Record<string, string>;
-      data: Record<string, string>;
-    }) => {
-      if (!selectedNode) {
-        handleCloseSheet();
-        return;
-      }
-
-      const nodeNumber = selectedNode
-        ? parseInt(selectedNode.id.substring(6, 7))
-        : 0;
-
-      if (option.type === "action") {
-        const newAction = {
-          id: option.id,
-          name: option.name,
-          metadata: option.metadata,
-        };
-
-        if (workflow && selectActions.length >= nodeNumber) {
-          const isExistingAction =
-            selectActions[nodeNumber - 1].name === option.name;
-
-          if (isExistingAction) {
-            setSelectActions((prevActions) => [
-              ...prevActions.filter((action) => action.id !== option.id),
-              newAction,
-            ]);
-          } else {
-            setSelectActions((prevActions) =>
-              prevActions.map((action, index) =>
-                index === nodeNumber - 1 ? newAction : action
-              )
-            );
-          }
-        } else {
-          setSelectActions((prevActions) => [...prevActions, newAction]);
-        }
-      } else {
-        setSelectTrigger({
-          id: option.id,
-          name: option.name,
-          metadata: option.metadata,
-        });
-        setFinalTrigger({
-          id: option.id,
-          name: option.name,
-          metadata: option.metadata,
-        });
-      }
-
-      setNodes((items) =>
-        items.map((node) =>
-          node.id === selectedNode.id
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  selectedOption: {
-                    icon:
-                      option.name === "Webhook" ? (
-                        <Webhook />
-                      ) : option.name === "Email" ? (
-                        <Mail />
-                      ) : (
-                        <FileSpreadsheet />
-                      ),
-                    name: option.name,
-                    metadata: option.metadata,
-                    triggerMetadata:
-                      option.data || workflow?.workflow?.trigger.metadata,
-                  },
-                },
-              }
-            : node
-        )
-      );
-
-      handleCloseSheet();
-    },
-    [selectedNode, setNodes, workflow, selectActions]
-  );
-
+  // Handle workflow publishing
   const handlePublishWorkflow = async () => {
     const { id, name, metadata } = finalTrigger;
 
-    if (!id || !name || !metadata) {
+    if (!id || !name) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
@@ -250,43 +179,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
 
     setIsLoading(true);
 
-    const filteredActions = selectActions.map((action) => ({
-      ...action,
-      metadata: Object.fromEntries(
-        Object.entries(action.metadata)
-          .filter(([_, value]) => value !== "")
-          .map(([actionKey, actionValue]) => {
-            if (
-              typeof actionValue === "string" &&
-              actionValue.match(/{data\.[^}]+}/)
-            ) {
-              const match = actionValue.match(/{data\.([^}]+)}/);
-              if (match) {
-                const oldKey = match[1];
-
-                if (finalTrigger.metadata && oldKey in finalTrigger.metadata) {
-                  return [
-                    actionKey,
-                    actionValue.replace(
-                      `{data.${oldKey}}`,
-                      `{data.${actionKey}}`
-                    ),
-                  ];
-                }
-              }
-            }
-            return [actionKey, actionValue];
-          })
-      ),
-    }));
-
     try {
       let response;
 
       response = workflow
         ? await updateWorkflow(
             workflow.workflow.id,
-            filteredActions,
+            selectActions,
             finalTrigger,
             workflowName,
             user?.id || "",
@@ -294,7 +193,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
             sessionId || ""
           )
         : await publishWorkflow(
-            filteredActions,
+            selectActions,
             finalTrigger,
             workflowName,
             user?.id || "",
@@ -335,6 +234,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
     }
   };
 
+  // Handle workflow running
   const handleRunWorkflow = async () => {
     // combine all the metadata from actions
     const actionMetadata = selectActions.reduce((acc, action) => {
@@ -464,26 +364,10 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeClick={handleNodeClick}
           nodeTypes={nodeTypes}
         >
           <Controls />
           <Background variant={"dots" as BackgroundVariant} gap={20} size={1} />
-          {!!selectedNode && (
-            <div className="absolute top-10 right-32 h-full w-96 z-10">
-              <NodeCard
-                workflow={workflow || null}
-                selectTrigger={selectTrigger}
-                setSelectTrigger={setSelectTrigger}
-                finalTrigger={finalTrigger}
-                setFinalTrigger={setFinalTrigger}
-                isOpen={!!selectedNode}
-                onClose={handleCloseSheet}
-                onSelect={handleSelectOption}
-                type={selectedNode?.type as "trigger" | "action"}
-              />
-            </div>
-          )}
         </ReactFlow>
       </div>
     </div>
