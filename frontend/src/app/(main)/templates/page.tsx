@@ -7,38 +7,41 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TemplateCard from "@/components/template/template-card";
+import { useTemplates } from "@/lib/hooks/useTemplates";
 
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const templates = [
-    {
-      id: "blog-scraper",
-      title: "Blog Scraper to Google Docs",
-      description:
-        "Scrape content from any blog URL, summarize it with AI, and save it to Google Docs automatically.",
-      nodes: [
-        { type: "input", name: "URL Input", icon: "link" },
-        { type: "ai", name: "LLM Model", icon: "brain" },
-        { type: "output", name: "Google Docs", icon: "file-text" },
-      ],
-    },
-    {
-      id: "company-scraper",
-      title: "Linkedin Company Page Scraper",
-      description:
-        "Get any company details using this template. Just add the company Linkedin page url and get the info automatically",
-      nodes: [
-        { type: "input", name: "Linkedin company url", icon: "link" },
-        { type: "ai", name: "Content Generator", icon: "brain" },
-        { type: "output", name: "Google Docs", icon: "file-text" },
-      ],
-    },
-  ];
+  const { isLoading, error, templates } = useTemplates();
+
+  // const templates = [
+  //   {
+  //     id: "blog-scraper",
+  //     title: "Blog Scraper to Google Docs",
+  //     description:
+  //       "Scrape content from any blog URL, summarize it with AI, and save it to Google Docs automatically.",
+  //     nodes: [
+  //       { type: "input", name: "URL Input", icon: "link" },
+  //       { type: "ai", name: "LLM Model", icon: "brain" },
+  //       { type: "output", name: "Google Docs", icon: "file-text" },
+  //     ],
+  //   },
+  //   {
+  //     id: "company-scraper",
+  //     title: "Linkedin Company Page Scraper",
+  //     description:
+  //       "Get any company details using this template. Just add the company Linkedin page url and get the info automatically",
+  //     nodes: [
+  //       { type: "input", name: "Linkedin company url", icon: "link" },
+  //       { type: "ai", name: "Content Generator", icon: "brain" },
+  //       { type: "output", name: "Google Docs", icon: "file-text" },
+  //     ],
+  //   },
+  // ];
 
   const filteredTemplates = templates.filter(
     (template) =>
-      template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -69,7 +72,7 @@ export default function TemplatesPage() {
       </div>
 
       {filteredTemplates.length === 0 && (
-        <div className="text-center py-12">
+        <div className="w-full text-center py-12">
           <h3 className="text-lg font-medium">No templates found</h3>
           <p className="text-muted-foreground mt-2">
             Try adjusting your search query
@@ -80,8 +83,8 @@ export default function TemplatesPage() {
       <div className="mt-12 bg-muted rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-2">Need a custom workflow?</h2>
         <p className="text-muted-foreground mb-4">
-          Can&apos;t find what you&apos;re looking for? Create a custom workflow from
-          scratch or request a template.
+          Can&apos;t find what you&apos;re looking for? Create a custom workflow
+          from scratch or request a template.
         </p>
         <div className="flex flex-wrap gap-4">
           <Button

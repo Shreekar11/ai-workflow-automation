@@ -25,7 +25,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -77,7 +76,7 @@ export default function TemplateCard({ template }: any) {
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{template.title}</CardTitle>
+          <CardTitle className="text-xl">{template.name}</CardTitle>
         </div>
         <CardDescription>{template.description}</CardDescription>
       </CardHeader>
@@ -85,31 +84,39 @@ export default function TemplateCard({ template }: any) {
         <div className="relative py-4">
           <div className="absolute top-[40%] left-0 right-0 h-0.5 bg-muted-foreground/20" />
           <div className="relative flex justify-between">
-            {template.nodes.map((node: any, index: number) => (
-              <TooltipProvider key={index}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="z-10">
-                      <WorkflowNode
-                        node={node}
-                        index={index}
-                        isLast={index === template.nodes.length - 1}
-                        iconMap={iconMap}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{node.name}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
+            {template.availableTemplateActions.map(
+              (node: any, index: number) => (
+                <TooltipProvider key={index}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="z-10">
+                        <WorkflowNode
+                          node={node}
+                          index={index}
+                          isLast={
+                            index ===
+                            template.availableTemplateActions.length - 1
+                          }
+                          iconMap={iconMap}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{node.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            )}
           </div>
         </div>
       </CardContent>
       <CardFooter className="pt-2">
-        <Button className="w-full bg-[#FF7801] text-white hover:bg-[#FF7801]/90" asChild>
-          <Link href={`/templates/${template.id}`}>Use This Template</Link>
+        <Button
+          className="w-full bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
+          asChild
+        >
+          <Link href={`/templates/${template.id}`}>View This Template</Link>
         </Button>
       </CardFooter>
     </Card>
