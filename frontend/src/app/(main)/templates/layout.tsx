@@ -12,5 +12,5 @@ export default function TemplateLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <main>{children}</main>;
+  return <main className="w-full">{children}</main>;
 }

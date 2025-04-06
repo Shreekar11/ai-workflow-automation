@@ -13,5 +13,5 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <main>{children}</main>;
+  return <main className="w-full">{children}</main>;
 }

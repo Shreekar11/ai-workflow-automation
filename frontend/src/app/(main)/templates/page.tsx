@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TemplateCard from "@/components/template/template-card";
 import { useTemplates } from "@/lib/hooks/useTemplates";
+import TemplateSkeleton from "@/components/template/template-skeleton";
 
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,6 +45,10 @@ export default function TemplatesPage() {
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (isLoading) {
+    return <TemplateSkeleton />;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
