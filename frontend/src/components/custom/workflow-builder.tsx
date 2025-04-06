@@ -118,7 +118,9 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
       type: "action",
       position: {
         x: lastActionNode.position.x,
-        y: lastActionNode.position.y + 550,
+        y: workflow?.workflow
+          ? lastActionNode.position.y + 650
+          : lastActionNode.position.y + 350,
       },
       data: {
         label: `Action ${nodes.length}`,

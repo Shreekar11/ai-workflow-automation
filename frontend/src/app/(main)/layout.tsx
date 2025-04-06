@@ -11,12 +11,6 @@ const everett = localFont({
   style: "normal",
 });
 
-export const metadata: Metadata = {
-  title: "Workflow Dashboard - View your workflows and templates",
-  description:
-    "Unlock seamless productivity with workflow automation platform. Streamline complex processes, reduce manual tasks, and boost team efficiency across all business operations.",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{

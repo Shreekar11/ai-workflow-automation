@@ -46,7 +46,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="mt-10">
         <SidebarGroup>
-        <div className="text-sm py-4">MAIN MENU</div>
+          <div className="text-sm py-4">MAIN MENU</div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -55,7 +55,7 @@ export function AppSidebar() {
                     asChild
                     className={`py-5 ${
                       pathName === item.url &&
-                      "bg-[#FF7801]/10 text-gray-900"
+                      "hover:bg-[#FF7801]/10 bg-[#FF7801]/10 text-gray-900"
                     }`}
                   >
                     <a href={item.url}>
