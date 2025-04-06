@@ -29,8 +29,8 @@ import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PulsatingButton } from "../ui/pulsating-button";
 
-import ActionNode from "./action-node";
-import TriggerNode from "./trigger-node";
+import ActionNode from "../node/action-node";
+import TriggerNode from "../node/trigger-node";
 import AddActionButton from "./add-action-button";
 
 interface WorkflowBuilderProps {
