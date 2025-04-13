@@ -94,7 +94,27 @@ export default class TemplateController {
     }
   }
 
-  @POST("/api/v1/template/:id")
+  @GET("/api/v1/template/:id")
+  public async getUserTemplateById(req: Request, res: Response) {
+    await AuthMiddleware.verifyToken(req, res, () => {});
+    const { id } = req.params;
+    try {
+      const template = await this.templateService.fetchTemplateById(id);
+      return res.status(HTTPStatus.OK).json({
+        status: true,
+        message: "Template retrieved successfully!",
+        data: template,
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+      return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+        status: false,
+        message: "Failed to fetch template",
+      });
+    }
+  }
+
+  @POST("/api/v1/template/run/:id")
   public async templateRunFunction(req: Request, res: Response) {
     await AuthMiddleware.verifyToken(req, res, () => {});
     const { body } = req;

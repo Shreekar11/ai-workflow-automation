@@ -63,7 +63,7 @@ export default class TemplateService {
     }
   }
 
-  public async fetchAllTemplates(user: User) {
+  public async fetchAllTemplates(user: any) {
     try {
       const templates = await this.templateRepo.getAllUserTemplates(user.id);
 
@@ -82,6 +82,29 @@ export default class TemplateService {
         "Failed to fetch templates",
         500,
         "TEMPLATES_FETCH_ERROR"
+      );
+    }
+  }
+
+  public async fetchTemplateById(id: string) {
+    try {
+      const template = await this.templateRepo.getUserTemplateById(id);
+
+      if (!template) {
+        throw new TemplateNotFoundError();
+      }
+
+      return template;
+    } catch (error) {
+      if (error instanceof TemplateError) {
+        throw error;
+      }
+
+      console.error("Error fetching template:", error);
+      throw new AppError(
+        "Failed to fetch template",
+        500,
+        "TEMPLATE_FETCH_ERROR"
       );
     }
   }
