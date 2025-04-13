@@ -180,6 +180,8 @@ export interface PreTemplateType {
 }
 
 export interface TemplateAction {
+  id: string;
+  preTemplateId: string;
   name: string;
   image: string;
 }
