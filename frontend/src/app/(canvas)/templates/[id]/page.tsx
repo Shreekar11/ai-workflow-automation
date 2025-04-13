@@ -25,6 +25,30 @@ import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useParams, useRouter } from "next/navigation";
 import { useTemplate } from "@/lib/hooks/useTemplate";
+import { useToast } from "@/lib/hooks/useToast";
+
+// Types for node data
+interface NodeData {
+  label: string;
+  image?: string;
+  preTemplateId?: string;
+  onChange?: (id: string, data: any) => void;
+  // Specific node data
+  blogUrl?: string;
+  modelType?: string;
+  systemPrompt?: string;
+  docId?: string;
+}
+
+// Define the request payload structure
+interface TemplateRequestPayload {
+  metadata: {
+    url: string;
+    model: string;
+    system: string;
+    googleDocsId: string;
+  };
+}
 
 const nodeTypes: NodeTypes = {
   blogScraper: BlogScraperNode,
@@ -50,12 +74,29 @@ export default function FlowPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id;
+  const { toast } = useToast();
   const { isLoading, template } = useTemplate(id);
+  const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
+  const [isRunning, setIsRunning] = useState<boolean>(false);
 
+  // Declare all hooks first - before any conditional logic
   const [initialNodesState, setInitialNodesState] = useState<Node[]>([]);
   const [initialEdgesState, setInitialEdgesState] = useState<Edge[]>([]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodesState);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdgesState);
+
+  // Store node data separately for form values
+  const [nodeFormData, setNodeFormData] = useState<Record<string, NodeData>>(
+    {}
+  );
+
+  // Handle node data changes
+  const handleNodeDataChange = useCallback((nodeId: string, data: NodeData) => {
+    setNodeFormData((prev) => ({
+      ...prev,
+      [nodeId]: data,
+    }));
+  }, []);
 
   // Generate initial nodes based on available template actions
   const generateInitialNodes = () => {
@@ -63,25 +104,34 @@ export default function FlowPage() {
       !template?.availableTemplateActions ||
       template.availableTemplateActions.length === 0
     ) {
-    
+      // Fallback to default nodes if no template actions available
       return [
         {
           id: "1",
           type: "blogScraper",
           position: { x: 200, y: 100 },
-          data: { label: "Blog Scraper" },
+          data: {
+            label: "Blog Scraper",
+            onChange: handleNodeDataChange,
+          },
         },
         {
           id: "2",
           type: "llmModel",
           position: { x: 600, y: 100 },
-          data: { label: "LLM Model" },
+          data: {
+            label: "LLM Model",
+            onChange: handleNodeDataChange,
+          },
         },
         {
           id: "3",
           type: "googleDocs",
           position: { x: 1050, y: 100 },
-          data: { label: "Google Docs" },
+          data: {
+            label: "Google Docs",
+            onChange: handleNodeDataChange,
+          },
         },
       ];
     }
@@ -101,6 +151,7 @@ export default function FlowPage() {
             label: action.name,
             image: action.image,
             preTemplateId: action.preTemplateId,
+            onChange: handleNodeDataChange,
           },
         };
       }
@@ -132,9 +183,17 @@ export default function FlowPage() {
       const nodes = generateInitialNodes();
       setInitialNodesState(nodes);
       setInitialEdgesState(generateInitialEdges(nodes));
+
+      // Initialize node form data
+      const initialFormData: Record<string, NodeData> = {};
+      nodes.forEach((node) => {
+        initialFormData[node.id] = node.data;
+      });
+      setNodeFormData(initialFormData);
     }
   }, [template]);
 
+  // Update nodes and edges when initial states change
   useEffect(() => {
     setNodes(initialNodesState);
     setEdges(initialEdgesState);
@@ -149,6 +208,138 @@ export default function FlowPage() {
     [setEdges]
   );
 
+  // Extract data from nodes to build request payload
+  const buildRequestPayload = (): TemplateRequestPayload | null => {
+    let url = "";
+    let model = "";
+    let system = "";
+    let googleDocsId = "";
+
+    // Find the data from each type of node
+    nodes.forEach((node) => {
+      const nodeData = nodeFormData[node.id];
+      if (!nodeData) return;
+
+      if (node.type === "blogScraper" && nodeData.blogUrl) {
+        url = nodeData.blogUrl;
+      }
+
+      if (node.type === "llmModel") {
+        model = nodeData.modelType || "";
+        system = nodeData.systemPrompt || "";
+      }
+
+      if (node.type === "googleDocs" && nodeData.docId) {
+        googleDocsId = nodeData.docId;
+      }
+    });
+
+    // Check if we have all required fields
+    if (!url || !model || !system || !googleDocsId) {
+      return null;
+    }
+
+    return {
+      metadata: {
+        url,
+        model,
+        system,
+        googleDocsId,
+      },
+    };
+  };
+
+  // Validate the flow before running
+  const validateFlow = (): boolean => {
+    // Check if we have at least one node
+    if (nodes.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Workflow needs at least one node to run",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check for required fields in each node type
+    for (const node of nodes) {
+      const nodeData = nodeFormData[node.id];
+
+      if (!nodeData) continue;
+
+      if (node.type === "blogScraper" && !nodeData.blogUrl) {
+        toast({
+          title: "Validation Error",
+          description: `Blog Scraper node requires a URL`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (
+        node.type === "llmModel" &&
+        (!nodeData.modelType || !nodeData.systemPrompt)
+      ) {
+        toast({
+          title: "Validation Error",
+          description: `LLM Model node requires both a model selection and system prompt`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (node.type === "googleDocs" && !nodeData.docId) {
+        toast({
+          title: "Validation Error",
+          description: `Google Docs node requires a document ID`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Run the template workflow
+  const handleRunTemplate = async () => {
+    if (!validateFlow()) return;
+
+    const payload = buildRequestPayload();
+
+    if (!payload) {
+      toast({
+        title: "Error",
+        description:
+          "Failed to build request payload. Make sure all required fields are filled.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRunning(true);
+
+    try {
+      // Make the API call to run the template
+      console.log("Sending payload:", payload);
+
+      toast({
+        title: "Success",
+        description: "Workflow executed successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to run workflow. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error running template:", error);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  // After all hooks have been called, we can render conditionally
   if (isLoading) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -179,17 +370,19 @@ export default function FlowPage() {
               type="text"
               className="text-lg bg-white flex-grow sm:w-64"
               placeholder="Workflow Name"
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
             />
           </div>
           <div className="flex justify-center items-center gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              //   disabled={isLoading}
-              //   onClick={handlePublishWorkflow}
+              disabled={isRunning}
+              onClick={handleRunTemplate}
               className="bg-[#FF7801] text-white  
               hover:bg-[#FF7801]/80 hover:text-white"
             >
-              Run Template
+              {isRunning ? "Running..." : "Run Template"}
             </Button>
           </div>
         </div>

@@ -11,14 +11,40 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
 
-export default function GoogleDocsNode({ data }: { data: { label: string } }) {
+export default function GoogleDocsNode({
+  data,
+  id,
+}: {
+  data: {
+    label: string;
+    image?: string;
+    preTemplateId?: string;
+    onChange?: (id: string, data: any) => void;
+    docId?: string;
+  };
+  id: string;
+}) {
+  const [docId, setDocId] = useState(data.docId || "");
+
+  // Update parent component when docId changes
+  useEffect(() => {
+    if (data.onChange) {
+      data.onChange(id, { ...data, docId });
+    }
+  }, [docId, id, data]);
+
   return (
     <Card className="w-[300px] shadow-md border-blue-300">
       <CardHeader className="pb-2 bg-blue-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileTextIcon className="h-5 w-5 text-blue-600" />
+            {data.image ? (
+              <img src={data.image} alt={data.label} className="h-5 w-5" />
+            ) : (
+              <FileTextIcon className="h-5 w-5 text-blue-600" />
+            )}
             <CardTitle className="text-lg font-bold text-blue-800">
               {data.label}
             </CardTitle>
@@ -41,8 +67,13 @@ export default function GoogleDocsNode({ data }: { data: { label: string } }) {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="doc-id">Google Docs ID</Label>
-            <Input id="doc-id" placeholder="1a2b3c4d5e6f7g8h9i0j" />
+            <Label htmlFor={`doc-id-${id}`}>Google Docs ID</Label>
+            <Input
+              id={`doc-id-${id}`}
+              placeholder="1a2b3c4d5e6f7g8h9i0j"
+              value={docId}
+              onChange={(e) => setDocId(e.target.value)}
+            />
           </div>
         </div>
       </CardContent>

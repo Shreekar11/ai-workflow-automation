@@ -11,14 +11,40 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
 
-export default function BlogScraperNode({ data }: { data: { label: string } }) {
+export default function BlogScraperNode({
+  data,
+  id,
+}: {
+  data: {
+    label: string;
+    image?: string;
+    preTemplateId?: string;
+    onChange?: (id: string, data: any) => void;
+    blogUrl?: string;
+  };
+  id: string;
+}) {
+  const [url, setUrl] = useState(data.blogUrl || "");
+
+  // Update parent component when url changes
+  useEffect(() => {
+    if (data.onChange) {
+      data.onChange(id, { ...data, blogUrl: url });
+    }
+  }, [url, id, data]);
+
   return (
     <Card className="w-[300px] shadow-md border-amber-300">
       <CardHeader className="pb-2 bg-amber-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <RssIcon className="h-5 w-5 text-amber-600" />
+            {data.image ? (
+              <img src={data.image} alt={data.label} className="h-5 w-5" />
+            ) : (
+              <RssIcon className="h-5 w-5 text-amber-600" />
+            )}
             <CardTitle className="text-lg font-bold text-amber-800">
               {data.label}
             </CardTitle>
@@ -41,8 +67,13 @@ export default function BlogScraperNode({ data }: { data: { label: string } }) {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="url">Blog URL</Label>
-            <Input id="url" placeholder="https://example.com/blog-post" />
+            <Label htmlFor={`url-${id}`}>Blog URL</Label>
+            <Input
+              id={`url-${id}`}
+              placeholder="https://example.com/blog-post"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
           </div>
         </div>
       </CardContent>

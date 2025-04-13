@@ -18,14 +18,46 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
 
-export default function LLMModelNode({ data }: { data: { label: string } }) {
+export default function LLMModelNode({
+  data,
+  id,
+}: {
+  data: {
+    label: string;
+    image?: string;
+    preTemplateId?: string;
+    onChange?: (id: string, data: any) => void;
+    modelType?: string;
+    systemPrompt?: string;
+  };
+  id: string;
+}) {
+  const [modelType, setModelType] = useState(data.modelType || "");
+  const [systemPrompt, setSystemPrompt] = useState(data.systemPrompt || "");
+
+  // Update parent component when data changes
+  useEffect(() => {
+    if (data.onChange) {
+      data.onChange(id, {
+        ...data,
+        modelType,
+        systemPrompt,
+      });
+    }
+  }, [modelType, systemPrompt, id, data]);
+
   return (
     <Card className="w-[350px] shadow-md border-red-300">
       <CardHeader className="pb-2 bg-red-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BrainCircuitIcon className="h-5 w-5 text-red-600" />
+            {data.image ? (
+              <img src={data.image} alt={data.label} className="h-5 w-5" />
+            ) : (
+              <BrainCircuitIcon className="h-5 w-5 text-red-600" />
+            )}
             <CardTitle className="text-lg font-bold text-red-800">
               {data.label}
             </CardTitle>
@@ -48,9 +80,9 @@ export default function LLMModelNode({ data }: { data: { label: string } }) {
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="model">Select Model</Label>
-            <Select>
-              <SelectTrigger id="model">
+            <Label htmlFor={`model-${id}`}>Select Model</Label>
+            <Select value={modelType} onValueChange={setModelType}>
+              <SelectTrigger id={`model-${id}`}>
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
               <SelectContent>
@@ -64,11 +96,13 @@ export default function LLMModelNode({ data }: { data: { label: string } }) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="system-prompt">System Prompt</Label>
+            <Label htmlFor={`system-prompt-${id}`}>System Prompt</Label>
             <Textarea
-              id="system-prompt"
+              id={`system-prompt-${id}`}
               placeholder="You are an expert content summarizer. Extract the key points from the blog post."
               className="min-h-[100px]"
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
             />
           </div>
         </div>

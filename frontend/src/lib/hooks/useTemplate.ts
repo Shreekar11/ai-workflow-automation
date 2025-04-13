@@ -1,8 +1,8 @@
 import { useToken } from "./useToken";
 import { useUser } from "@clerk/nextjs";
-import { useCallback, useEffect, useState } from "react";
-import { getAllTemplates, getTemplateById } from "../actions/template.action";
 import { PreTemplateType } from "@/types";
+import { useCallback, useEffect, useState } from "react";
+import { getTemplateById } from "../actions/template.action";
 
 interface UseTemplatesReturn {
   template: PreTemplateType;
