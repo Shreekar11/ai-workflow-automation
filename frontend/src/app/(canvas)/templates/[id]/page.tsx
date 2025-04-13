@@ -27,6 +27,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useTemplate } from "@/lib/hooks/useTemplate";
 import { useToast } from "@/lib/hooks/useToast";
 import { RunTemplatePayload, TemplatePayload } from "@/types";
+import { api } from "@/app/api/client";
+import { saveTemplate } from "@/lib/actions/template.action";
+import { useToken } from "@/lib/hooks/useToken";
+import { useUser } from "@clerk/nextjs";
 
 // Types for node data
 interface NodeData {
@@ -69,10 +73,9 @@ export default function FlowPage() {
   const { toast } = useToast();
   const { isLoading, template } = useTemplate(id);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
-  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [templateId, setTemplateId] = useState<string | undefined>(id);
-  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const { user } = useUser();
+  const { token, sessionId } = useToken();
 
   // Declare all hooks first - before any conditional logic
   const [initialNodesState, setInitialNodesState] = useState<Node[]>([]);
@@ -91,8 +94,6 @@ export default function FlowPage() {
       ...prev,
       [nodeId]: data,
     }));
-    // Mark as unsaved when changes happen
-    setIsSaved(false);
   }, []);
 
   // Generate initial nodes based on available template actions
@@ -196,9 +197,6 @@ export default function FlowPage() {
       if (template.name) {
         setWorkflowName(template.name);
       }
-
-      // Set saved state based on whether this is a new or existing template
-      setIsSaved(!!id && id !== "new");
     }
   }, [template, id]);
 
@@ -213,8 +211,6 @@ export default function FlowPage() {
       setEdges((eds) =>
         addEdge({ ...connection, type: "custom", animated: true }, eds)
       );
-      // Mark as unsaved when connections change
-      setIsSaved(false);
     },
     [setEdges]
   );
@@ -243,51 +239,9 @@ export default function FlowPage() {
     });
 
     return {
-      id: templateId,
       preTemplateId: template?.id,
       name: workflowName,
       actions,
-    };
-  };
-
-  // Extract data from nodes to build run request payload
-  const buildRunRequestPayload = (): RunTemplatePayload | null => {
-    let url = "";
-    let model = "";
-    let system = "";
-    let googleDocsId = "";
-
-    // Find the data from each type of node
-    nodes.forEach((node) => {
-      const nodeData = nodeFormData[node.id];
-      if (!nodeData) return;
-
-      if (node.type === "blogScraper" && nodeData.url) {
-        url = nodeData.url;
-      }
-
-      if (node.type === "llmModel") {
-        model = nodeData.model || "";
-        system = nodeData.system || "";
-      }
-
-      if (node.type === "googleDocs" && nodeData.googleDocsId) {
-        googleDocsId = nodeData.googleDocsId;
-      }
-    });
-
-    // Check if we have all required fields
-    if (!url || !model || !system || !googleDocsId) {
-      return null;
-    }
-
-    return {
-      metadata: {
-        url,
-        model,
-        system,
-        googleDocsId,
-      },
     };
   };
 
@@ -316,80 +270,28 @@ export default function FlowPage() {
     return true;
   };
 
-  // Validate run-specific requirements
-  const validateRunFlow = (): boolean => {
-    if (!validateFlow()) return false;
-
-    // Check for required fields in each node type
-    for (const node of nodes) {
-      const nodeData = nodeFormData[node.id];
-
-      if (!nodeData) continue;
-
-      if (node.type === "blogScraper" && !nodeData.url) {
-        toast({
-          title: "Validation Error",
-          description: `Blog Scraper node requires a URL`,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (
-        node.type === "llmModel" &&
-        (!nodeData.model || !nodeData.system)
-      ) {
-        toast({
-          title: "Validation Error",
-          description: `LLM Model node requires both a model selection and system prompt`,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (node.type === "googleDocs" && !nodeData.googleDocsId) {
-        toast({
-          title: "Validation Error",
-          description: `Google Docs node requires a document ID`,
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   // Save the template workflow
   const handleSaveTemplate = async () => {
+    setIsSaving(true);
     if (!validateFlow()) return;
 
     const payload = buildTemplatePayload();
 
-    setIsSaving(true);
-
     try {
-      // Make the API call to save the template
-      console.log("Saving template with payload:", payload);
-
-      // Mock API call - replace with actual implementation
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Set the template ID if it's a new template
-      if (!templateId || templateId === "new") {
-        const newId = `template-${Date.now()}`;
-        setTemplateId(newId);
-
-        // Update URL without causing a full page refresh
-        window.history.replaceState(null, "", `/flow/${newId}`);
-      }
-
-      setIsSaved(true);
+      const result = await saveTemplate(
+        payload,
+        user?.id || "",
+        token,
+        sessionId || ""
+      );
 
       toast({
         title: "Success",
         description: "Workflow saved successfully!",
+        variant: "success",
       });
+      
+      router.push(`/templates/publish/${result.data.id}`);
     } catch (error) {
       toast({
         title: "Error",
@@ -402,59 +304,6 @@ export default function FlowPage() {
     }
   };
 
-  // Run the template workflow
-  const handleRunTemplate = async () => {
-    if (!isSaved) {
-      toast({
-        title: "Save Required",
-        description: "Please save your workflow before running it.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!validateRunFlow()) return;
-
-    const payload = buildRunRequestPayload();
-    
-    console.log("Run template body", payload);
-
-    if (!payload) {
-      toast({
-        title: "Error",
-        description:
-          "Failed to build request payload. Make sure all required fields are filled.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsRunning(true);
-
-    try {
-      // Make the API call to run the template
-      console.log("Running template with payload:", payload);
-
-      // Mock API call - replace with actual implementation
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      toast({
-        title: "Success",
-        description: "Workflow executed successfully!",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to run workflow. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error running template:", error);
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
-  // After all hooks have been called, we can render conditionally
   if (isLoading) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -486,13 +335,10 @@ export default function FlowPage() {
               className="text-lg bg-white flex-grow sm:w-64"
               placeholder="Workflow Name"
               value={workflowName}
-              onChange={(e) => {
-                setWorkflowName(e.target.value);
-                setIsSaved(false);
-              }}
+              onChange={(e) => setWorkflowName(e.target.value)}
             />
           </div>
-          <div className="flex justify-center items-center gap-3 w-full sm:w-auto">
+          <div className="w-full sm:w-auto">
             <Button
               variant="outline"
               disabled={isSaving}
@@ -501,23 +347,7 @@ export default function FlowPage() {
               hover:bg-gray-100"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving
-                ? "Saving..."
-                : isSaved
-                ? "Save Changes"
-                : "Save Workflow"}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={isRunning || !isSaved}
-              onClick={handleRunTemplate}
-              className={`
-                bg-[#FF7801] text-white
-                hover:bg-[#FF7801]/80 hover:text-white
-                ${!isSaved ? "opacity-60 cursor-not-allowed" : ""}
-              `}
-            >
-              {isRunning ? "Running..." : "Run Template"}
+              Save Template
             </Button>
           </div>
         </div>
@@ -527,14 +357,8 @@ export default function FlowPage() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={(changes) => {
-            onNodesChange(changes);
-            setIsSaved(false);
-          }}
-          onEdgesChange={(changes) => {
-            onEdgesChange(changes);
-            setIsSaved(false);
-          }}
+          onNodesChange={(changes) => onNodesChange(changes)}
+          onEdgesChange={(changes) => onEdgesChange(changes)}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
