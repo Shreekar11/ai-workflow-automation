@@ -33,7 +33,6 @@ export default function TemplateSkeleton () {
         <Skeleton className="h-5 w-[28rem] mb-4" /> {/* Description */}
         <div className="flex flex-wrap gap-4">
           <Skeleton className="h-10 w-48" /> {/* Button 1 */}
-          <Skeleton className="h-10 w-36" /> {/* Button 2 */}
         </div>
       </div>
     </div>

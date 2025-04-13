@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState } from "react"
+import Link from "next/link"
 import {
   Brain,
   Calendar,
@@ -12,7 +12,7 @@ import {
   Folder,
   FolderTree,
   Globe,
-  Image,
+  ImageIcon,
   Layout,
   LinkIcon,
   Mail,
@@ -23,25 +23,13 @@ import {
   User,
   UserSearch,
   Users,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import WorkflowNode from "./workflow-node";
-import { PreTemplateType } from "@/types";
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import WorkflowNode from "./workflow-node"
+import type { PreTemplateType } from "@/types"
 
 const iconMap = {
   brain: Brain,
@@ -53,7 +41,7 @@ const iconMap = {
   folder: Folder,
   "folder-tree": FolderTree,
   globe: Globe,
-  image: Image,
+  image: ImageIcon,
   layout: Layout,
   link: LinkIcon,
   mail: Mail,
@@ -64,66 +52,59 @@ const iconMap = {
   user: User,
   "user-search": UserSearch,
   users: Users,
-};
+}
 
 export default function TemplateCard({
   template,
 }: {
-  template: PreTemplateType;
+  template: PreTemplateType
 }) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
     <Card
-      className="overflow-hidden transition-all duration-300 hover:shadow-md"
+      className="overflow-hidden transition-all duration-300 border-border/60 hover:border-[#FF7801]/50 hover:shadow-md"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{template.name}</CardTitle>
-        </div>
-        <CardDescription>{template.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="relative py-4">
-          <div className="absolute top-[40%] left-0 right-0 h-0.5 bg-muted-foreground/20" />
-          <div className="relative flex justify-between">
-            {template.availableTemplateActions.map(
-              (node: any, index: number) => (
-                <TooltipProvider key={index}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="z-10">
-                        <WorkflowNode
-                          node={node}
-                          index={index}
-                          isLast={
-                            index ===
-                            template.availableTemplateActions.length - 1
-                          }
-                          iconMap={iconMap}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{node.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )
-            )}
+          <div>
+            <CardTitle className="text-xl font-semibold">{template.name}</CardTitle>
+            <CardDescription className="mt-1.5 line-clamp-2">{template.description}</CardDescription>
           </div>
         </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            {template.availableTemplateActions.map((node: any, index: number) => (
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <WorkflowNode
+                        node={node}
+                        index={index}
+                        isLast={index === template.availableTemplateActions.length - 1}
+                        iconMap={iconMap}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{node.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+
+          <Button className="bg-[#FF7801] text-white font-medium hover:bg-[#FF7801]/90 shadow-sm" asChild>
+            <Link href={`/templates/${template.id}`}>Use This Template</Link>
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter className="pt-2">
-        <Button
-          className="w-full bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
-          asChild
-        >
-          <Link href={`/templates/${template.id}`}>View This Template</Link>
-        </Button>
-      </CardFooter>
     </Card>
-  );
+  )
 }

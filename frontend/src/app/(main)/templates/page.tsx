@@ -89,7 +89,7 @@ export default function TemplatesPage() {
         <h2 className="text-xl font-semibold mb-2">Need a custom workflow?</h2>
         <p className="text-muted-foreground mb-4">
           Can&apos;t find what you&apos;re looking for? Create a custom workflow
-          from scratch or request a template.
+          from scratch.
         </p>
         <div className="flex flex-wrap gap-4">
           <Button
@@ -97,9 +97,6 @@ export default function TemplatesPage() {
             className="bg-[#FF7801] text-white hover:bg-[#FF7801]/90"
           >
             <Link href="/workflows/create">Create Custom Workflow</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/request-template">Request Template</Link>
           </Button>
         </div>
       </div>
