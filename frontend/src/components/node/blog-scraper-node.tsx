@@ -22,16 +22,16 @@ export default function BlogScraperNode({
     image?: string;
     preTemplateId?: string;
     onChange?: (id: string, data: any) => void;
-    blogUrl?: string;
+    url?: string;
   };
   id: string;
 }) {
-  const [url, setUrl] = useState(data.blogUrl || "");
+  const [url, setUrl] = useState(data.url || "");
 
   // Update parent component when url changes
   useEffect(() => {
     if (data.onChange) {
-      data.onChange(id, { ...data, blogUrl: url });
+      data.onChange(id, { ...data, url: url });
     }
   }, [url, id, data]);
 

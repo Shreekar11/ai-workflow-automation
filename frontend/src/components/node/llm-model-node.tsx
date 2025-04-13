@@ -29,24 +29,24 @@ export default function LLMModelNode({
     image?: string;
     preTemplateId?: string;
     onChange?: (id: string, data: any) => void;
-    modelType?: string;
-    systemPrompt?: string;
+    model?: string;
+    system?: string;
   };
   id: string;
 }) {
-  const [modelType, setModelType] = useState(data.modelType || "");
-  const [systemPrompt, setSystemPrompt] = useState(data.systemPrompt || "");
+  const [model, setmodel] = useState(data.model || "");
+  const [system, setsystem] = useState(data.system || "");
 
   // Update parent component when data changes
   useEffect(() => {
     if (data.onChange) {
       data.onChange(id, {
         ...data,
-        modelType,
-        systemPrompt,
+        model,
+        system,
       });
     }
-  }, [modelType, systemPrompt, id, data]);
+  }, [model, system, id, data]);
 
   return (
     <Card className="w-[350px] shadow-md border-red-300">
@@ -81,7 +81,7 @@ export default function LLMModelNode({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor={`model-${id}`}>Select Model</Label>
-            <Select value={modelType} onValueChange={setModelType}>
+            <Select value={model} onValueChange={setmodel}>
               <SelectTrigger id={`model-${id}`}>
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
@@ -101,8 +101,8 @@ export default function LLMModelNode({
               id={`system-prompt-${id}`}
               placeholder="You are an expert content summarizer. Extract the key points from the blog post."
               className="min-h-[100px]"
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
+              value={system}
+              onChange={(e) => setsystem(e.target.value)}
             />
           </div>
         </div>

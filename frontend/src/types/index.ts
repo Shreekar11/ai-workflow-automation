@@ -184,4 +184,26 @@ export interface TemplateAction {
   preTemplateId: string;
   name: string;
   image: string;
+  metadata: any;
 }
+
+export interface TemplatePayload {
+  id?: string;
+  preTemplateId?: string;
+  name: string;
+  actions: Array<{
+    availableActionId: string;
+    actionMetadata?: any;
+  }>;
+}
+
+// Define the request payload structure for running the template
+export interface RunTemplatePayload {
+  metadata: {
+    url: string;
+    model: string;
+    system: string;
+    googleDocsId: string;
+  };
+}
+

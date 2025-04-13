@@ -22,18 +22,18 @@ export default function GoogleDocsNode({
     image?: string;
     preTemplateId?: string;
     onChange?: (id: string, data: any) => void;
-    docId?: string;
+    googleDocsId?: string;
   };
   id: string;
 }) {
-  const [docId, setDocId] = useState(data.docId || "");
+  const [googleDocsId, setgoogleDocsId] = useState(data.googleDocsId || "");
 
-  // Update parent component when docId changes
+  // Update parent component when googleDocsId changes
   useEffect(() => {
     if (data.onChange) {
-      data.onChange(id, { ...data, docId });
+      data.onChange(id, { ...data, googleDocsId });
     }
-  }, [docId, id, data]);
+  }, [googleDocsId, id, data]);
 
   return (
     <Card className="w-[300px] shadow-md border-blue-300">
@@ -71,8 +71,8 @@ export default function GoogleDocsNode({
             <Input
               id={`doc-id-${id}`}
               placeholder="1a2b3c4d5e6f7g8h9i0j"
-              value={docId}
-              onChange={(e) => setDocId(e.target.value)}
+              value={googleDocsId}
+              onChange={(e) => setgoogleDocsId(e.target.value)}
             />
           </div>
         </div>

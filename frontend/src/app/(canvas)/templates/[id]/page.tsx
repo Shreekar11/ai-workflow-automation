@@ -21,33 +21,25 @@ import LLMModelNode from "@/components/node/llm-model-node";
 import GoogleDocsNode from "@/components/node/google-docs-node";
 import CustomEdge from "@/components/node/edge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useParams, useRouter } from "next/navigation";
 import { useTemplate } from "@/lib/hooks/useTemplate";
 import { useToast } from "@/lib/hooks/useToast";
+import { RunTemplatePayload, TemplatePayload } from "@/types";
 
 // Types for node data
 interface NodeData {
   label: string;
   image?: string;
   preTemplateId?: string;
+  availableActionId?: string;
   onChange?: (id: string, data: any) => void;
   // Specific node data
-  blogUrl?: string;
-  modelType?: string;
-  systemPrompt?: string;
-  docId?: string;
-}
-
-// Define the request payload structure
-interface TemplateRequestPayload {
-  metadata: {
-    url: string;
-    model: string;
-    system: string;
-    googleDocsId: string;
-  };
+  url?: string;
+  model?: string;
+  system?: string;
+  googleDocsId?: string;
 }
 
 const nodeTypes: NodeTypes = {
@@ -73,11 +65,14 @@ const getNodeTypeFromName = (name: string): string => {
 export default function FlowPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id;
+  const id = params.id as string;
   const { toast } = useToast();
   const { isLoading, template } = useTemplate(id);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [templateId, setTemplateId] = useState<string | undefined>(id);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
   // Declare all hooks first - before any conditional logic
   const [initialNodesState, setInitialNodesState] = useState<Node[]>([]);
@@ -96,6 +91,8 @@ export default function FlowPage() {
       ...prev,
       [nodeId]: data,
     }));
+    // Mark as unsaved when changes happen
+    setIsSaved(false);
   }, []);
 
   // Generate initial nodes based on available template actions
@@ -112,6 +109,7 @@ export default function FlowPage() {
           position: { x: 200, y: 100 },
           data: {
             label: "Blog Scraper",
+            availableActionId: "blog-scraper-action",
             onChange: handleNodeDataChange,
           },
         },
@@ -121,6 +119,7 @@ export default function FlowPage() {
           position: { x: 600, y: 100 },
           data: {
             label: "LLM Model",
+            availableActionId: "llm-model-action",
             onChange: handleNodeDataChange,
           },
         },
@@ -130,6 +129,7 @@ export default function FlowPage() {
           position: { x: 1050, y: 100 },
           data: {
             label: "Google Docs",
+            availableActionId: "google-docs-action",
             onChange: handleNodeDataChange,
           },
         },
@@ -151,6 +151,7 @@ export default function FlowPage() {
             label: action.name,
             image: action.image,
             preTemplateId: action.preTemplateId,
+            availableActionId: action.id,
             onChange: handleNodeDataChange,
           },
         };
@@ -190,8 +191,16 @@ export default function FlowPage() {
         initialFormData[node.id] = node.data;
       });
       setNodeFormData(initialFormData);
+
+      // Set workflow name from template if available
+      if (template.name) {
+        setWorkflowName(template.name);
+      }
+
+      // Set saved state based on whether this is a new or existing template
+      setIsSaved(!!id && id !== "new");
     }
-  }, [template]);
+  }, [template, id]);
 
   // Update nodes and edges when initial states change
   useEffect(() => {
@@ -204,12 +213,45 @@ export default function FlowPage() {
       setEdges((eds) =>
         addEdge({ ...connection, type: "custom", animated: true }, eds)
       );
+      // Mark as unsaved when connections change
+      setIsSaved(false);
     },
     [setEdges]
   );
 
-  // Extract data from nodes to build request payload
-  const buildRequestPayload = (): TemplateRequestPayload | null => {
+  // Build template payload from nodes data
+  const buildTemplatePayload = (): TemplatePayload => {
+    const actions = nodes.map((node) => {
+      const nodeData = nodeFormData[node.id];
+      let actionMetadata = {};
+
+      if (node.type === "blogScraper" && nodeData?.url) {
+        actionMetadata = { url: nodeData.url };
+      } else if (node.type === "llmModel") {
+        actionMetadata = {
+          model: nodeData?.model || "",
+          system: nodeData?.system || "",
+        };
+      } else if (node.type === "googleDocs" && nodeData?.googleDocsId) {
+        actionMetadata = { googleDocsId: nodeData.googleDocsId };
+      }
+
+      return {
+        availableActionId: nodeData?.availableActionId || node.id,
+        actionMetadata,
+      };
+    });
+
+    return {
+      id: templateId,
+      preTemplateId: template?.id,
+      name: workflowName,
+      actions,
+    };
+  };
+
+  // Extract data from nodes to build run request payload
+  const buildRunRequestPayload = (): RunTemplatePayload | null => {
     let url = "";
     let model = "";
     let system = "";
@@ -220,17 +262,17 @@ export default function FlowPage() {
       const nodeData = nodeFormData[node.id];
       if (!nodeData) return;
 
-      if (node.type === "blogScraper" && nodeData.blogUrl) {
-        url = nodeData.blogUrl;
+      if (node.type === "blogScraper" && nodeData.url) {
+        url = nodeData.url;
       }
 
       if (node.type === "llmModel") {
-        model = nodeData.modelType || "";
-        system = nodeData.systemPrompt || "";
+        model = nodeData.model || "";
+        system = nodeData.system || "";
       }
 
-      if (node.type === "googleDocs" && nodeData.docId) {
-        googleDocsId = nodeData.docId;
+      if (node.type === "googleDocs" && nodeData.googleDocsId) {
+        googleDocsId = nodeData.googleDocsId;
       }
     });
 
@@ -249,17 +291,34 @@ export default function FlowPage() {
     };
   };
 
-  // Validate the flow before running
+  // Validate the flow before saving or running
   const validateFlow = (): boolean => {
-    // Check if we have at least one node
-    if (nodes.length === 0) {
+    // Check if we have a workflow name
+    if (!workflowName || workflowName.trim() === "") {
       toast({
         title: "Validation Error",
-        description: "Workflow needs at least one node to run",
+        description: "Please provide a workflow name",
         variant: "destructive",
       });
       return false;
     }
+
+    // Check if we have at least one node
+    if (nodes.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Workflow needs at least one node to save",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  // Validate run-specific requirements
+  const validateRunFlow = (): boolean => {
+    if (!validateFlow()) return false;
 
     // Check for required fields in each node type
     for (const node of nodes) {
@@ -267,7 +326,7 @@ export default function FlowPage() {
 
       if (!nodeData) continue;
 
-      if (node.type === "blogScraper" && !nodeData.blogUrl) {
+      if (node.type === "blogScraper" && !nodeData.url) {
         toast({
           title: "Validation Error",
           description: `Blog Scraper node requires a URL`,
@@ -278,7 +337,7 @@ export default function FlowPage() {
 
       if (
         node.type === "llmModel" &&
-        (!nodeData.modelType || !nodeData.systemPrompt)
+        (!nodeData.model || !nodeData.system)
       ) {
         toast({
           title: "Validation Error",
@@ -288,7 +347,7 @@ export default function FlowPage() {
         return false;
       }
 
-      if (node.type === "googleDocs" && !nodeData.docId) {
+      if (node.type === "googleDocs" && !nodeData.googleDocsId) {
         toast({
           title: "Validation Error",
           description: `Google Docs node requires a document ID`,
@@ -301,11 +360,64 @@ export default function FlowPage() {
     return true;
   };
 
-  // Run the template workflow
-  const handleRunTemplate = async () => {
+  // Save the template workflow
+  const handleSaveTemplate = async () => {
     if (!validateFlow()) return;
 
-    const payload = buildRequestPayload();
+    const payload = buildTemplatePayload();
+
+    setIsSaving(true);
+
+    try {
+      // Make the API call to save the template
+      console.log("Saving template with payload:", payload);
+
+      // Mock API call - replace with actual implementation
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Set the template ID if it's a new template
+      if (!templateId || templateId === "new") {
+        const newId = `template-${Date.now()}`;
+        setTemplateId(newId);
+
+        // Update URL without causing a full page refresh
+        window.history.replaceState(null, "", `/flow/${newId}`);
+      }
+
+      setIsSaved(true);
+
+      toast({
+        title: "Success",
+        description: "Workflow saved successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save workflow. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error saving template:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Run the template workflow
+  const handleRunTemplate = async () => {
+    if (!isSaved) {
+      toast({
+        title: "Save Required",
+        description: "Please save your workflow before running it.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateRunFlow()) return;
+
+    const payload = buildRunRequestPayload();
+    
+    console.log("Run template body", payload);
 
     if (!payload) {
       toast({
@@ -321,7 +433,10 @@ export default function FlowPage() {
 
     try {
       // Make the API call to run the template
-      console.log("Sending payload:", payload);
+      console.log("Running template with payload:", payload);
+
+      // Mock API call - replace with actual implementation
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast({
         title: "Success",
@@ -371,16 +486,36 @@ export default function FlowPage() {
               className="text-lg bg-white flex-grow sm:w-64"
               placeholder="Workflow Name"
               value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
+              onChange={(e) => {
+                setWorkflowName(e.target.value);
+                setIsSaved(false);
+              }}
             />
           </div>
           <div className="flex justify-center items-center gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              disabled={isRunning}
+              disabled={isSaving}
+              onClick={handleSaveTemplate}
+              className="bg-white text-gray-800 border-gray-300
+              hover:bg-gray-100"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving
+                ? "Saving..."
+                : isSaved
+                ? "Save Changes"
+                : "Save Workflow"}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={isRunning || !isSaved}
               onClick={handleRunTemplate}
-              className="bg-[#FF7801] text-white  
-              hover:bg-[#FF7801]/80 hover:text-white"
+              className={`
+                bg-[#FF7801] text-white
+                hover:bg-[#FF7801]/80 hover:text-white
+                ${!isSaved ? "opacity-60 cursor-not-allowed" : ""}
+              `}
             >
               {isRunning ? "Running..." : "Run Template"}
             </Button>
@@ -392,8 +527,14 @@ export default function FlowPage() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={(changes) => {
+            onNodesChange(changes);
+            setIsSaved(false);
+          }}
+          onEdgesChange={(changes) => {
+            onEdgesChange(changes);
+            setIsSaved(false);
+          }}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
