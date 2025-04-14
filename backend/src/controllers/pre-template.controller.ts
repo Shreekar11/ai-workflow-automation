@@ -32,7 +32,7 @@ export default class PreTemplateController {
     }
   }
 
-  @GET("/api/v1/pre/template/all")
+  @GET("/api/v1/pre/template")
   public async getAllPreTemplates(req: Request, res: Response) {
     await AuthMiddleware.verifyToken(req, res, () => {});
 

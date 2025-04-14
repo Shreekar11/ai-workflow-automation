@@ -7,7 +7,7 @@ export const getAllTemplates = async (
   sessionId: string
 ) => {
   try {
-    const response = await api.get("/api/v1/pre/template/all", {
+    const response = await api.get("/api/v1/pre/template", {
       headers: {
         "clerk-user-id": userId,
         Authorization: `Bearer ${token}`,
