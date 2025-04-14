@@ -53,11 +53,7 @@ export default function LLMModelNode({
       <CardHeader className="pb-2 bg-red-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {data.image ? (
-              <img src={data.image} alt={data.label} className="h-5 w-5" />
-            ) : (
-              <BrainCircuitIcon className="h-5 w-5 text-red-600" />
-            )}
+            <BrainCircuitIcon className="h-5 w-5 text-red-600" />
             <CardTitle className="text-lg font-bold text-red-800">
               {data.label}
             </CardTitle>

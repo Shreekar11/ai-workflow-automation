@@ -40,11 +40,7 @@ export default function BlogScraperNode({
       <CardHeader className="pb-2 bg-amber-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {data.image ? (
-              <img src={data.image} alt={data.label} className="h-5 w-5" />
-            ) : (
-              <RssIcon className="h-5 w-5 text-amber-600" />
-            )}
+            <RssIcon className="h-5 w-5 text-amber-600" />
             <CardTitle className="text-lg font-bold text-amber-800">
               {data.label}
             </CardTitle>

@@ -19,6 +19,10 @@ export function useTemplate(templateId: string | string[]): UseTemplatesReturn {
   const [template, setTemplate] = useState<PreTemplateType>({
     name: "",
     description: "",
+    template: {
+      id: "",
+      name: "",
+    },
     availableTemplateActions: [],
   });
 

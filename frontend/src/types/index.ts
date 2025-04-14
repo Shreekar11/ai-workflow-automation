@@ -176,6 +176,10 @@ export interface PreTemplateType {
   id?: string;
   name: string;
   description: string;
+  template: {
+    id: string;
+    name: string;
+  };
   availableTemplateActions: TemplateAction[];
 }
 
@@ -184,7 +188,12 @@ export interface TemplateAction {
   preTemplateId: string;
   name: string;
   image: string;
-  metadata: any;
+  actions: {
+    id: string;
+    templateId: string;
+    actionId: string;
+    metadata: any;
+  }[];
 }
 
 export interface TemplatePayload {
@@ -206,4 +215,3 @@ export interface RunTemplatePayload {
     googleDocsId: string;
   };
 }
-
