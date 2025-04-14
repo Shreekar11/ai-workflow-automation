@@ -199,6 +199,7 @@ export const createInitialEdges = (workflow?: Workflow | null): Edge[] => {
         id: "e-trigger-action1",
         source: "trigger",
         target: "action1",
+        type: "workflow",
         animated: true,
       },
     ];
@@ -213,6 +214,7 @@ export const createInitialEdges = (workflow?: Workflow | null): Edge[] => {
       id: `e-${previousNodeId}-${currentNodeId}`,
       source: previousNodeId,
       target: currentNodeId,
+      type: "workflow",
       animated: true,
     });
     previousNodeId = currentNodeId;

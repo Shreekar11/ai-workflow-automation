@@ -25,13 +25,7 @@ export default function CustomEdge({
   })
 
   // Determine edge color based on source and target
-  let edgeColor = "#10b981"
-
-  if (source === "1" && target === "2") {
-    edgeColor = "#f59e0b" // amber for blog scraper to LLM
-  } else if (source === "2" && target === "3") {
-    edgeColor = "#ef4444" // red for LLM to Google Docs
-  }
+  let edgeColor = "#10B981"
 
   return (
     <BaseEdge

@@ -32,6 +32,7 @@ import { PulsatingButton } from "../ui/pulsating-button";
 import ActionNode from "../node/action-node";
 import TriggerNode from "../node/trigger-node";
 import AddActionButton from "./add-action-button";
+import CustomEdge from "../node/workflow-edge";
 
 interface WorkflowBuilderProps {
   workflow?: Workflow | null;
@@ -40,6 +41,10 @@ interface WorkflowBuilderProps {
 const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
+};
+
+const edgeType = {
+  workflow: CustomEdge,
 };
 
 export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
@@ -172,6 +177,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
         id: `e-${lastActionNode.id}-${newActionId}`,
         source: lastActionNode.id,
         target: newActionId,
+        type: "workflow",
         animated: true,
       },
     ]);
@@ -386,6 +392,7 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeType}
         >
           <Controls />
           <Background variant={"dots" as BackgroundVariant} gap={20} size={1} />

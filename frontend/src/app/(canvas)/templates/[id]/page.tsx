@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play, Save } from "lucide-react";
 
-import CustomEdge from "@/components/node/edge";
+import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
 import GoogleDocsNode from "@/components/node/google-docs-node";
 import BlogScraperNode from "@/components/node/blog-scraper-node";
