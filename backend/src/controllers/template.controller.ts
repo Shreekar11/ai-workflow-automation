@@ -114,7 +114,7 @@ export default class TemplateController {
     }
   }
 
-  @POST("/api/v1/template/run/:id")
+  @POST("/api/v1/template/:id/run")
   public async templateRunFunction(req: Request, res: Response) {
     await AuthMiddleware.verifyToken(req, res, () => {});
     const { body } = req;

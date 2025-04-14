@@ -13,7 +13,12 @@ export default class PreTemplateRepository extends Repository<PreTemplate> {
       const preTemplate = await this.model.findUnique({
         where: { id: templateId },
         include: {
-          availableTemplateActions: true,
+          template: true,
+          availableTemplateActions: {
+            include: {
+              actions: true,
+            },
+          },
         },
       });
 
