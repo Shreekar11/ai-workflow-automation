@@ -24,13 +24,21 @@ import ReactFlow, {
   type EdgeTypes,
   useNodesState,
   useEdgesState,
-  BackgroundVariant,
+  type BackgroundVariant,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Save } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Play, Save, FileText } from "lucide-react";
 
 import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
@@ -83,6 +91,7 @@ export default function FlowPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [templateName, setTemplateName] = useState<string>("Untitled Workflow");
+  const [runResult, setRunResult] = useState<any>(null);
 
   const hasTemplate = Boolean(template?.template?.id);
 
@@ -310,6 +319,7 @@ export default function FlowPage() {
       );
 
       console.log(result);
+      setRunResult(result);
 
       toast({
         title: "Success",
@@ -326,6 +336,82 @@ export default function FlowPage() {
     } finally {
       setIsRunning(false);
     }
+  };
+
+  const renderOutputButton = () => {
+    const hasMetadata = template?.availableTemplateActions?.some(
+      (action) =>
+        action.actions?.[0]?.metadata &&
+        Object.keys(action.actions[0].metadata).length > 0
+    );
+
+    if (!hasMetadata) return null;
+
+    // Get metadata from run result or template
+    let metadata = {};
+    if (template?.availableTemplateActions) {
+      const availableActions = template.availableTemplateActions;
+      const actionWithMetadata =
+        template.availableTemplateActions[availableActions.length - 1];
+
+      const scraper_result =
+        actionWithMetadata?.actions[0]?.metadata.scraper_result;
+      const llm_result =
+        actionWithMetadata?.actions[0]?.metadata.llmmodel_result;
+      const final_metadata_result = {
+        scraper_result: scraper_result.content,
+        llm_result: llm_result.result,
+      };
+
+      metadata = final_metadata_result;
+    }
+
+    const metadataKeys = Object.keys(metadata);
+
+    if (metadataKeys.length === 0) return null;
+
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button
+            className="bg-white shadow-md hover:bg-gray-100"
+            variant="outline"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            View Output
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Template Output</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 pr-2">
+            <Tabs defaultValue={metadataKeys[0]}>
+              <TabsList className="mb-4">
+                {metadataKeys.map((key) => (
+                  <TabsTrigger key={key} value={key}>
+                    {key}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {metadataKeys.map((key) => (
+                <TabsContent key={key} value={key}>
+                  {typeof (metadata as any)[key] === "object" ? (
+                    <pre className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[60vh]">
+                      {JSON.stringify((metadata as any)[key], null, 2)}
+                    </pre>
+                  ) : (
+                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[60vh]">
+                      {String((metadata as any)[key])}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   };
 
   if (isLoading) {
@@ -363,6 +449,8 @@ export default function FlowPage() {
             />
           </div>
           <div className="w-full sm:w-auto flex justify-center items-center gap-2">
+            {renderOutputButton()}
+
             {!hasTemplate ? (
               <Button
                 variant="outline"
