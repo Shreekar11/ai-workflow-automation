@@ -6,15 +6,14 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { Home, LayoutTemplate, RotateCw } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { Home, Layout, RotateCw } from "lucide-react";
 
 // Menu items.
 const items = [
@@ -26,7 +25,7 @@ const items = [
   {
     title: "Templates",
     url: "/templates",
-    icon: LayoutTemplate,
+    icon: Layout,
   },
   {
     title: "Previous Runs",
