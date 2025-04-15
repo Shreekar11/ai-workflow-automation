@@ -449,7 +449,7 @@ export default function FlowPage() {
             />
           </div>
           <div className="w-full sm:w-auto flex justify-center items-center gap-2">
-            {renderOutputButton()}
+            {template.template && renderOutputButton()}
 
             {!hasTemplate ? (
               <Button

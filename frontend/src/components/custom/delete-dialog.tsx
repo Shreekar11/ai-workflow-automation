@@ -28,7 +28,7 @@ interface DeleteDialogProps {
   description?: string;
 }
 
-export function DeleteDialog({
+const DeleteDialog = ({
   user,
   workflowId,
   workflows,
@@ -37,7 +37,7 @@ export function DeleteDialog({
   setWorkflows,
   title = "Delete Confirmation",
   description = "Are you sure you want to delete this item? This action cannot be undone.",
-}: DeleteDialogProps) {
+}: DeleteDialogProps) => {
   const { token, sessionId } = useToken();
   const [isDeleting, setIsDeleting] = useState(false);
   const handleDelete = async () => {
@@ -108,4 +108,6 @@ export function DeleteDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default DeleteDialog;
