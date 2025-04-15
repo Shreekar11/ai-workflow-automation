@@ -2,7 +2,7 @@
 import { Workflow } from "@/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/useToast";
-import { Eye, Plus, Layout, Trash, ChevronRight } from "lucide-react";
+import { Eye, Plus, Layout, Trash, ChevronRight, MonitorDown } from "lucide-react";
 
 import {
   Table,
@@ -43,7 +43,7 @@ export default function DashboardPage({
   //   const tutorials = [
   //     {
   //       id: 1,
-  //       icon: <Layout size={20} />,
+  //       icon: <MonitorDown size={20} />,
   //       category: "Web Scraping",
   //       title: "Scrape and extract from websites",
   //       color: "purple-50",

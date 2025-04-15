@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { PreTemplateType } from "@/types";
-import { BrainCircuit, File, FileText, RssIcon } from "lucide-react";
+import { BrainCircuit, File, FileText, MonitorDown } from "lucide-react";
 
 import {
   Card,
@@ -32,7 +32,7 @@ export default function TemplateCard({
       case "Scraper":
         return (
           <div className="flex items-center">
-            <RssIcon className="h-5 w-5 text-amber-600" />
+            <MonitorDown className="h-5 w-5 text-amber-600" />
             {!isLast && <div className="h-px w-4 bg-gray-300 mx-1" />}
           </div>
         );

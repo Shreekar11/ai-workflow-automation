@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
-import { InfoIcon, RssIcon } from "lucide-react";
+import { InfoIcon, MonitorDown, RssIcon } from "lucide-react";
 
 import {
   Tooltip,
@@ -41,7 +41,7 @@ export default function BlogScraperNode({
       <CardHeader className="pb-2 bg-amber-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <RssIcon className="h-5 w-5 text-amber-600" />
+            <MonitorDown className="h-5 w-5 text-amber-600" />
             <CardTitle className="text-lg font-bold text-amber-800">
               {data.label}
             </CardTitle>
