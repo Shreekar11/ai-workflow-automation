@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { IoLogoLinkedin } from "react-icons/io5";
 
 export default function TemplateCard({
   template,
@@ -29,7 +30,7 @@ export default function TemplateCard({
 
   const renderNode = (node: any, index: number, isLast: boolean) => {
     switch (node.name) {
-      case "Scraper":
+      case "Blog Scraper":
         return (
           <div className="flex items-center">
             <MonitorDown className="h-5 w-5 text-amber-600" />
@@ -47,6 +48,13 @@ export default function TemplateCard({
         return (
           <div className="flex items-center">
             <FileText className="h-5 w-5 text-blue-600" />
+            {!isLast && <div className="h-px w-4 bg-gray-300 mx-1" />}
+          </div>
+        );
+      case "LinkedIn Scraper":
+        return (
+          <div className="flex items-center">
+            <IoLogoLinkedin className="h-5 w-5 text-blue-600" />
             {!isLast && <div className="h-px w-4 bg-gray-300 mx-1" />}
           </div>
         );

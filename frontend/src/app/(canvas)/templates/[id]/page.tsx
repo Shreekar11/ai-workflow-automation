@@ -44,6 +44,7 @@ import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
 import GoogleDocsNode from "@/components/node/google-docs-node";
 import BlogScraperNode from "@/components/node/blog-scraper-node";
+import LinkedInScraperNode from "@/components/node/linkedin-scraper-node";
 
 // Types for node data
 interface NodeData {
@@ -62,6 +63,7 @@ const nodeTypes: NodeTypes = {
   blogScraper: BlogScraperNode,
   llmModel: LLMModelNode,
   googleDocs: GoogleDocsNode,
+  linkedInScraper: LinkedInScraperNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -69,13 +71,17 @@ const edgeTypes: EdgeTypes = {
 };
 
 const getNodeTypeFromName = (name: string): string => {
-  const nameToType = {
-    Scraper: "blogScraper",
+  if (name.includes("Scraper")) {
+    const scraperType = name.replace("Scraper", "").trim().toLowerCase();
+    return `${scraperType}Scraper`;
+  }
+
+  const nameToType: Record<string, string> = {
     "LLM Model": "llmModel",
     "Google Docs": "googleDocs",
   };
 
-  return (nameToType as any)[name] || "blogScraper";
+  return nameToType[name] || "defaultNode";
 };
 
 export default function FlowPage() {
@@ -112,6 +118,8 @@ export default function FlowPage() {
       [nodeId]: data,
     }));
   }, []);
+
+  console.log(template);
 
   // Generate initial nodes based on available template actions with metadata if available
   const generateInitialNodes = () => {
