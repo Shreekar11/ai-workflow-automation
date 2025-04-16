@@ -130,8 +130,8 @@ async function processScraperAction(
           },
           status:
             stage === (templateResultData?.template.actions.length || 1) - 1
-              ? "completed"
-              : "running",
+              ? "COMPLETED"
+              : "RUNNING",
         },
       });
 
@@ -190,8 +190,8 @@ async function processModelAction(
           },
           status:
             stage === (templateResultData?.template.actions.length || 1) - 1
-              ? "completed"
-              : "running",
+              ? "COMPLETED"
+              : "RUNNING",
         },
       });
 
@@ -254,8 +254,8 @@ async function processDocsAction(
         },
         status:
           stage === (templateResultData?.template.actions.length || 1) - 1
-            ? "completed"
-            : "running",
+            ? "COMPLETED"
+            : "RUNNING",
       },
     });
   }

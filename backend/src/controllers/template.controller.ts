@@ -142,7 +142,7 @@ export default class TemplateController {
         data: {
           templateId: id,
           metadata: body.metadata,
-          status: "running",
+          status: "RUNNING",
         },
       });
 
