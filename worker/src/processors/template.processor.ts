@@ -7,6 +7,8 @@ import {
   availableModelId,
   availableGoogleDocsId,
   QUEUE_NAME,
+  availableLinkedinId,
+  availableLinkedinModel,
 } from "../config";
 import ScraperService from "../services/scraper.service";
 import ModelService from "../services/model.service";
@@ -42,7 +44,10 @@ export async function processTemplateMessage(
 
   try {
     // scraper action
-    if (currentAction?.type.id === availableScraperId) {
+    if (
+      currentAction?.type.id === availableScraperId ||
+      currentAction?.type.id === availableLinkedinId
+    ) {
       await processScraperAction(
         client,
         currentAction,
@@ -53,7 +58,10 @@ export async function processTemplateMessage(
     }
 
     // llm model action
-    if (currentAction?.type.id === availableModelId) {
+    if (
+      currentAction?.type.id === availableModelId ||
+      currentAction?.type.id === availableLinkedinModel
+    ) {
       await processModelAction(
         client,
         currentAction,
@@ -77,7 +85,7 @@ export async function processTemplateMessage(
     await client.templateResult.update({
       where: { id: templateResultData?.id },
       data: {
-        status: "failed",
+        status: "FAILED",
       },
     });
 
@@ -116,6 +124,11 @@ async function processScraperAction(
   const scraperService = new ScraperService(url);
   const actionResult = await scraperService.scraperAction();
 
+  let typeName = "";
+  if (currentAction.type.name.includes("Scraper")) {
+    typeName = "scraper";
+  }
+
   if (actionResult) {
     await client.$transaction(async (tx) => {
       await tx.templateResult.update({
@@ -125,8 +138,7 @@ async function processScraperAction(
         data: {
           metadata: {
             ...(metadata as object),
-            [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-              actionResult,
+            [`${typeName}_result`]: actionResult,
           },
           status:
             stage === (templateResultData?.template.actions.length || 1) - 1
@@ -138,13 +150,16 @@ async function processScraperAction(
       // here the metadata of the next step i.e ai-model is updated and scraper_result is added
       await tx.templateAction.update({
         where: {
-          actionId: availableModelId,
+          actionId: `${
+            currentAction?.type?.name === "Blog Scraper"
+              ? availableModelId
+              : availableLinkedinModel
+          }`,
         },
         data: {
           metadata: {
             ...(metadata as object),
-            [`${currentAction.type.name.toLowerCase().trim()}_result`]:
-              actionResult,
+            [`${typeName}_result`]: actionResult,
           },
         },
       });
@@ -177,6 +192,9 @@ async function processModelAction(
   const modelService = new ModelService(url, title, content, system, model);
 
   const actionResult = await modelService.llmAction();
+
+  console.log(actionResult);
+
   if (actionResult) {
     await client.$transaction(async (tx) => {
       await tx.templateResult.update({
