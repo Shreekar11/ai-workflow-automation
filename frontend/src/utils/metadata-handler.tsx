@@ -11,7 +11,10 @@ const buildTemplatePayload = (
     const nodeData = nodeFormData[node.id];
     let actionMetadata = {};
 
-    if (node.type === "blogScraper" && nodeData?.url) {
+    if (
+      (node.type === "blogScraper" || node.type === "linkedinScraper") &&
+      nodeData?.url
+    ) {
       actionMetadata = { url: nodeData.url };
     } else if (node.type === "llmModel") {
       actionMetadata = {
