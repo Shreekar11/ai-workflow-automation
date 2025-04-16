@@ -273,7 +273,7 @@ export default function FlowPage() {
         variant: "success",
       });
 
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
@@ -338,28 +338,27 @@ export default function FlowPage() {
   };
 
   const renderOutputButton = () => {
-    const hasMetadata = template?.availableTemplateActions?.some(
-      (action) =>
-        action.actions?.[0]?.metadata &&
-        Object.keys(action.actions[0].metadata).length > 0
+    const hasMetadata = template?.template.templateResults?.some(
+      (result) => result?.metadata && Object.keys(result.metadata).length > 0
     );
 
     if (!hasMetadata) return null;
 
     // Get metadata from run result or template
     let metadata = {};
-    if (template?.availableTemplateActions) {
-      const availableActions = template.availableTemplateActions;
-      const actionWithMetadata =
-        template.availableTemplateActions[availableActions.length - 1];
+    if (template?.template.templateResults) {
+      const results = template?.template.templateResults;
+      // const availableActions = template.availableTemplateActions;
+      // const actionWithMetadata =
+      //   template.availableTemplateActions[availableActions.length - 1];
 
-      const scraper_result =
-        actionWithMetadata?.actions[0]?.metadata.scraper_result;
-      const llm_result =
-        actionWithMetadata?.actions[0]?.metadata.llmmodel_result;
+      const scraper_result = results[0]?.metadata.scraper_result;
+      const llm_result = results[0]?.metadata.llmmodel_result;
+      const google_result = results[0]?.metadata.google_docs_result;
       const final_metadata_result = {
         scraper_result: scraper_result?.content,
         llm_result: llm_result?.result,
+        google_result: google_result?.documentUrl,
       };
 
       metadata = final_metadata_result;

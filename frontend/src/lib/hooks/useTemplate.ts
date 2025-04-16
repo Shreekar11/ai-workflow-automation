@@ -22,6 +22,7 @@ export function useTemplate(templateId: string | string[]): UseTemplatesReturn {
     template: {
       id: "",
       name: "",
+      templateResults: [],
     },
     availableTemplateActions: [],
   });

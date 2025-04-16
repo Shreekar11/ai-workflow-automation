@@ -179,6 +179,7 @@ export interface PreTemplateType {
   template: {
     id: string;
     name: string;
+    templateResults: any[];
   };
   availableTemplateActions: TemplateAction[];
 }
