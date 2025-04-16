@@ -13,10 +13,10 @@ export default class PreTemplateController {
 
   @GET("/api/v1/pre/template/:id")
   public async getPreTemplate(req: Request, res: Response) {
-    await AuthMiddleware.verifyToken(req, res, () => {});
+    // await AuthMiddleware.verifyToken(req, res, () => {});
     const { id } = req.params;
     try {
-      const preTemplateData = await this.preTemplateRepo.getPreTemplatById(id);
+      const preTemplateData = await this.preTemplateRepo.getPreTemplateById(id);
 
       return res.status(HTTPStatus.OK).json({
         status: true,
