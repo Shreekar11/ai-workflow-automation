@@ -43,7 +43,7 @@ async function main() {
     data: {
       id: "1174ec54-91a4-4b0e-bd60-7bc438b2e3b4",
       preTemplateId: "0245e465-8329-4765-8a72-1058cf8af9f8",
-      name: "Scraper",
+      name: "Blog Scraper",
       image: "https://img.icons8.com/?size=512&id=ITIhejPZQD5g&format=png",
     },
   });
@@ -65,6 +65,25 @@ async function main() {
       name: "Google Docs",
       image:
         "https://static.vecteezy.com/system/resources/previews/027/179/392/non_2x/google-docs-icon-logo-symbol-free-png.png",
+    },
+  });
+
+  await prisma.availableTemplateAction.create({
+    data: {
+      id: "5062cee8-df60-43d8-ae68-669bff73c41a",
+      preTemplateId: "6db1ed1f-107e-477f-a69b-1e2c4098b1d8",
+      name: "Linkedin Scraper",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqRT_v4ZAz8Dycy-qPy_EUGo-5afRiZZ4o_w&s",
+    },
+  });
+
+  await prisma.availableTemplateAction.create({
+    data: {
+      id: "ce056d42-4ed2-43ca-9ef2-e9e6063228d2",
+      preTemplateId: "6db1ed1f-107e-477f-a69b-1e2c4098b1d8",
+      name: "LLM model",
+      image:
+        "https://static.vecteezy.com/system/resources/previews/021/059/827/non_2x/chatgpt-logo-chat-gpt-icon-on-white-background-free-vector.jpg",
     },
   });
 }
