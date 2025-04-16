@@ -45,6 +45,7 @@ import LLMModelNode from "@/components/node/llm-model-node";
 import GoogleDocsNode from "@/components/node/google-docs-node";
 import BlogScraperNode from "@/components/node/blog-scraper-node";
 import LinkedinScraperNode from "@/components/node/linkedin-scraper-node";
+import { blogScraperId, googleDocsId, llmModelId } from "@/lib/config";
 
 // Types for node data
 interface NodeData {
@@ -130,7 +131,7 @@ export default function FlowPage() {
           position: { x: 200, y: 100 },
           data: {
             label: "Blog Scraper",
-            availableActionId: "blog-scraper-action",
+            availableActionId: blogScraperId,
             onChange: handleNodeDataChange,
           },
         },
@@ -140,7 +141,7 @@ export default function FlowPage() {
           position: { x: 600, y: 100 },
           data: {
             label: "LLM Model",
-            availableActionId: "llm-model-action",
+            availableActionId: llmModelId,
             onChange: handleNodeDataChange,
           },
         },
@@ -150,7 +151,7 @@ export default function FlowPage() {
           position: { x: 1050, y: 100 },
           data: {
             label: "Google Docs",
-            availableActionId: "google-docs-action",
+            availableActionId: googleDocsId,
             onChange: handleNodeDataChange,
           },
         },

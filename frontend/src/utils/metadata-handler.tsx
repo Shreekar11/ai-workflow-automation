@@ -49,7 +49,10 @@ export const buildRunRequestPayload = (
     const nodeData = nodeFormData[node.id];
     if (!nodeData) return;
 
-    if (node.type === "blogScraper" && nodeData.url) {
+    if (
+      (node.type === "blogScraper" || node.type === "linkedinScraper") &&
+      nodeData.url
+    ) {
       url = nodeData.url;
     }
 
@@ -64,7 +67,7 @@ export const buildRunRequestPayload = (
   });
 
   // Check if we have all required fields
-  if (!url || !model || !system || !googleDocsId) {
+  if (!url || !model || !system) {
     return null;
   }
 

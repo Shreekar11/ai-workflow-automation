@@ -1,5 +1,6 @@
 "use client"
 
+import { blogScraperId, llmModelId } from "@/lib/config"
 import { BaseEdge, type EdgeProps, getStraightPath } from "reactflow"
 
 export default function CustomEdge({
@@ -24,15 +25,13 @@ export default function CustomEdge({
     // targetPosition,
   })
 
-  console.log(source);
-
   // Determine edge color based on source and target
-  let edgeColor = "#10b981"
+  let edgeColor = "#10B981"
 
-  if (source === "1174ec54-91a4-4b0e-bd60-7bc438b2e3b4" && target === "de560ec9-eba5-4aaf-a30b-863817dfedc4") {
-    edgeColor = "#f59e0b" // amber for blog scraper to LLM
-  } else if (source === "de560ec9-eba5-4aaf-a30b-863817dfedc4") {
-    edgeColor = "#ef4444" // red for LLM to Google Docs
+  if (source === blogScraperId && target === llmModelId) {
+    edgeColor = "#F59E0B"
+  } else if (source === llmModelId) {
+    edgeColor = "#EF4444"
   }
 
   return (
