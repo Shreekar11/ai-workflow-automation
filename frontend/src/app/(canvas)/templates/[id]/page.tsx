@@ -44,7 +44,7 @@ import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
 import GoogleDocsNode from "@/components/node/google-docs-node";
 import BlogScraperNode from "@/components/node/blog-scraper-node";
-import LinkedInScraperNode from "@/components/node/linkedin-scraper-node";
+import LinkedinScraperNode from "@/components/node/linkedin-scraper-node";
 
 // Types for node data
 interface NodeData {
@@ -63,7 +63,7 @@ const nodeTypes: NodeTypes = {
   blogScraper: BlogScraperNode,
   llmModel: LLMModelNode,
   googleDocs: GoogleDocsNode,
-  linkedInScraper: LinkedInScraperNode,
+  linkedinScraper: LinkedinScraperNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -81,7 +81,7 @@ const getNodeTypeFromName = (name: string): string => {
     "Google Docs": "googleDocs",
   };
 
-  return nameToType[name] || "defaultNode";
+  return nameToType[name] || "blogScraper";
 };
 
 export default function FlowPage() {
@@ -106,20 +106,16 @@ export default function FlowPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodesState);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdgesState);
 
-  // Store node data for form values
   const [nodeFormData, setNodeFormData] = useState<Record<string, NodeData>>(
     {}
   );
 
-  // Handle node data change
   const handleNodeDataChange = useCallback((nodeId: string, data: NodeData) => {
     setNodeFormData((prev) => ({
       ...prev,
       [nodeId]: data,
     }));
   }, []);
-
-  console.log(template);
 
   // Generate initial nodes based on available template actions with metadata if available
   const generateInitialNodes = () => {
@@ -168,7 +164,6 @@ export default function FlowPage() {
 
     const nodeValues = template.availableTemplateActions.map(
       (action, index) => {
-        // Find metadata if it exists
         let metadata = {};
         if (hasTemplate && action.actions && action.actions.length > 0) {
           metadata = action.actions[0].metadata || {};
@@ -224,14 +219,12 @@ export default function FlowPage() {
       });
       setNodeFormData(initialFormData);
 
-      // Set workflow name from template if available
       if (template.name) {
         setTemplateName(template.name);
       }
     }
   }, [template, id]);
 
-  // Update nodes and edges when initial states change
   useEffect(() => {
     setNodes(initialNodesState);
     setEdges(initialEdgesState);
@@ -246,7 +239,6 @@ export default function FlowPage() {
     [setEdges]
   );
 
-  // Save the template workflow
   const handleSaveTemplate = async () => {
     setIsSaving(true);
     if (!validateFlow(templateName, nodes)) {
@@ -280,7 +272,6 @@ export default function FlowPage() {
         variant: "success",
       });
 
-      // Reload the page to get the updated template with ID
       router.refresh();
     } catch (error) {
       toast({
@@ -326,7 +317,6 @@ export default function FlowPage() {
         sessionId || ""
       );
 
-      console.log(result);
       setRunResult(result);
 
       toast({
@@ -367,8 +357,8 @@ export default function FlowPage() {
       const llm_result =
         actionWithMetadata?.actions[0]?.metadata.llmmodel_result;
       const final_metadata_result = {
-        scraper_result: scraper_result.content,
-        llm_result: llm_result.result,
+        scraper_result: scraper_result?.content,
+        llm_result: llm_result?.result,
       };
 
       metadata = final_metadata_result;

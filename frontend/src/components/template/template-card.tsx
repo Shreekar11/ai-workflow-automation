@@ -51,7 +51,7 @@ export default function TemplateCard({
             {!isLast && <div className="h-px w-4 bg-gray-300 mx-1" />}
           </div>
         );
-      case "LinkedIn Scraper":
+      case "Linkedin Scraper":
         return (
           <div className="flex items-center">
             <IoLogoLinkedin className="h-5 w-5 text-blue-600" />
