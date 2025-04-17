@@ -31,14 +31,13 @@ import "reactflow/dist/style.css";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Save, FileText } from "lucide-react";
+import { ArrowLeft, Play, Save, FileText, X } from "lucide-react";
 
 import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
@@ -97,6 +96,7 @@ export default function FlowPage() {
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [showOutput, setShowOutput] = useState<boolean>(false);
   const [templateName, setTemplateName] = useState<string>("Untitled Workflow");
   const [runResult, setRunResult] = useState<any>(null);
 
@@ -338,77 +338,104 @@ export default function FlowPage() {
   };
 
   const renderOutputButton = () => {
-    const hasMetadata = template?.template.templateResults?.some(
+    const hasMetadata =
+      template?.availableTemplateActions?.some(
+        (action) =>
+          action.actions?.[0]?.metadata &&
+          Object.keys(action.actions[0].metadata).length > 0
+      ) ||
+      (runResult && Object.keys(runResult).length > 0);
+
+    if (!hasMetadata) return null;
+
+    return (
+      <Button
+        className="bg-white shadow-md hover:bg-gray-100"
+        variant="outline"
+        onClick={() => setShowOutput(!showOutput)}
+      >
+        <FileText className="h-4 w-4 mr-2" />
+        {showOutput ? "Hide Output" : "View Output"}
+      </Button>
+    );
+  };
+
+  const renderOutputPanel = () => {
+    const results = template?.template.templateResults || [];
+    const hasMetadata = results.some(
       (result) => result?.metadata && Object.keys(result.metadata).length > 0
     );
 
     if (!hasMetadata) return null;
 
-    // Get metadata from run result or template
-    let metadata = {};
-    if (template?.template.templateResults) {
-      const results = template?.template.templateResults;
-      // const availableActions = template.availableTemplateActions;
-      // const actionWithMetadata =
-      //   template.availableTemplateActions[availableActions.length - 1];
-
-      const scraper_result = results[0]?.metadata.scraper_result;
-      const llm_result = results[0]?.metadata.llmmodel_result;
-      const google_result = results[0]?.metadata.google_docs_result;
-      const final_metadata_result = {
-        scraper_result: scraper_result?.content,
-        llm_result: llm_result?.result,
-        google_result: google_result?.documentUrl,
-      };
-
-      metadata = final_metadata_result;
-    }
-
-    const metadataKeys = Object.keys(metadata);
-
-    if (metadataKeys.length === 0) return null;
-
     return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button
-            className="bg-white shadow-md hover:bg-gray-100"
-            variant="outline"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            View Output
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Template Output</DialogTitle>
-          </DialogHeader>
-          <div className="overflow-y-auto flex-1 pr-2">
-            <Tabs defaultValue={metadataKeys[0]}>
-              <TabsList className="mb-4">
-                {metadataKeys.map((key) => (
-                  <TabsTrigger key={key} value={key}>
-                    {key}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {metadataKeys.map((key) => (
-                <TabsContent key={key} value={key}>
-                  {typeof (metadata as any)[key] === "object" ? (
-                    <pre className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[60vh]">
-                      {JSON.stringify((metadata as any)[key], null, 2)}
-                    </pre>
-                  ) : (
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[60vh]">
-                      {String((metadata as any)[key])}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+      <div className="absolute top-0 right-0 bottom-0 w-[400px] bg-white border-l border-gray-200 shadow-lg z-20 overflow-hidden">
+        <div className="h-full w-full overflow-auto p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Template Output</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowOutput(false)}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <Accordion type="multiple" className="space-y-2">
+            {results.map((result, index) => {
+              const scraper_result = result?.metadata?.scraper_result?.content;
+              const llm_result = result?.metadata?.llmmodel_result?.result;
+              const google_result =
+                result?.metadata?.google_docs_result?.documentUrl;
+
+              const metadata = {
+                scraper_result,
+                llm_result,
+                google_result,
+              };
+
+              const metadataKeys = Object.keys(metadata).filter(
+                (key) => (metadata as any)[key]
+              );
+
+              if (metadataKeys.length === 0) return null;
+
+              return (
+                <AccordionItem key={index} value={`result-${index}`}>
+                  <AccordionTrigger>Result {index + 1}</AccordionTrigger>
+                  <AccordionContent>
+                    <Tabs defaultValue={metadataKeys[0]} className="mt-2">
+                      <TabsList className="mb-4">
+                        {metadataKeys.map((key) => (
+                          <TabsTrigger key={key} value={key}>
+                            {key}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      {metadataKeys.map((key) => (
+                        <TabsContent key={key} value={key}>
+                          {typeof (metadata as any)[key] === "object" ? (
+                            <pre className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[300px] text-sm">
+                              {JSON.stringify((metadata as any)[key], null, 2)}
+                            </pre>
+                          ) : (
+                            <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[300px] text-sm">
+                              {String((metadata as any)[key])}
+                            </div>
+                          )}
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        </div>
+      </div>
     );
   };
 
@@ -479,18 +506,26 @@ export default function FlowPage() {
       </div>
 
       <div className="flex-1 w-full relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-        >
-          <Controls />
-          <Background variant={"dots" as BackgroundVariant} gap={20} size={1} />
-        </ReactFlow>
+        <div className="w-full h-full">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+          >
+            <Controls />
+            <Background
+              variant={"dots" as BackgroundVariant}
+              gap={20}
+              size={1}
+            />
+          </ReactFlow>
+        </div>
+
+        {showOutput && renderOutputPanel()}
       </div>
     </div>
   );
