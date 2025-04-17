@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { BaseEdge, type EdgeProps, getStraightPath } from "reactflow"
+import { BaseEdge, type EdgeProps, getSmoothStepPath } from "reactflow";
 
 export default function CustomEdge({
   id,
@@ -15,17 +15,17 @@ export default function CustomEdge({
   source,
   target,
 }: EdgeProps) {
-  const [edgePath] = getStraightPath({
+  const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
-    // sourcePosition,
+    sourcePosition,
     targetX,
     targetY,
-    // targetPosition,
-  })
+    targetPosition,
+  });
 
   // Determine edge color based on source and target
-  let edgeColor = "#10B981"
+  let edgeColor = "#10B981";
 
   return (
     <BaseEdge
@@ -38,6 +38,5 @@ export default function CustomEdge({
         stroke: edgeColor,
       }}
     />
-  )
+  );
 }
-

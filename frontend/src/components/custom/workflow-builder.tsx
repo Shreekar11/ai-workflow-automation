@@ -393,6 +393,17 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeType}
+          fitView={true}
+          fitViewOptions={{
+            padding: 1.2, // Increased padding around the nodes
+            minZoom: 0.05, // Decreased minimum zoom to allow further zooming out
+            maxZoom: 1.0,
+          }}
+          defaultViewport={{
+            x: 0,
+            y: 0,
+            zoom: 0.1, // Much smaller zoom value (0.1 instead of 0.3) for maximum zoom-out
+          }}
         >
           <Controls />
           <Background variant={"dots" as BackgroundVariant} gap={20} size={1} />
