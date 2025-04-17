@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-
 export default function GoogleDocsNode({
   data,
   id,
@@ -77,7 +76,7 @@ export default function GoogleDocsNode({
       </CardContent>
       <Handle
         type="target"
-        position={Position.Left}
+        position={Position.Top}
         id="in"
         className="w-3 h-3 bg-blue-500"
       />

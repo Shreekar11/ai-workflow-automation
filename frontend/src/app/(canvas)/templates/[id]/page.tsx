@@ -128,7 +128,7 @@ export default function FlowPage() {
         {
           id: "1",
           type: "blogScraper",
-          position: { x: 200, y: 100 },
+          position: { x: 250, y: 50 },
           data: {
             label: "Blog Scraper",
             availableActionId: blogScraperId,
@@ -138,7 +138,7 @@ export default function FlowPage() {
         {
           id: "2",
           type: "llmModel",
-          position: { x: 600, y: 100 },
+          position: { x: 250, y: 250 },
           data: {
             label: "LLM Model",
             availableActionId: llmModelId,
@@ -148,7 +148,7 @@ export default function FlowPage() {
         {
           id: "3",
           type: "googleDocs",
-          position: { x: 1050, y: 100 },
+          position: { x: 250, y: 450 },
           data: {
             label: "Google Docs",
             availableActionId: googleDocsId,
@@ -157,11 +157,11 @@ export default function FlowPage() {
         },
       ];
     }
-
     // Calculate horizontal spacing based on number of nodes
-    const spacing = 450;
-    const startX = 200;
-    const y = 100;
+    const spacing = 350;
+    const startY = 10;
+    const baseX = 600;
+    const middleNodeOffset = 150;
 
     const nodeValues = template.availableTemplateActions.map(
       (action, index) => {
@@ -170,10 +170,17 @@ export default function FlowPage() {
           metadata = action.actions[0].metadata || {};
         }
 
+        const nodeCount = template.availableTemplateActions.length;
+        let xPosition = baseX;
+
+        if (nodeCount === 3 && index === 1) {
+          xPosition += middleNodeOffset;
+        }
+
         return {
           id: action.id,
           type: getNodeTypeFromName(action.name),
-          position: { x: startX + index * spacing, y },
+          position: { x: xPosition, y: startY + index * spacing },
           data: {
             label: action.name,
             image: action.image,
@@ -515,6 +522,17 @@ export default function FlowPage() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            fitView={true}
+            fitViewOptions={{
+              padding: 0.5,
+              minZoom: 0.5,
+              maxZoom: 1.5,
+            }}
+            defaultViewport={{
+              x: 0,
+              y: 0,
+              zoom: 0.7,
+            }}
           >
             <Controls />
             <Background

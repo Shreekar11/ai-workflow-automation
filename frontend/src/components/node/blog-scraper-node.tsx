@@ -76,7 +76,7 @@ export default function BlogScraperNode({
       </CardContent>
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
         id="out"
         className="w-3 h-3 bg-amber-500"
       />

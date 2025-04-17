@@ -77,7 +77,7 @@ export default function LinkedinScraperNode({
       </CardContent>
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
         id="out"
         className="w-3 h-3 bg-blue-500"
       />
