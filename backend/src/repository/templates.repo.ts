@@ -12,17 +12,18 @@ export default class TemplateRepository extends Repository<Template> {
         userId,
       },
       include: {
+        templateResults: true,
         preTemplate: {
           include: {
             availableTemplateActions: true,
-          }
+          },
         },
         // actions: {
         //   include: {
         //     type: true,
         //   }
         // }
-      }
+      },
     });
 
     return templates;
