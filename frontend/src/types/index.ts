@@ -50,103 +50,6 @@ export interface Workflow {
   };
 }
 
-export interface OptionType {
-  id: string;
-  name: string;
-  image?: string;
-  type?: string;
-  icon?: ReactNode;
-  metadata?: Record<string, string>;
-}
-
-export interface NodeCardProps {
-  workflow: Workflow | null;
-  selectTrigger: {
-    id: string;
-    name: string;
-    metadata: Record<string, string>;
-  };
-  setSelectTrigger: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      metadata: Record<string, string>;
-    }>
-  >;
-  finalTrigger: {
-    id: string;
-    name: string;
-    metadata: Record<string, string>;
-  };
-  setFinalTrigger: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      metadata: Record<string, string>;
-    }>
-  >;
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (option: {
-    id: string;
-    type: string;
-    name: string;
-    metadata: Record<string, string>;
-    data: Record<string, string>;
-  }) => void;
-  type: "trigger" | "action";
-}
-
-export interface MetadataDisplayProps {
-  type: string;
-  metadata: Record<string, string>;
-}
-
-export interface TriggerMetadataFieldsProps {
-  metadata: Record<string, string>;
-  errors: Record<string, boolean>;
-  setMetadata: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  handleMetadataChange: (key: string, value: string) => void;
-}
-
-export interface ActionMetadataFieldsProps {
-  selectedOption: OptionType;
-  metadata: Record<string, string>;
-  errors: Record<string, boolean>;
-  errorMessages: Record<string, string>;
-  selectTrigger: {
-    metadata: Record<string, string>;
-  };
-  setDisplayTrigger: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
-  setSelectTrigger: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      metadata: Record<string, string>;
-    }>
-  >;
-  finalTrigger: {
-    id: string;
-    name: string;
-    metadata: Record<string, string>;
-  };
-  setFinalTrigger: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      metadata: Record<string, string>;
-    }>
-  >;
-  handleMetadataChange: (
-    key: string,
-    value: string,
-    callback?: (key: string, value: string) => void
-  ) => void;
-}
-
 export interface ValidationResult {
   isValid: boolean;
   message: string;
@@ -170,6 +73,47 @@ export interface ActionType {
   name: string;
   metadata: Record<string, string>;
   triggerMetadata?: Record<string, string>;
+}
+
+export interface RunType {
+  workflows: {
+    id?: string;
+    triggerId: string;
+    userId: string;
+    name: string;
+    timestamp: string;
+    workflowRuns: {
+      id: string;
+      status: string;
+      metadata: any;
+      timestamp: string;
+    }[];
+  }[];
+  templates: {
+    id: string;
+    userId: string;
+    name: string;
+    preTemplateId: string;
+    templateResults: {
+      id: string;
+      status: string;
+      metadata: any;
+      timestamp: string;
+    }[];
+  }[];
+}
+export interface Template {
+  id?: string;
+  name: string;
+  userId: number;
+  preTemplate: PreTemplateType;
+  templateResults: {
+    id?: string;
+    templateId: string;
+    metadata: any;
+    status: string;
+    timestamp: string;
+  }[];
 }
 
 export interface PreTemplateType {
