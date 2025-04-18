@@ -16,19 +16,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RunSkeleton from "@/components/runs/runs-skeleton";
 
 export default function DashboardPage() {
-  const { runs: mockData } = useRuns();
+  const { isLoading, runs } = useRuns();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("templates");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredWorkflows = mockData.workflows.filter((workflow) =>
+  const filteredWorkflows = runs.workflows.filter((workflow) =>
     workflow.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredTemplates = mockData.templates.filter((template) =>
+  const filteredTemplates = runs.templates.filter((template) =>
     template.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -39,6 +40,10 @@ export default function DashboardPage() {
     },
     [selectedItem, dialogOpen]
   );
+
+  if (isLoading) {
+    return <RunSkeleton />;
+  }
 
   return (
     <div className="w-full p-4">
