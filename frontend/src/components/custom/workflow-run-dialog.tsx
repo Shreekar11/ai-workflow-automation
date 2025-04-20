@@ -49,7 +49,7 @@ const WorkflowRunDialog = ({
                           <span className="font-medium">Status:</span>
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              workflowRun.status.toLowerCase() === "completed"
+                              workflowRun.status.toLowerCase() === "COMPLETED"
                                 ? "bg-green-100 text-green-800"
                                 : workflowRun.status.toLowerCase() === "failed"
                                 ? "bg-red-100 text-red-800"
@@ -57,7 +57,7 @@ const WorkflowRunDialog = ({
                             }`}
                           >
                             {workflowRun.status.toLowerCase() ===
-                              "completed" && (
+                              "COMPLETED" && (
                               <CheckCircle2 className="w-4 h-4 mr-1" />
                             )}
                             {workflowRun.status.toLowerCase() === "failed" && (

@@ -6,24 +6,21 @@ export default class PreTemplateRepository extends Repository<PreTemplate> {
     super("preTemplate");
   }
 
-  public async getPreTemplatById(
+  public async getPreTemplateById(
     templateId: string
   ): Promise<PreTemplate | null> {
     try {
       const preTemplate = await this.model.findUnique({
         where: { id: templateId },
         include: {
-          template: true,
+          template: {
+            include: {
+              templateResults: true,
+            },
+          },
           availableTemplateActions: {
             include: {
-              actions: {
-                include: {
-                  type: true,
-                },
-                orderBy: {
-                  sortingOrder: "asc",
-                },
-              },
+              actions: true,
             },
           },
         },

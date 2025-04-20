@@ -69,7 +69,7 @@ export async function processWorkflowMessage(
 
       await client.workflowRun.update({
         where: { id: workflowRunDetails?.id },
-        data: { status: "completed" },
+        data: { status: "COMPLETED" },
       });
     }
 
@@ -106,7 +106,7 @@ export async function processWorkflowMessage(
 
       await client.workflowRun.update({
         where: { id: workflowRunDetails?.id },
-        data: { status: "completed" },
+        data: { status: "COMPLETED" },
       });
     }
   } catch (error: any) {

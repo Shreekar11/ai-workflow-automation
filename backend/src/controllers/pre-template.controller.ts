@@ -11,14 +11,12 @@ export default class PreTemplateController {
     this.preTemplateRepo = new PreTemplateRepository();
   }
 
-  @GET("/api/v1/pre/template")
+  @GET("/api/v1/pre/template/:id")
   public async getPreTemplate(req: Request, res: Response) {
-    await AuthMiddleware.verifyToken(req, res, () => {});
-    const { templateId } = req.body;
+    // await AuthMiddleware.verifyToken(req, res, () => {});
+    const { id } = req.params;
     try {
-      const preTemplateData = await this.preTemplateRepo.getPreTemplatById(
-        templateId
-      );
+      const preTemplateData = await this.preTemplateRepo.getPreTemplateById(id);
 
       return res.status(HTTPStatus.OK).json({
         status: true,
@@ -34,7 +32,7 @@ export default class PreTemplateController {
     }
   }
 
-  @GET("/api/v1/pre/template/all")
+  @GET("/api/v1/pre/template")
   public async getAllPreTemplates(req: Request, res: Response) {
     await AuthMiddleware.verifyToken(req, res, () => {});
 

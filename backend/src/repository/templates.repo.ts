@@ -11,6 +11,19 @@ export default class TemplateRepository extends Repository<Template> {
       where: {
         userId,
       },
+      include: {
+        templateResults: true,
+        preTemplate: {
+          include: {
+            availableTemplateActions: true,
+          },
+        },
+        // actions: {
+        //   include: {
+        //     type: true,
+        //   }
+        // }
+      },
     });
 
     return templates;
@@ -19,24 +32,18 @@ export default class TemplateRepository extends Repository<Template> {
   public async getUserTemplateById(templateId: string): Promise<Template> {
     const template = await this.model.findFirst({
       where: {
-        templateId,
+        id: templateId,
       },
       include: {
         actions: {
           include: {
             type: true,
-            metadata: true,
           },
           orderBy: {
             sortingOrder: "asc",
           },
         },
-        templateResults: {
-          include: {
-            status: true,
-            metadata: true,
-          },
-        },
+        templateResults: true,
       },
     });
 

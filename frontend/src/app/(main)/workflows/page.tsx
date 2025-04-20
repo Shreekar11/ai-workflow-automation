@@ -1,22 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Plus, Search } from "lucide-react";
 import { useWorkflows } from "@/lib/hooks/useWorkflows";
 
 // components
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/layout/navbar";
 import { WorkflowTable } from "@/components/custom/workflow-table";
 import { useUser } from "@clerk/nextjs";
 
 const WorkflowPage = () => {
   const router = useRouter();
   const { user } = useUser();
-  const { isLoading, workflows, setWorkflows } = useWorkflows();
   const [searchTerm, setSearchTerm] = useState("");
+  const { isLoading, workflows, setWorkflows } = useWorkflows();
 
   const handleViewWorkflow = (id: string) => {
     router.push(`/workflows/${id}`);
@@ -36,9 +35,8 @@ const WorkflowPage = () => {
   }, [workflows, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
-      <Navbar />
-      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+    <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-100 text-gray-900">
+      <main className="container px-4 sm:pr-10 sm:px-6 lg:px-8 lg:pr-12 py-8">
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">

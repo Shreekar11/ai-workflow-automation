@@ -106,7 +106,7 @@ model Template {
 
 model TemplateResult {
   id         String   @id @default(uuid())
-  templateId String   @unique
+  templateId String
   template   Template @relation(fields: [templateId], references: [id])
   status     String   @default("pending")
   metadata   Json

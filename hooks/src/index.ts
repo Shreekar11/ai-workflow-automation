@@ -107,7 +107,7 @@ app.post("/hooks/:workflowId", async (req, res): Promise<any> => {
         data: {
           workflowId,
           metadata: body,
-          status: "running",
+          status: "RUNNING",
         },
       });
 
