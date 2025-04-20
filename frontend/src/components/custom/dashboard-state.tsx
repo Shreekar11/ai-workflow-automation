@@ -2,7 +2,7 @@
 import { Workflow } from "@/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/lib/hooks/useToast";
-import { Eye, Plus, Layout, Trash, ChevronRight, MonitorDown } from "lucide-react";
+import { Eye, Plus, Layout, Trash, ChevronRight } from "lucide-react";
 
 import {
   Table,
@@ -70,7 +70,7 @@ export default function DashboardPage({
             <TableHead>Actions</TableHead>
             <TableHead>Webhook</TableHead>
             <TableHead>Webhook Secret</TableHead>
-            <TableHead>Workflow Runs</TableHead>
+            {/* <TableHead>Workflow Runs</TableHead> */}
             <TableHead>Created At</TableHead>
             <TableHead className="text-right">View</TableHead>
             <TableHead className="w-[50px]"></TableHead>
@@ -159,21 +159,6 @@ export default function DashboardPage({
                       <span className="text-gray-400">N/A</span>
                     )}
                   </TableCell>
-
-                  <TableCell
-                    className="cursor-pointer"
-                    onClick={() => setSelectedWorkflow(wf)}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-between"
-                    >
-                      <span>{wf.workflow.workflowRuns.length}</span>
-                      <span className="sr-only">View workflow runs</span>
-                      <ChevronRight className="h-4 w-4 opacity-50" />
-                    </Button>
-                  </TableCell>
                   <TableCell>{formatDate(wf.workflow.timestamp)}</TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -232,28 +217,6 @@ export default function DashboardPage({
             Create Workflow
           </Button>
         </div>
-
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {tutorials.map((tutorial) => (
-            <div
-              key={tutorial.id}
-              className={` bg-gradient-to-tr from-[#ffebd9] to-white rounded-xl p-6 text-left cursor-pointer hover:shadow-md transition-shadow border hover:border-gray-200`}
-              onClick={tutorial.onClick}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="mb-4">{tutorial.icon}</div>
-                  <h3 className="text-base font-medium text-[#FF7801] mb-1">
-                    {tutorial.category}
-                  </h3>
-                  <p className="text-lg font-semibold text-gray-900 mb-0">
-                    {tutorial.title}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div> */}
       </div>
     </div>
   );
