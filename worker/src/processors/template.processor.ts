@@ -154,7 +154,7 @@ async function processScraperAction(
     if (nextActionType) {
       await tx.templateAction.update({
         where: {
-          actionId: nextActionType.id,
+          actionId: nextActionType.actionId,
         },
         data: {
           metadata: {
@@ -198,6 +198,8 @@ async function processModelAction(
   const modelService = new ModelService(url, title, content, system, model);
   const actionResult = await modelService.llmAction();
 
+  const actionConfig = ACTION_TYPE_MAP[currentAction.type.name];
+
   if (!actionResult) return;
 
   const nextActionType = findNextActionType(
@@ -213,7 +215,7 @@ async function processModelAction(
       data: {
         metadata: {
           ...(metadata as object),
-          llmmodel_result: actionResult,
+          [actionConfig.resultKey]: actionResult,
         },
         status: isLastStage(templateResultData, stage)
           ? "COMPLETED"
@@ -225,12 +227,12 @@ async function processModelAction(
     if (nextActionType) {
       await tx.templateAction.update({
         where: {
-          actionId: nextActionType.id,
+          actionId: nextActionType.actionId,
         },
         data: {
           metadata: {
             ...(metadata as object),
-            llmmodel_result: actionResult,
+            [actionConfig.resultKey]: actionResult,
             scraper_result: scraperResult,
           },
         },
@@ -304,10 +306,17 @@ function isLastStage(templateResultData: any, stage: number): boolean {
 }
 
 function findNextActionType(actions: any[], currentAction: any): any {
-  const currentIndex = actions.findIndex(
+  const sortedActions = [...actions].sort(
+    (a, b) => a.sortingOrder - b.sortingOrder
+  );
+
+  const currentIndex = sortedActions.findIndex(
     (action) => action.id === currentAction.id
   );
-  if (currentIndex === -1 || currentIndex === actions.length - 1) return null;
 
-  return actions[currentIndex + 1].type;
+  if (currentIndex === -1 || currentIndex === sortedActions.length - 1) {
+    return null;
+  }
+
+  return sortedActions[currentIndex + 1];
 }

@@ -138,16 +138,44 @@ export default class TemplateController {
     try {
       await redisClient.connect();
 
-      const templateResult = await this.prisma.templateResult.create({
-        data: {
-          templateId: id,
-          metadata: body.metadata,
-          status: "RUNNING",
-        },
-      });
+      const templateUpdateTransaction = await this.prisma.$transaction(
+        async (tx) => {
+          const template = await tx.template.findFirst({
+            where: { id },
+            include: { actions: true },
+          });
+
+          if (!template) {
+            throw new Error(`Template with id ${id} not found`);
+          }
+
+          const updatePromises = template.actions.map((action) => {
+            return tx.templateAction.update({
+              where: { id: action.id },
+              data: { metadata: body.metadata },
+            });
+          });
+
+          const updatedActions = await Promise.all(updatePromises);
+
+          const templateResult = await tx.templateResult.create({
+            data: {
+              templateId: id,
+              metadata: body.metadata,
+              status: "RUNNING",
+            },
+          });
+
+          return {
+            template,
+            updatedActions,
+            templateResult,
+          };
+        }
+      );
 
       const message = JSON.stringify({
-        templateResultId: templateResult.id,
+        templateResultId: templateUpdateTransaction.templateResult.id,
         stage: 0,
       });
 
