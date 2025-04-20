@@ -33,9 +33,18 @@ async function main() {
   await prisma.preTemplate.create({
     data: {
       id: "0245e465-8329-4765-8a72-1058cf8af9f8",
-      name: "Blog Scraper Template",
+      name: "Blog Scraper to Google Docs",
       description:
-        "This template scraps the blog page details and uses a LLM model GPT or Claude to provide the transcript and write it to Google Doc or your email",
+        "Scrape content from any blog URL, summarize it with AI, and save it to Google Docs automatically.",
+    },
+  });
+
+  await prisma.preTemplate.create({
+    data: {
+      id: "6db1ed1f-107e-477f-a69b-1e2c4098b1d8",
+      name: "Linkedin Company Page Scraper",
+      description:
+        "Scrape company information from their LinkedIn page, providing data including employee count, company description etc. Uses AI to summarize the details",
     },
   });
 
@@ -52,7 +61,7 @@ async function main() {
     data: {
       id: "de560ec9-eba5-4aaf-a30b-863817dfedc4",
       preTemplateId: "0245e465-8329-4765-8a72-1058cf8af9f8",
-      name: "LLM model",
+      name: "LLM Model",
       image:
         "https://static.vecteezy.com/system/resources/previews/021/059/827/non_2x/chatgpt-logo-chat-gpt-icon-on-white-background-free-vector.jpg",
     },
@@ -73,7 +82,8 @@ async function main() {
       id: "5062cee8-df60-43d8-ae68-669bff73c41a",
       preTemplateId: "6db1ed1f-107e-477f-a69b-1e2c4098b1d8",
       name: "Linkedin Scraper",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqRT_v4ZAz8Dycy-qPy_EUGo-5afRiZZ4o_w&s",
+      image:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqRT_v4ZAz8Dycy-qPy_EUGo-5afRiZZ4o_w&s",
     },
   });
 
@@ -81,7 +91,7 @@ async function main() {
     data: {
       id: "ce056d42-4ed2-43ca-9ef2-e9e6063228d2",
       preTemplateId: "6db1ed1f-107e-477f-a69b-1e2c4098b1d8",
-      name: "LLM model",
+      name: "LLM Model",
       image:
         "https://static.vecteezy.com/system/resources/previews/021/059/827/non_2x/chatgpt-logo-chat-gpt-icon-on-white-background-free-vector.jpg",
     },
