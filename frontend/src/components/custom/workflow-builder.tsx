@@ -363,8 +363,8 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
               variant="outline"
               disabled={isLoading}
               onClick={handlePublishWorkflow}
-              className="bg-[#FF7801] text-white  
-              hover:bg-[#FF7801]/80 hover:text-white"
+              className="bg-white text-gray-800 border-gray-300
+                hover:bg-gray-100"
             >
               {isLoading && (
                 <div
@@ -376,9 +376,13 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
             </Button>
 
             {workflow && (
-              <PulsatingButton onClick={handleRunWorkflow}>
+              <Button
+                onClick={handleRunWorkflow}
+                className="bg-[#FF7801] text-white  
+              hover:bg-[#FF7801]/80 hover:text-white"
+              >
                 Run flow
-              </PulsatingButton>
+              </Button>
             )}
           </div>
         </div>

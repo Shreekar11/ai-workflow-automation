@@ -37,7 +37,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Save, FileText, X } from "lucide-react";
+import { ArrowLeft, Play, X } from "lucide-react";
 
 import CustomEdge from "@/components/node/template-edge";
 import LLMModelNode from "@/components/node/llm-model-node";
@@ -361,7 +361,6 @@ export default function FlowPage() {
         variant="outline"
         onClick={() => setShowOutput(!showOutput)}
       >
-        <FileText className="h-4 w-4 mr-2" />
         {showOutput ? "Hide Output" : "View Output"}
       </Button>
     );
@@ -491,7 +490,6 @@ export default function FlowPage() {
                 className="bg-white text-gray-800 border-gray-300
                 hover:bg-gray-100"
               >
-                <Save className="h-4 w-4 mr-2" />
                 Save Template
               </Button>
             ) : (
