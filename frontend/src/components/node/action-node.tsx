@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Handle, Position } from "reactflow";
-import { InfoIcon, PlayIcon, TableIcon, MailIcon } from "lucide-react";
+import {
+  InfoIcon,
+  PlayIcon,
+  TableIcon,
+  MailIcon,
+  ClipboardCopyIcon,
+} from "lucide-react";
 import { useAvailableTriggersActions } from "@/lib/hooks/useAvailableTriggersActions";
 
 // ui components
@@ -23,6 +29,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { Alert, AlertDescription } from "../ui/alert";
 
 export default function ActionNode({
   data,
@@ -53,6 +61,10 @@ export default function ActionNode({
 
   const [actionType, setActionType] = useState<string>("");
   const [metadata, setMetadata] = useState<Record<string, any>>({});
+
+  const [copied, setCopied] = useState(false);
+  const serviceAccountEmail =
+    "google-auth-service-account@workflow-automation-448218.iam.gserviceaccount.com";
 
   // Find the selected action from availableTriggerActions
   const selectedAction = availableTriggerActions.find(
@@ -105,6 +117,12 @@ export default function ActionNode({
     if (data.onMetadataChange) {
       data.onMetadataChange(data.nodeId, updatedMetadata);
     }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(serviceAccountEmail);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // Determine colors based on selection state
@@ -169,44 +187,73 @@ export default function ActionNode({
 
     if (selectedAction.name === "Google Sheets") {
       return (
-        <div className="space-y-3 bg-white rounded-md p-3 border border-green-200">
-          <div className="space-y-1">
-            <Label htmlFor="sheet-id" className="text-sm text-green-700">
-              Sheet ID
-            </Label>
-            <Input
-              id="sheet-id"
-              placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-              value={metadata.sheetId || ""}
-              onChange={(e) => handleInputChange("sheetId", e.target.value)}
-              className="border-green-200 focus-visible:ring-green-400"
-            />
+        <>
+          <div className="space-y-3 bg-white rounded-md p-3 border border-green-200">
+            <div className="space-y-1">
+              <Label htmlFor="sheet-id" className="text-sm text-green-700">
+                Sheet ID
+              </Label>
+              <Input
+                id="sheet-id"
+                placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                value={metadata.sheetId || ""}
+                onChange={(e) => handleInputChange("sheetId", e.target.value)}
+                className="border-green-200 focus-visible:ring-green-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="range" className="text-sm text-green-700">
+                Range
+              </Label>
+              <Input
+                id="range"
+                placeholder="A1:D5"
+                value={metadata.range || ""}
+                onChange={(e) => handleInputChange("range", e.target.value)}
+                className="border-green-200 focus-visible:ring-green-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="values" className="text-sm text-green-700">
+                Values
+              </Label>
+              <Textarea
+                id="values"
+                placeholder="Enter values to add to sheet"
+                value={metadata.values || ""}
+                onChange={(e) => handleInputChange("values", e.target.value)}
+                className="min-h-[80px] border-green-200 focus-visible:ring-green-400"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="range" className="text-sm text-green-700">
-              Range
-            </Label>
-            <Input
-              id="range"
-              placeholder="A1:D5"
-              value={metadata.range || ""}
-              onChange={(e) => handleInputChange("range", e.target.value)}
-              className="border-green-200 focus-visible:ring-green-400"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="values" className="text-sm text-green-700">
-              Values
-            </Label>
-            <Textarea
-              id="values"
-              placeholder="Enter values to add to sheet"
-              value={metadata.values || ""}
-              onChange={(e) => handleInputChange("values", e.target.value)}
-              className="min-h-[80px] border-green-200 focus-visible:ring-green-400"
-            />
-          </div>
-        </div>
+          <Alert className="bg-green-50 border-green-200">
+            <AlertDescription className="text-xs text-green-800">
+              <p className="font-medium mb-1">
+                Important: Share access to your spreadsheet
+              </p>
+              <p className="mb-2">
+                You must share your Google Sheet with editor access to the
+                service account:
+              </p>
+              <div className="flex items-center gap-2 bg-white p-1.5 rounded border border-green-200 mb-1">
+                <code className="text-xs text-green-700 flex-1 truncate">
+                  {serviceAccountEmail}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-green-600 hover:text-green-800 hover:bg-green-100"
+                  onClick={copyToClipboard}
+                >
+                  <ClipboardCopyIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs">
+                {copied ? "Copied to clipboard!" : "Click the icon to copy"}
+              </p>
+            </AlertDescription>
+          </Alert>
+        </>
       );
     } else if (selectedAction.name === "Email") {
       return (
