@@ -6,7 +6,7 @@
 
 ## Solution
 
-Workflow Automation enables seamless automation of your workflows. Users can effortlessly create workflows and configure them to the available trigger providers and multiple available actions with precision. Designed with a robust event-driven architecture, the application ensures reliable and asynchronous execution of actions upon each trigger, providing high performance.
+Workflow Automation enables seamless automation of your workflows. Users can effortlessly create workflows and configure them to the available trigger providers and multiple available actions with precision or use pre-built AI-powered templates. Designed with a robust event-driven architecture, the application ensures reliable and asynchronous execution of actions upon each trigger, providing high performance.
 
 ## Demo Video
 
@@ -18,6 +18,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Webhook trigger provider
 - Automate your Google Sheet
 - Mailing service for instant mails
+- AI-powered workflow templates
 - Clean and MVC OOPs architecture
 - Secure Clerk Authentication and Authorization
 - Beautiful User Interface
@@ -43,6 +44,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - **Node.js** - JavaScript runtime for server-side development
 - **Express** - Web framework for Node.js
 - **Nodemailer** - For sending emails
+- **Gemini** - To analyze the scraped content and generate detailed description
 - **Zod** - Used for validation
 
 ### Frontend
@@ -67,7 +69,6 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Add more Trigger and Action provider to expand the Workflow Automation
 - Provide user to connect with the provider to reduce manual workload
 - Add notification channels (Slack, Discord)
-- Integrate AI for enhanced workflow automation
 
 ## Pros and Cons of Proposed Solution
 
@@ -77,6 +78,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Clean and MVC OOPs architecture
 - Dedicated Webhook Server for scalable event handling
 - Secured Webhook endpoint using unique secret key
+- AI-powered pre-built templates
 
 ### Cons
 - Transition to microservices architecture
