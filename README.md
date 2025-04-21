@@ -69,6 +69,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Add more Trigger and Action provider to expand the Workflow Automation
 - Provide user to connect with the provider to reduce manual workload
 - Add notification channels (Slack, Discord)
+- Add a feature to display workflow status in real-time
 
 ## Pros and Cons of Proposed Solution
 
@@ -82,6 +83,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 ### Cons
 - Transition to microservices architecture
+- Add real-time feature to display workflow status
 
 ## Getting Started
 
