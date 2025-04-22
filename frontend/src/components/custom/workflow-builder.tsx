@@ -363,8 +363,12 @@ export default function WorkflowBuilder({ workflow }: WorkflowBuilderProps) {
               variant="outline"
               disabled={isLoading}
               onClick={handlePublishWorkflow}
-              className="bg-white text-gray-800 border-gray-300
-                hover:bg-gray-100"
+              className={`${
+                workflow
+                  ? `bg-white text-gray-800 border-gray-300
+                hover:bg-gray-100`
+                  : `bg-[#FF7801] text-white hover:bg-[#FF7801]/80 hover:text-white`
+              }`}
             >
               {isLoading && (
                 <div
