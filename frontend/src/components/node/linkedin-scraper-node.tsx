@@ -37,7 +37,7 @@ export default function LinkedinScraperNode({
   }, [url, id, data]);
 
   return (
-    <Card className="w-[300px] shadow-md border-blue-300">
+    <Card className="w-[350px] shadow-md border-blue-300">
       <CardHeader className="pb-2 bg-blue-100 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
