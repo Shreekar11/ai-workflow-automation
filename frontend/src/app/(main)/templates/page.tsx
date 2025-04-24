@@ -13,32 +13,7 @@ import TemplateSkeleton from "@/components/template/template-skeleton";
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { isLoading, error, templates } = useTemplates();
-
-  // const templates = [
-  //   {
-  //     id: "blog-scraper",
-  //     title: "Blog Scraper to Google Docs",
-  //     description:
-  //       "Scrape content from any blog URL, summarize it with AI, and save it to Google Docs automatically.",
-  //     nodes: [
-  //       { type: "input", name: "URL Input", icon: "link" },
-  //       { type: "ai", name: "LLM Model", icon: "brain" },
-  //       { type: "output", name: "Google Docs", icon: "file-text" },
-  //     ],
-  //   },
-  //   {
-  //     id: "company-scraper",
-  //     title: "Linkedin Company Page Scraper",
-  //     description:
-  //       "Get any company details using this template. Just add the company Linkedin page url and get the info automatically",
-  //     nodes: [
-  //       { type: "input", name: "Linkedin company url", icon: "link" },
-  //       { type: "ai", name: "Content Generator", icon: "brain" },
-  //       { type: "output", name: "Google Docs", icon: "file-text" },
-  //     ],
-  //   },
-  // ];
+  const { isLoading, templates } = useTemplates();
 
   const filteredTemplates = templates.filter(
     (template) =>
