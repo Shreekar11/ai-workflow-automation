@@ -89,12 +89,22 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium mb-2">
                     Recent Template Results
                   </h3>
-                  <div className="rounded-md border overflow-hidden">
-                    <TemplateTable
-                      filteredTemplates={filteredTemplates}
-                      onViewDetails={handleViewDetails}
-                    />
-                  </div>
+                  {filteredTemplates.flatMap(
+                    (template) => template.templateResults
+                  ).length === 0 ? (
+                    <div className="text-center py-10 border rounded-md">
+                      <p className="text-muted-foreground">
+                        No template runs found
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-md border overflow-hidden">
+                      <TemplateTable
+                        filteredTemplates={filteredTemplates}
+                        onViewDetails={handleViewDetails}
+                      />
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
