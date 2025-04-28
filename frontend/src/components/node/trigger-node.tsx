@@ -93,7 +93,10 @@ export default function TriggerNode({ data }: TriggerNodeProps) {
           data.workflowId ? data.workflowId : ""
         }`,
         Method: "POST",
-        Headers: "Content-Type: application/json",
+        Headers: `{
+          "Content-Type: application/json",
+          "x-webhook-secret": WEBHOOK_SECRET,
+        }`,
       };
     }
 
