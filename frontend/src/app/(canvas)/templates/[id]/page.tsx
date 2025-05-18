@@ -332,6 +332,10 @@ export default function FlowPage() {
         description: "Workflow executed successfully!",
         variant: "success",
       });
+
+      setTimeout(() => {
+        router.push("/runs");
+      }, 1000);
     } catch (error) {
       toast({
         title: "Error",
