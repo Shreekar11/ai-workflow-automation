@@ -4,6 +4,7 @@ const protectedRoute = createRouteMatcher([
   "/workflows",
   "/workflows/create",
   "/templates",
+  "/runs",
 ]);
 
 export default clerkMiddleware((auth, req) => {
