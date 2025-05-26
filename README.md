@@ -14,11 +14,11 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 ## Features
 
+- AI-powered workflow templates
 - Streamlined Workflow Creation
 - Webhook trigger provider
 - Automate your Google Sheet
 - Mailing service for instant mails
-- AI-powered workflow templates
 - Clean and MVC OOPs architecture
 - Secure Clerk Authentication and Authorization
 - Beautiful User Interface
@@ -66,20 +66,19 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 ## Solution Future Aspects
 
+- Add a feature to display workflow status in real-time
 - Add more Trigger and Action provider to expand the Workflow Automation
 - Provide user to connect with the provider to reduce manual workload
-- Add notification channels (Slack, Discord)
-- Add a feature to display workflow status in real-time
 
 ## Pros and Cons of Proposed Solution
 
 ### Pros
+- AI-powered pre-built templates
 - Streamlined and user-friendly interface
 - Event-driven asynchronous processing
 - Clean and MVC OOPs architecture
 - Dedicated Webhook Server for scalable event handling
 - Secured Webhook endpoint using unique secret key
-- AI-powered pre-built templates
 
 ### Cons
 - Transition to microservices architecture
