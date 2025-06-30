@@ -18,6 +18,7 @@
     "@clerk/clerk-sdk-node": "^5.1.6",
     "@prisma/client": "^6.2.1",
     "@types/node-cron": "^3.0.11",
+    "amqplib": "^0.10.8",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -35,6 +36,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.7",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/dotenv": "^8.2.3",
