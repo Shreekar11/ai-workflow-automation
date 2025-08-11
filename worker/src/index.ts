@@ -37,6 +37,7 @@ async function processMessage(message: string) {
     const parsedValue = JSON.parse(message);
     const workflowRunId = parsedValue.workflowRunId;
     const templateId = parsedValue.templateResultId;
+    const interviewId = parsedValue.roomId;
     const stage = parsedValue.stage;
 
     if (workflowRunId) {
@@ -53,6 +54,15 @@ async function processMessage(message: string) {
         client,
         redisQueue.getClient(),
         templateId,
+        stage
+      );
+    }
+
+    if (interviewId) {
+      await processInterviewMessage(
+        client,
+        redisQueue.getClient(),
+        interviewId,
         stage
       );
     }
