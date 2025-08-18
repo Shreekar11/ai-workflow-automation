@@ -1,11 +1,14 @@
-import { PrismaClient } from "@prisma/client";
+import axios from "axios";
 import dotenv from "dotenv";
 import cron from "node-cron";
-import axios from "axios";
-import { processWorkflowMessage } from "./processors/workflow.processor";
-import { RedisQueue } from "./queue/redis.queue";
+
 import { Server } from "./server";
+import { PrismaClient } from "@prisma/client";
+import { RedisQueue } from "./queue/redis.queue";
+
+import { processWorkflowMessage } from "./processors/workflow.processor";
 import { processTemplateMessage } from "./processors/template.processor";
+import { processInterviewMessage } from "./processors/interview.processor";
 
 dotenv.config();
 
@@ -37,6 +40,7 @@ async function processMessage(message: string) {
     const parsedValue = JSON.parse(message);
     const workflowRunId = parsedValue.workflowRunId;
     const templateId = parsedValue.templateResultId;
+    const interviewId = parsedValue.interviewId;
     const stage = parsedValue.stage;
 
     if (workflowRunId) {
@@ -53,6 +57,15 @@ async function processMessage(message: string) {
         client,
         redisQueue.getClient(),
         templateId,
+        stage
+      );
+    }
+
+    if (interviewId) {
+      await processInterviewMessage(
+        client,
+        redisQueue.getClient(),
+        interviewId,
         stage
       );
     }
