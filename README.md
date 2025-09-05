@@ -38,11 +38,11 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 ## Tech Stack
 
 ### Backend
+- **Node.js** - JavaScript runtime for server-side development
+- **Express** - Web framework for Node.js
 - **PostgerSQL** - SQL database for storing data and maintain complex data relations
 - **Prisma** - Efficient ORM for database interactions
 - **Redis** - In-memory database and queue management
-- **Node.js** - JavaScript runtime for server-side development
-- **Express** - Web framework for Node.js
 - **Nodemailer** - For sending emails
 - **Gemini** - To analyze the scraped content and generate detailed description
 - **Zod** - Used for validation
