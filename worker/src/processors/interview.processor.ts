@@ -8,5 +8,19 @@ export async function processInterviewMessage(
   transcript: any[],
   stage: number
 ) {
-  console.log(`Processing interview message: ${interviewId}`);
+  try {
+    const [interview_id, authId] = interviewId.split("&");
+
+    // Formatting transcription data
+    const formattedTranscript = [];
+    for (let i = 0; i < transcript.length; i += 2) {
+      formattedTranscript.push({
+        assistant: transcript[i][1] || "",
+        client: transcript[i + 1]?.[1] || "",
+      });
+    }
+
+  } catch (err: any) {
+    console.error("Error: ", err);
+  }
 }
