@@ -38,10 +38,11 @@ function initHealthCheck() {
 async function processMessage(message: string) {
   try {
     const parsedValue = JSON.parse(message);
-    const workflowRunId = parsedValue.workflowRunId;
-    const templateId = parsedValue.templateResultId;
-    const interviewId = parsedValue.interviewId;
-    const stage = parsedValue.stage;
+    const workflowRunId = parsedValue?.workflowRunId;
+    const templateId = parsedValue?.templateResultId;
+    const interviewId = parsedValue?.interviewId;
+    const transcript = parsedValue?.transcription;
+    const stage = parsedValue?.stage;
 
     if (workflowRunId) {
       await processWorkflowMessage(
@@ -66,6 +67,7 @@ async function processMessage(message: string) {
         client,
         redisQueue.getClient(),
         interviewId,
+        transcript,
         stage
       );
     }
