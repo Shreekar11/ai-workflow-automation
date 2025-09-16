@@ -1,19 +1,12 @@
-import { PrismaClient } from "@prisma/client";
-import { RedisClientType } from "redis";
 import { UserService } from "../services/user.service";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { FeedbackService } from "../services/feedback.service";
 import { InterviewService } from "../services/interview.service";
-
-// Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function processInterviewMessage(
-  client: PrismaClient,
-  redisClient: RedisClientType,
+  supabase: SupabaseClient,
   interviewId: string,
   transcript: any[],
-  stage: number
 ) {
   try {
     const [interview_id, authId] = interviewId.split("&");

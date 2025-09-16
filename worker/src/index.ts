@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cron from "node-cron";
 
 import { Server } from "./server";
+import { createClient } from "../src/utils/supabase/client";
 import { PrismaClient } from "@prisma/client";
 import { RedisQueue } from "./queue/redis.queue";
 
@@ -12,6 +13,7 @@ import { processInterviewMessage } from "./processors/interview.processor";
 
 dotenv.config();
 
+const supabase = new createClient();
 const client = new PrismaClient();
 const redisQueue = new RedisQueue();
 const server = new Server(8000);
@@ -64,11 +66,9 @@ async function processMessage(message: string) {
 
     if (interviewId) {
       await processInterviewMessage(
-        client,
-        redisQueue.getClient(),
+        supabase,
         interviewId,
         transcript,
-        stage
       );
     }
 
