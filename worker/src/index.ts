@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cron from "node-cron";
 
 import { Server } from "./server";
-import { createClient } from "../src/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { PrismaClient } from "@prisma/client";
 import { RedisQueue } from "./queue/redis.queue";
 
