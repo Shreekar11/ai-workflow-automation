@@ -80,6 +80,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Clean and MVC OOPs architecture
 - Dedicated Webhook Server for scalable event handling
 - Secured Webhook endpoint using unique secret key
+- Plugin based architecture
 
 ### Cons
 - Transition to microservices architecture
