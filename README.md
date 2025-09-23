@@ -24,6 +24,7 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 - Beautiful User Interface
 - React Flow for User-Friendly Experience
 - Webhook secret key to authenticate and secure the Webhook endpoint
+- Plugin architecture to add more workflow connections
 
 
 ## System Architecture
