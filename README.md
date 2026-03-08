@@ -1,4 +1,4 @@
-# [Workflow Automation](https://workflows-flax.vercel.app)
+# [AI Workflow Automation](https://workflows-flax.vercel.app)
 
 ![Landing Page](assets/landing.png)
 
