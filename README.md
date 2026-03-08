@@ -216,10 +216,8 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 To install Docker, run the following commands in your terminal:
 
-    ```
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
-    ```
 
 ## Development Environment For Server
 
