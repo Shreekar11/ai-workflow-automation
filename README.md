@@ -31,11 +31,6 @@ Workflow Automation enables seamless automation of your workflows. Users can eff
 
 ![Architecture Diagram](assets/architecture.png)
 
-
-## DB Diagram
-
-![DB Diagram](assets/db-diagram.png)
-
 ## Tech Stack
 
 ### Backend
